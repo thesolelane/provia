@@ -1024,8 +1024,11 @@
                 loadJobs();
             });
             
-            document.getElementById('aiAssistantButton').addEventListener('click', function() {
+            document.getElementById('aiAssistantButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 openAIAssistant();
+                return false;
             });
             
             // Initialize job creation modal
@@ -2001,11 +2004,16 @@
 
         // AI Assistant functionality
         function openAIAssistant() {
+            // Prevent default browser behavior
+            event.preventDefault();
+            event.stopPropagation();
+            
             const query = prompt("Ask the AI Assistant about building codes, timelines, budgets, or construction best practices:");
             if (query && query.trim()) {
                 console.log('Asking AI:', query);
                 getAIAssistance(query.trim());
             }
+            return false;
         }
 
         function getAIAssistance(query) {
