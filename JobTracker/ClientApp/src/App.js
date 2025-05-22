@@ -9,10 +9,8 @@ import JobList from './components/jobs/JobList';
 import JobDetail from './components/jobs/JobDetail';
 import JobForm from './components/jobs/JobForm';
 import JobSectionForm from './components/jobs/JobSectionForm';
-
-// Placeholder for sections (we'll implement these next)
-const SectionList = () => <div>Section List</div>;
-const SectionDetail = () => <div>Section Detail</div>;
+import JobSectionList from './components/jobs/JobSectionList';
+import JobSectionDetail from './components/jobs/JobSectionDetail';
 
 function App() {
   return (
@@ -24,8 +22,8 @@ function App() {
         <Route path="/jobs/:id" element={<Layout><JobDetail /></Layout>} />
         <Route path="/jobs/:id/edit" element={<Layout><JobForm /></Layout>} />
         <Route path="/jobs/:id/sections/create" element={<Layout><JobSectionForm /></Layout>} />
-        <Route path="/sections" element={<Layout><SectionList /></Layout>} />
-        <Route path="/sections/:id" element={<Layout><SectionDetail /></Layout>} />
+        <Route path="/sections" element={<Layout><JobSectionList /></Layout>} />
+        <Route path="/sections/:id" element={<Layout><JobSectionDetail /></Layout>} />
         <Route path="/sections/:sectionId/edit" element={<Layout><JobSectionForm /></Layout>} />
       </Routes>
     </div>
