@@ -2131,6 +2131,33 @@
                 }
             });
         }
+
+        function updateAIResponse(response) {
+            // Update the existing modal with new response
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                const responseDiv = modal.querySelector('div[style*="white-space: pre-wrap"]');
+                const confidenceDiv = modal.querySelector('div[style*="border-top: 1px solid #eee"]');
+                
+                if (responseDiv) {
+                    responseDiv.innerHTML = response.response || response.answer || 'I can help with construction questions!';
+                }
+                
+                if (confidenceDiv) {
+                    confidenceDiv.innerHTML = `
+                        <span>Confidence: ${Math.round((response.confidence || 0.8) * 100)}%</span>
+                        <span>Sources: ${(response.sources || ['Construction Knowledge Base']).join(', ')}</span>
+                    `;
+                }
+                
+                // Re-enable the ask button
+                const askButton = modal.querySelector('#askAIButton');
+                if (askButton) {
+                    askButton.disabled = false;
+                    askButton.innerHTML = 'Ask AI';
+                }
+            }
+        }
     </script>
 </body>
 </html>
