@@ -1652,22 +1652,7 @@
             window.uploadedFiles = {};
         }
 
-        // Add missing functions
-        function createNewJob() {
-            openCreateJobModal();
-        }
-
-        function initSectionSelection() {
-            // Initialize all section rows as hidden
-            const sectionNames = ['Demolition', 'Foundation', 'Framing', 'Electrical', 'Plumbing', 'HVAC', 'Drywall', 'Painting', 'Flooring', 'Finishing', 'Inspection'];
-            sectionNames.forEach(sectionName => {
-                const sectionKey = sectionName.replace(/\s+/g, '');
-                const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
-                if (subcontractorRow) {
-                    subcontractorRow.style.display = 'none';
-                }
-            });
-        }
+        // Add missing functions - these are now handled in the event listeners above
     </script>
 </body>
 </html>
