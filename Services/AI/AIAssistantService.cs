@@ -25,7 +25,8 @@ namespace JobTrackerApp.Services.AI
 
             // Configure HttpClient for OpenAI
             _httpClient.BaseAddress = new Uri("https://api.openai.com/v1/");
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_configuration["OpenAI:APIKey"]}");
+            var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? _configuration["OpenAI:APIKey"];
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
         }
 
         public async Task<string> GetBuildingCodeAssistance(string query, SectionType? sectionType = null)
@@ -42,9 +43,17 @@ namespace JobTrackerApp.Services.AI
                 }
 
                 // Prepare the prompt with context
-                string systemPrompt = @"You are an expert assistant specialized in Massachusetts building codes for construction and renovation projects. 
-Your goal is to provide accurate, helpful information about building code requirements, permit processes, inspection criteria, 
-and compliance best practices. Only provide information relevant to Massachusetts building codes and regulations.";
+                string systemPrompt = @"You are an expert construction assistant specialized in building codes, materials, and best practices for construction and renovation projects. 
+Provide specific, detailed answers about:
+- Building materials and fasteners (screws, bolts, nails, anchors)
+- Construction techniques and methods
+- Building code requirements and compliance
+- Permit processes and inspection criteria
+- Safety regulations and best practices
+- Material specifications and installation guidelines
+
+Give practical, actionable advice with specific product recommendations, measurements, and step-by-step guidance when appropriate.
+Focus on Massachusetts building codes when relevant, but also provide general construction knowledge.";
 
                 if (!string.IsNullOrEmpty(relevantCodes))
                 {
