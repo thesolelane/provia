@@ -197,6 +197,43 @@ Massachusetts Considerations:
                     Sources = new[] { "Industry Cost Analysis" }
                 };
             }
+            else if (query.Contains("year") || query.Contains("built") || query.Contains("age") || query.Contains("old"))
+            {
+                return new {
+                    Response = @"Building Age and Code Considerations:
+
+**Pre-1978 Buildings:**
+• Lead paint concerns - special handling required
+• Asbestos may be present in insulation and tiles
+• Electrical systems may need upgrading to current codes
+• Plumbing may use galvanized or lead pipes
+
+**Pre-1960 Buildings:**
+• Knob-and-tube wiring common - replacement often required
+• Foundation waterproofing may be inadequate
+• Insulation typically below current standards
+• HVAC systems likely need modernization
+
+**Modern Buildings (Post-2000):**
+• Generally meet current energy efficiency standards
+• May have newer electrical panels and GFCI protection
+• Proper insulation and vapor barriers
+
+**Key Inspections for Older Buildings:**
+• Structural integrity assessment
+• Electrical safety evaluation
+• Lead and asbestos testing
+• Foundation and drainage review
+• HVAC efficiency analysis
+
+**Massachusetts Requirements:**
+- Lead paint disclosure required for pre-1978 properties
+- Asbestos regulations strictly enforced
+- Energy efficiency upgrades may be required for major renovations",
+                    Confidence = 0.85f,
+                    Sources = new[] { "Massachusetts Building Code", "EPA Guidelines", "Historic Building Standards" }
+                };
+            }
             else
             {
                 return new {
