@@ -49,6 +49,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Serve static files for the React app
+app.UseStaticFiles();
+
 app.UseCors("AllowReactApp");
 
 app.UseAuthorization();
@@ -57,6 +60,9 @@ app.MapControllers();
 
 // Add simple test endpoint
 app.MapGet("/api/test", () => new { Message = "Job Tracker API is working!", Timestamp = DateTime.UtcNow });
+
+// Add SPA fallback route to serve index.html for all non-API routes
+app.MapFallbackToFile("index.html");
 
 // Create database and tables on startup
 using (var scope = app.Services.CreateScope())
