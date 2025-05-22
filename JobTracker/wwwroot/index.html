@@ -1970,6 +1970,29 @@
         }
 
         // Add missing functions - these are now handled in the event listeners above
+        
+        // Add the missing showJobTab function for job details navigation
+        function showJobTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.style.display = 'none');
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tabs .tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+            
+            // Add active class to selected tab
+            const activeTab = document.querySelector(`[onclick="showJobTab('${tabName}')"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+        }
     </script>
 </body>
 </html>
