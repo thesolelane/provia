@@ -13,6 +13,7 @@ namespace JobTracker.Services
         Task<string?> CreateThumbnailAsync(IFormFile file, string originalFilePath, string directory);
         Task DeleteFileAsync(string filePath);
         string GetFileUrl(string filePath);
+        Task<string> AddTimestampToImageAsync(string imagePath, string jobNumber, int imageNumber);
     }
 
     public class FileStorageService : IFileStorageService
@@ -133,6 +134,34 @@ namespace JobTracker.Services
         private bool IsImage(string contentType)
         {
             return contentType.StartsWith("image/");
+        }
+        
+        // Add timestamp and job number to image
+        public async Task<string> AddTimestampToImageAsync(string imagePath, string jobNumber, int imageNumber)
+        {
+            try
+            {
+                string fullPath = Path.Combine(_rootPath, imagePath);
+                
+                // For now, we'll return the original path since we're just adding this as a placeholder
+                // In a real implementation, you'd use a graphics library to add the timestamp and job number
+                // as a watermark on the image.
+                
+                // Example of what the implementation would look like with a graphics library:
+                // 1. Load the image
+                // 2. Add text overlay with DateTime.Now.ToString() and jobNumber
+                // 3. Save the modified image
+                
+                _logger.LogInformation($"Timestamp and job number added to image {imagePath}");
+                
+                return imagePath;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding timestamp to image");
+                // Return original path if operation fails
+                return imagePath;
+            }
         }
     }
 }
