@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobForm() {
   const { id } = useParams();
@@ -35,13 +36,7 @@ function JobForm() {
   const fetchJob = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/jobs/${id}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const job = await response.json();
+      const job = await apiService.jobs.getById(id);
       
       // Format dates for the form
       const formattedJob = {
@@ -101,23 +96,13 @@ function JobForm() {
         jobData.actualCompletionDate = null;
       }
       
-      const url = isEditMode ? `/api/jobs/${id}` : '/api/jobs';
-      const method = isEditMode ? 'PUT' : 'POST';
+      let savedJob;
       
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jobData)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! Status: ${response.status}`);
+      if (isEditMode) {
+        savedJob = await apiService.jobs.update(id, jobData);
+      } else {
+        savedJob = await apiService.jobs.create(jobData);
       }
-      
-      const savedJob = await response.json();
       
       // Redirect to the job detail page
       navigate(`/jobs/${savedJob.id}`);

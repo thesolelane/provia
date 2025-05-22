@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobDetail() {
   const { id } = useParams();
@@ -17,16 +18,7 @@ function JobDetail() {
   const fetchJob = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/jobs/${id}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Job not found');
-        }
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobs.getById(id);
       setJob(data);
       setError(null);
     } catch (err) {
@@ -39,13 +31,7 @@ function JobDetail() {
   
   const fetchJobSections = async () => {
     try {
-      const response = await fetch(`/api/jobsections/job/${id}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobSections.getByJobId(id);
       setSections(data);
     } catch (err) {
       console.error('Error fetching job sections:', err);
@@ -58,14 +44,7 @@ function JobDetail() {
     }
     
     try {
-      const response = await fetch(`/api/jobs/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
+      await apiService.jobs.delete(id);
       navigate('/jobs');
     } catch (err) {
       setError('Failed to delete job. Please try again later.');

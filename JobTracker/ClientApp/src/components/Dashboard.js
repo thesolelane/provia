@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiService } from '../services/apiService';
 
 function Dashboard() {
   const [recentJobs, setRecentJobs] = useState([]);
@@ -21,13 +22,7 @@ function Dashboard() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/jobs');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobs.getAll();
       
       // Get only 5 most recent jobs
       const sortedJobs = [...data].sort((a, b) => 
