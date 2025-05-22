@@ -118,11 +118,17 @@ namespace JobTracker.Controllers
                     return BadRequest("No file uploaded");
                 }
 
-                // Get highest display order for the job
+                // Get highest display order and image number for the job
                 int displayOrder = await _context.JobImages
                     .Where(i => i.JobId == jobId && i.JobSectionId == null)
                     .Select(i => i.DisplayOrder)
-                    .DefaultIfEmpty()
+                    .DefaultIfEmpty(-1)
+                    .MaxAsync() + 1;
+                
+                int imageNumber = await _context.JobImages
+                    .Where(i => i.JobId == jobId && i.JobSectionId == null)
+                    .Select(i => i.ImageNumber)
+                    .DefaultIfEmpty(0)
                     .MaxAsync() + 1;
 
                 // Save file
@@ -142,8 +148,10 @@ namespace JobTracker.Controllers
                     Description = description,
                     IsMainImage = isMainImage,
                     DisplayOrder = displayOrder,
+                    ImageNumber = imageNumber,
                     FileSize = file.Length,
-                    ThumbnailPath = thumbnailPath
+                    ThumbnailPath = thumbnailPath,
+                    ShowTimestamp = true  // Show timestamp by default for all images except main job image
                 };
 
                 // If this is set as main image, clear other main images
@@ -198,11 +206,17 @@ namespace JobTracker.Controllers
                     return BadRequest("No file uploaded");
                 }
 
-                // Get highest display order for the section
+                // Get highest display order and image number for the section
                 int displayOrder = await _context.JobImages
                     .Where(i => i.JobSectionId == sectionId)
                     .Select(i => i.DisplayOrder)
-                    .DefaultIfEmpty()
+                    .DefaultIfEmpty(-1)
+                    .MaxAsync() + 1;
+                    
+                int imageNumber = await _context.JobImages
+                    .Where(i => i.JobSectionId == sectionId)
+                    .Select(i => i.ImageNumber)
+                    .DefaultIfEmpty(0)
                     .MaxAsync() + 1;
 
                 // Check if we already have max images (5)
@@ -236,8 +250,10 @@ namespace JobTracker.Controllers
                     IsMainImage = false,
                     IsVideo = isVideo,
                     DisplayOrder = displayOrder,
+                    ImageNumber = imageNumber,
                     FileSize = file.Length,
-                    ThumbnailPath = thumbnailPath
+                    ThumbnailPath = thumbnailPath,
+                    ShowTimestamp = true // Always show timestamp with job number for section images
                 };
 
                 _context.JobImages.Add(jobImage);
