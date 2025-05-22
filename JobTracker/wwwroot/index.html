@@ -270,7 +270,60 @@
         
         .section-item {
             padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        
+        .section-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
             border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+        }
+        
+        .collapse-icon {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        
+        .section-item.collapsed .section-content {
+            display: none;
+        }
+        
+        .section-notes {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .notes-content {
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+            min-height: 40px;
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        .section-photos-preview {
+            margin-top: 15px;
+        }
+        
+        .small-button {
+            padding: 5px 10px;
+            font-size: 12px;
         }
         
         .info-grid {
