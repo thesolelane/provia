@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobSectionList() {
   const [sections, setSections] = useState([]);
@@ -13,13 +14,7 @@ function JobSectionList() {
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/jobsections');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobSections.getAll();
       setSections(data);
       setError(null);
     } catch (err) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobSectionForm() {
   const { id, sectionId } = useParams();
@@ -58,13 +59,7 @@ function JobSectionForm() {
   const fetchSection = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/jobsections/${sectionId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const section = await response.json();
+      const section = await apiService.jobSections.getById(sectionId);
       
       // Format dates for the form
       const formattedSection = {
@@ -133,23 +128,13 @@ function JobSectionForm() {
         sectionData.inspectionDate = null;
       }
       
-      const url = isEditMode ? `/api/jobsections/${sectionId}` : '/api/jobsections';
-      const method = isEditMode ? 'PUT' : 'POST';
+      let savedSection;
       
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(sectionData)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP error! Status: ${response.status}`);
+      if (isEditMode) {
+        savedSection = await apiService.jobSections.update(sectionId, sectionData);
+      } else {
+        savedSection = await apiService.jobSections.create(sectionData);
       }
-      
-      const savedSection = await response.json();
       
       // Redirect to the job detail page
       navigate(`/jobs/${formData.jobId}`);
