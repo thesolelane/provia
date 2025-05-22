@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace JobTracker.Models
 {
@@ -9,6 +10,8 @@ namespace JobTracker.Models
 
         [Required]
         public int JobId { get; set; }
+        
+        [JsonIgnore]
         public Job Job { get; set; } = null!;
 
         [Required]

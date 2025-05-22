@@ -59,7 +59,8 @@ namespace JobTracker.Controllers
             }
         }
 
-        // GET: api/JobSections/ByJob/5
+        // GET: api/JobSections/job/5 or api/JobSections/ByJob/5
+        [HttpGet("job/{jobId}")]
         [HttpGet("ByJob/{jobId}")]
         public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSectionsByJob(int jobId)
         {
