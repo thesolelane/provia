@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
