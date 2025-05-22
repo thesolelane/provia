@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "obj/Debug/net7.0/staticwebassets/msbuild.JobTracker.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net7.0/staticwebassets/msbuild.build.JobTracker.props",
+      "PackagePath": "build\\JobTracker.props"
+    },
+    {
+      "Id": "obj/Debug/net7.0/staticwebassets/msbuild.buildMultiTargeting.JobTracker.props",
+      "PackagePath": "buildMultiTargeting\\JobTracker.props"
+    },
+    {
+      "Id": "obj/Debug/net7.0/staticwebassets/msbuild.buildTransitive.JobTracker.props",
+      "PackagePath": "buildTransitive\\JobTracker.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
