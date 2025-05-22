@@ -13,6 +13,51 @@
             background-color: #f5f5f5;
         }
         
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+        }
+        
+        .btn-template {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            margin-right: 5px;
+        }
+        
+        #whatsAppStatus {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -187,6 +232,7 @@
                 <div class="tab active" data-tab="details">Details</div>
                 <div class="tab" data-tab="sections">Sections</div>
                 <div class="tab" data-tab="finances">Finances</div>
+                <div class="tab" data-tab="notifications">Notifications</div>
             </div>
             
             <div class="tab-content active" id="detailsTab">
@@ -199,6 +245,34 @@
             
             <div class="tab-content" id="financesTab">
                 <div class="info-grid" id="jobFinances"></div>
+            </div>
+            
+            <div class="tab-content" id="notificationsTab">
+                <div class="info-card">
+                    <h3>Send WhatsApp Notification</h3>
+                    <p>Send updates to the client or team members via WhatsApp</p>
+                    
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number (with country code, e.g., +1234567890)</label>
+                        <input type="text" id="phoneNumber" class="form-control" placeholder="+1234567890">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="messageText">Message</label>
+                        <textarea id="messageText" class="form-control" rows="4" 
+                            placeholder="Enter your message here..."></textarea>
+                    </div>
+                    
+                    <div id="whatsAppTemplates" class="form-group">
+                        <label>Quick Templates:</label>
+                        <button onclick="fillTemplate('status')" class="button btn-template">Status Update</button>
+                        <button onclick="fillTemplate('delay')" class="button btn-template">Delay Notification</button>
+                        <button onclick="fillTemplate('complete')" class="button btn-template">Section Completed</button>
+                    </div>
+                    
+                    <button id="sendWhatsAppBtn" class="button">Send WhatsApp Message</button>
+                    <div id="whatsAppStatus"></div>
+                </div>
             </div>
         </div>
     </div>
