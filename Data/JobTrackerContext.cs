@@ -1,8 +1,8 @@
-using JobTracker.Models;
+using JobTrackerApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 
-namespace JobTracker.Data
+namespace JobTrackerApp.Data
 {
     public class JobTrackerContext : DbContext
     {

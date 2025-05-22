@@ -1,182 +1,131 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using JobTracker.Services;
-using JobTracker.Data;
-using JobTracker.Models;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using JobTrackerApp.Models;
+using JobTrackerApp.Services.AI;
+using JobTrackerApp.Data;
 
-namespace JobTracker.Controllers
+namespace JobTrackerApp.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AIAssistantController : ControllerBase
     {
-        private readonly JobTrackerContext _context;
-        private readonly AIService _aiService;
+        private readonly AIAssistantService _aiService;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<AIAssistantController> _logger;
 
         public AIAssistantController(
-            JobTrackerContext context,
-            AIService aiService,
+            AIAssistantService aiService,
+            ApplicationDbContext context,
             ILogger<AIAssistantController> logger)
         {
-            _context = context;
             _aiService = aiService;
+            _context = context;
             _logger = logger;
         }
 
-        // POST: api/AIAssistant/chat
-        [HttpPost("chat")]
-        public async Task<ActionResult<object>> GetChatResponse([FromBody] ChatRequest request)
+        // POST: api/AIAssistant/building-code
+        [HttpPost("building-code")]
+        public async Task<ActionResult<AIResponse>> GetBuildingCodeAssistance(BuildingCodeQuery query)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Message))
-                {
-                    return BadRequest("Message cannot be empty.");
-                }
-
-                // Get context for the chat based on job section if provided
-                List<BuildingCode> relevantCodes = new List<BuildingCode>();
-                JobSection section = null;
-
-                if (request.JobSectionId.HasValue)
-                {
-                    section = await _context.JobSections
-                        .Include(js => js.Job)
-                        .FirstOrDefaultAsync(js => js.SectionId == request.JobSectionId);
-
-                    if (section != null)
-                    {
-                        relevantCodes = await _context.BuildingCodes
-                            .Where(bc => bc.RelatedSection == section.Type && bc.IsActive)
-                            .ToListAsync();
-                    }
-                }
-
-                // Get the AI response
-                var response = await _aiService.GetAssistantResponse(
-                    request.Message,
-                    request.ConversationId,
-                    section,
-                    relevantCodes
-                );
-
-                return new
+                string response = await _aiService.GetBuildingCodeAssistance(query.Query, query.SectionType);
+                
+                _logger.LogInformation("Generated AI response for building code query: {Query}", query.Query);
+                
+                return Ok(new AIResponse
                 {
                     Response = response,
-                    ConversationId = request.ConversationId ?? Guid.NewGuid().ToString(),
-                    Context = section != null
-                        ? new
-                        {
-                            JobId = section.JobId,
-                            JobName = section.Job?.JobName,
-                            SectionId = section.SectionId,
-                            SectionType = section.Type.ToString(),
-                            RelevantCodes = relevantCodes.Take(3).Select(c => new
-                            {
-                                c.CodeNumber,
-                                c.Title
-                            })
-                        }
-                        : null
-                };
+                    Query = query.Query,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting AI assistant response for message: {Message}", request.Message);
-                return StatusCode(500, "Internal server error occurred while processing your request.");
+                _logger.LogError(ex, "Error getting AI building code assistance");
+                return StatusCode(500, "An error occurred while getting AI assistance");
             }
         }
 
-        // POST: api/AIAssistant/codequery
-        [HttpPost("codequery")]
-        public async Task<ActionResult<object>> GetCodeSpecificResponse([FromBody] CodeQueryRequest request)
+        // POST: api/AIAssistant/section-guidance/{sectionId}
+        [HttpPost("section-guidance/{sectionId}")]
+        public async Task<ActionResult<AIResponse>> GetSectionGuidance(int sectionId)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Query))
+                var section = await _context.JobSections
+                    .FindAsync(sectionId);
+                
+                if (section == null)
                 {
-                    return BadRequest("Query cannot be empty.");
+                    return NotFound("Section not found");
                 }
 
-                if (!request.SectionType.HasValue && string.IsNullOrWhiteSpace(request.Category))
+                string guidance = await _aiService.GetJobSectionGuidance(section);
+                
+                _logger.LogInformation("Generated AI guidance for job section {SectionType} with ID {SectionId}", 
+                    section.SectionType, sectionId);
+                
+                return Ok(new AIResponse
                 {
-                    return BadRequest("Either section type or category must be provided.");
-                }
-
-                // Get relevant building codes based on section type or category
-                var codesQuery = _context.BuildingCodes.Where(bc => bc.IsActive);
-
-                if (request.SectionType.HasValue)
-                {
-                    codesQuery = codesQuery.Where(bc => bc.RelatedSection == request.SectionType.Value);
-                }
-
-                if (!string.IsNullOrWhiteSpace(request.Category))
-                {
-                    codesQuery = codesQuery.Where(bc => bc.Category == request.Category);
-                }
-
-                if (!string.IsNullOrWhiteSpace(request.Subcategory))
-                {
-                    codesQuery = codesQuery.Where(bc => bc.Subcategory == request.Subcategory);
-                }
-
-                var relevantCodes = await codesQuery.ToListAsync();
-
-                // Get the AI response specific to building codes
-                var response = await _aiService.GetCodeSpecificResponse(
-                    request.Query,
-                    relevantCodes
-                );
-
-                // Get the most relevant codes
-                var mostRelevantCodes = await _aiService.GetMostRelevantCodes(
-                    request.Query,
-                    relevantCodes,
-                    5
-                );
-
-                return new
-                {
-                    Response = response,
-                    RelevantCodes = mostRelevantCodes.Select(c => new
-                    {
-                        c.CodeId,
-                        c.CodeNumber,
-                        c.Title,
-                        c.Description,
-                        c.Category,
-                        c.Subcategory
-                    })
-                };
+                    Response = guidance,
+                    Query = $"Guidance for {section.SectionType.GetDisplayName()} section",
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting code-specific AI response for query: {Query}", request.Query);
-                return StatusCode(500, "Internal server error occurred while processing your code query.");
+                _logger.LogError(ex, "Error getting AI section guidance for section {SectionId}", sectionId);
+                return StatusCode(500, "An error occurred while getting AI guidance");
             }
         }
 
-        public class ChatRequest
+        // POST: api/AIAssistant/general-question
+        [HttpPost("general-question")]
+        public async Task<ActionResult<AIResponse>> GetGeneralAssistance(GeneralQuery query)
         {
-            public string Message { get; set; }
-            public string ConversationId { get; set; }
-            public int? JobSectionId { get; set; }
+            try
+            {
+                // Append construction/building context to ensure relevant answers
+                string enhancedQuery = $"As a construction professional in Massachusetts working on a {query.JobType} project, I need information about: {query.Query}";
+                
+                string response = await _aiService.GetBuildingCodeAssistance(enhancedQuery, null);
+                
+                _logger.LogInformation("Generated AI response for general query: {Query}", query.Query);
+                
+                return Ok(new AIResponse
+                {
+                    Response = response,
+                    Query = query.Query,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting AI general assistance");
+                return StatusCode(500, "An error occurred while getting AI assistance");
+            }
         }
+    }
 
-        public class CodeQueryRequest
-        {
-            public string Query { get; set; }
-            public SectionType? SectionType { get; set; }
-            public string Category { get; set; }
-            public string Subcategory { get; set; }
-        }
+    public class BuildingCodeQuery
+    {
+        public string Query { get; set; } = string.Empty;
+        public SectionType? SectionType { get; set; }
+    }
+
+    public class GeneralQuery
+    {
+        public string Query { get; set; } = string.Empty;
+        public string JobType { get; set; } = "renovation";
+    }
+
+    public class AIResponse
+    {
+        public string Response { get; set; } = string.Empty;
+        public string Query { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
     }
 }

@@ -1,0 +1,28 @@
+modules = ["dotnet", "dotnet-7.0"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "DotNetJobTrackerApp"
+
+[[workflows.workflow]]
+name = "DotNetJobTrackerApp"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd JobTracker && dotnet run --urls=http://0.0.0.0:5000"
+waitForPort = 5000
+
+[deployment]
+run = ["sh", "-c", "cd JobTracker && dotnet run --urls=http://0.0.0.0:5000"]

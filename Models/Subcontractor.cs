@@ -1,49 +1,46 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace JobTracker.Models
+namespace JobTrackerApp.Models
 {
     public class Subcontractor
     {
-        [Key]
-        public int SubcontractorId { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string CompanyName { get; set; }
+        [StringLength(100)]
+        public string CompanyName { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string ContactName { get; set; }
+        [StringLength(100)]
+        public string ContactName { get; set; } = string.Empty;
 
-        [MaxLength(20)]
-        public string Phone { get; set; }
+        [StringLength(20)]
+        public string Phone { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string Email { get; set; }
+        [StringLength(100)]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
 
-        [MaxLength(200)]
-        public string Address { get; set; }
+        [StringLength(200)]
+        public string Address { get; set; } = string.Empty;
 
-        [MaxLength(50)]
-        public string LicenseNumber { get; set; }
+        [StringLength(50)]
+        public string LicenseNumber { get; set; } = string.Empty;
 
-        [MaxLength(200)]
-        public string InsuranceInfo { get; set; }
+        [StringLength(100)]
+        public string InsuranceInfo { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string Specialty { get; set; }
+        public bool IsActive { get; set; } = true;
 
-        [MaxLength(500)]
-        public string Notes { get; set; }
+        [StringLength(500)]
+        public string Notes { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string UpdatedBy { get; set; } = string.Empty;
 
         // Navigation properties
-        public virtual ICollection<JobSection> JobSections { get; set; } = new List<JobSection>();
-
-        // Auditing
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public string ModifiedBy { get; set; }
+        public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
+        public ICollection<SectionSubcontractor> SectionSubcontractors { get; set; } = new List<SectionSubcontractor>();
     }
 }

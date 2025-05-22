@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using JobTracker.Data;
-using JobTracker.Models;
-using JobTracker.Services;
+using JobTrackerApp.Data;
+using JobTrackerApp.Models;
+using JobTrackerApp.Services;
 using System.Security.Claims;
 
-namespace JobTracker.Controllers
+namespace JobTrackerApp.Controllers
 {
     [Authorize]
     [ApiController]
