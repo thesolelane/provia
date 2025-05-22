@@ -24,7 +24,87 @@ namespace JobTracker.Controllers
         {
             try
             {
-                return await _context.Jobs.ToListAsync();
+                var jobs = await _context.Jobs.ToListAsync();
+                
+                // If no jobs exist, create a sample job
+                if (jobs.Count == 0)
+                {
+                    var sampleJob = new Job
+                    {
+                        Name = "Sample Renovation Project",
+                        Description = "Kitchen and bathroom renovation for a residential property",
+                        Location = "123 Main Street, Boston, MA",
+                        JobNumber = "REN-2023-001",
+                        StartDate = DateTime.UtcNow.AddDays(-30),
+                        TargetCompletionDate = DateTime.UtcNow.AddDays(60),
+                        Status = "In Progress",
+                        ClientName = "John Smith",
+                        ClientEmail = "john.smith@example.com",
+                        ClientPhone = "(555) 123-4567",
+                        Budget = 75000.00m,
+                        ActualCost = 25000.00m,
+                        Notes = "Client has requested high-end fixtures for all bathrooms",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    
+                    _context.Jobs.Add(sampleJob);
+                    await _context.SaveChangesAsync();
+                    
+                    // Add sample job sections
+                    var sections = new List<JobSection>
+                    {
+                        new JobSection
+                        {
+                            JobId = sampleJob.Id,
+                            SectionType = 0, // Demolition
+                            Description = "Remove existing kitchen cabinets and flooring",
+                            Status = 2, // Completed
+                            StartDate = DateTime.UtcNow.AddDays(-25),
+                            CompletionDate = DateTime.UtcNow.AddDays(-15),
+                            IsSubcontracted = false,
+                            MaterialsOrdered = true,
+                            MaterialsDelivered = true,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        },
+                        new JobSection
+                        {
+                            JobId = sampleJob.Id,
+                            SectionType = 3, // Electrical
+                            Description = "Upgrade electrical panel and add new lighting fixtures",
+                            Status = 1, // In Progress
+                            StartDate = DateTime.UtcNow.AddDays(-10),
+                            IsSubcontracted = true,
+                            SubcontractorId = null,
+                            ContractReference = "EL-2023-456",
+                            MaterialsOrdered = true,
+                            MaterialsDelivered = false,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        },
+                        new JobSection
+                        {
+                            JobId = sampleJob.Id,
+                            SectionType = 4, // Plumbing
+                            Description = "Install new plumbing for kitchen sink and dishwasher",
+                            Status = 0, // Not Started
+                            IsSubcontracted = true,
+                            MaterialsOrdered = true,
+                            MaterialsDelivered = false,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        }
+                    };
+                    
+                    _context.JobSections.AddRange(sections);
+                    await _context.SaveChangesAsync();
+                    
+                    // Refresh jobs list
+                    jobs = await _context.Jobs.ToListAsync();
+                }
+                
+                return Ok(jobs);
             }
             catch (Exception ex)
             {

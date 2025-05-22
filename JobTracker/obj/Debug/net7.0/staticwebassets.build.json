@@ -1,11 +1,19 @@
 {
   "Version": 1,
-  "Hash": "0RK4HRqnhgCm7rBjHiJ9p5GZ3wIIstCveeyzQ24K8Tk=",
+  "Hash": "p8JgTHUuJBTVwGRWVbS80fjyl736AKJ2WjbkuNpT/Q0=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "JobTracker/wwwroot",
+      "Source": "JobTracker",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "Pattern": "**"
+    }
+  ],
   "Assets": []
 }
