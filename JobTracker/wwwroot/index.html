@@ -579,7 +579,324 @@
             </div>
             
             <div class="tab-content" id="sectionsTab">
-                <div id="jobSections"></div>
+                <h3>Select Job Sections</h3>
+                <p>Choose which construction phases are needed for this job:</p>
+                
+                <div class="sections-grid">
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Demolition" onchange="toggleSectionSelection('Demolition', this)">
+                            Demolition
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Foundation" onchange="toggleSectionSelection('Foundation', this)">
+                            Foundation
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Framing" onchange="toggleSectionSelection('Framing', this)">
+                            Framing
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Electrical" onchange="toggleSectionSelection('Electrical', this)">
+                            Electrical
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Plumbing" onchange="toggleSectionSelection('Plumbing', this)">
+                            Plumbing
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="HVAC" onchange="toggleSectionSelection('HVAC', this)">
+                            HVAC
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Drywall" onchange="toggleSectionSelection('Drywall', this)">
+                            Drywall
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Painting" onchange="toggleSectionSelection('Painting', this)">
+                            Painting
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Flooring" onchange="toggleSectionSelection('Flooring', this)">
+                            Flooring
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Finishing" onchange="toggleSectionSelection('Finishing', this)">
+                            Finishing
+                        </label>
+                    </div>
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="sections" value="Inspection" onchange="toggleSectionSelection('Inspection', this)">
+                            Inspection
+                        </label>
+                    </div>
+                </div>
+
+                <h3>Subcontractor Assignments</h3>
+                <p>Assign subcontractors to selected sections:</p>
+                
+                <div class="subcontractor-assignments">
+                    <div class="subcontractor-row" id="subcontractor-Demolition" style="display: none;">
+                        <div class="subcontractor-section">Demolition</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="1">Demo Pro LLC</option>
+                            <option value="2">Quick Demolition</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Demolition')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Demolition')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Foundation" style="display: none;">
+                        <div class="subcontractor-section">Foundation</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="3">Foundation Masters</option>
+                            <option value="4">Solid Base Contractors</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Foundation')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Foundation')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Framing" style="display: none;">
+                        <div class="subcontractor-section">Framing</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="5">Frame Right Construction</option>
+                            <option value="6">Timber Frame Pros</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Framing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Framing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Electrical" style="display: none;">
+                        <div class="subcontractor-section">Electrical</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="7">Power Plus Electric</option>
+                            <option value="8">Bright Light Electrical</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Electrical')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Electrical')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Plumbing" style="display: none;">
+                        <div class="subcontractor-section">Plumbing</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="9">Flow Right Plumbing</option>
+                            <option value="10">Pipe Perfect LLC</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Plumbing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Plumbing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-HVAC" style="display: none;">
+                        <div class="subcontractor-section">HVAC</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="11">Climate Control Experts</option>
+                            <option value="12">Cool Air Contractors</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'HVAC')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'HVAC')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Drywall" style="display: none;">
+                        <div class="subcontractor-section">Drywall</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="13">Perfect Walls Inc</option>
+                            <option value="14">Smooth Finish Drywall</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Drywall')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Drywall')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Painting" style="display: none;">
+                        <div class="subcontractor-section">Painting</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="15">Color Perfect Painters</option>
+                            <option value="16">Brush Stroke Professionals</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Painting')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Painting')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Flooring" style="display: none;">
+                        <div class="subcontractor-section">Flooring</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="17">Floor Masters LLC</option>
+                            <option value="18">Premium Flooring Solutions</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Flooring')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Flooring')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Finishing" style="display: none;">
+                        <div class="subcontractor-section">Finishing</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="19">Final Touch Contractors</option>
+                            <option value="20">Detail Finish Pros</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Finishing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Finishing')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subcontractor-row" id="subcontractor-Inspection" style="display: none;">
+                        <div class="subcontractor-section">Inspection</div>
+                        <select class="subcontractor-select form-control">
+                            <option value="">Select Subcontractor</option>
+                            <option value="21">Quality Inspection Services</option>
+                            <option value="22">Building Code Inspectors</option>
+                        </select>
+                        <input type="number" class="subcontractor-budget form-control" placeholder="Budget $" min="0" step="100">
+                        <div class="subcontractor-documents">
+                            <div class="document-upload">
+                                <label>Workers Comp Certificate:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'workersComp', 'Inspection')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                            <div class="document-upload">
+                                <label>License:</label>
+                                <input type="file" onchange="handleFileUpload(this, 'license', 'Inspection')" accept=".pdf,.jpg,.png">
+                                <span class="file-name"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="tab-content" id="financesTab">
