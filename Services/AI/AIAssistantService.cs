@@ -196,6 +196,58 @@ Focus on Massachusetts building codes when relevant, but also provide general co
 **Inspection:** Footing/foundation before concrete pour.";
                 }
                 
+                if (queryLower.Contains("massachusetts") && queryLower.Contains("building") && queryLower.Contains("code"))
+                {
+                    return @"**MASSACHUSETTS BUILDING CODE COMPREHENSIVE REFERENCE**
+
+**PRIMARY CODES:**
+• Building Code: 780 CMR (9th Edition Based on IBC 2015)
+• Residential Code: 780 CMR Appendix Q (IRC 2015)
+• Energy Code: 780 CMR Appendix 115.AA (IECC 2015)
+• Accessibility: 521 CMR (AAB)
+
+**ELECTRICAL (527 CMR 12.00):**
+• GFCI: Required bathrooms, kitchens, outdoor, unfinished basements
+• AFCI: Required bedrooms, family rooms, dining rooms, living rooms
+• Smoke/CO detectors: Hardwired with battery backup required
+
+**PLUMBING (248 CMR):**
+• Water service: ¾"" minimum, lead-free materials required
+• Septic systems: Title V compliance (310 CMR 15.000)
+• Backflow prevention required for irrigation systems
+
+**HVAC (780 CMR Chapter 13):**
+• Permits required for new systems, ductwork modifications
+• Energy efficiency: Must meet 780 CMR Appendix 115.AA
+• Carbon monoxide detectors required near fuel-burning appliances
+
+**STRUCTURAL:**
+• Snow load: 30 psf minimum (varies by region)
+• Wind load: 110 mph basic wind speed
+• Seismic: Design category A (low seismic)
+
+**PERMITS REQUIRED:**
+• Building permits: New construction, additions >120 sq ft
+• Electrical: New circuits, panel upgrades, GFCI installations
+• Plumbing: New fixtures, water/sewer connections
+• Mechanical: HVAC systems, fireplaces, wood stoves
+
+**LOCAL AUTHORITIES:**
+• Building Inspector: Municipal authority having jurisdiction
+• Inspections: Foundation, framing, rough mechanical/electrical, final
+• Appeals: Local Board of Appeals, then State Building Code Appeals Board
+
+**KEY PHONE NUMBERS:**
+• Dig Safe: 811
+• State Building Code: (617) 727-7532
+• Architectural Access Board: (617) 727-0660
+
+**RESOURCES:**
+• Mass.gov Building Code section
+• Local building department
+• Professional engineer for complex projects";
+                }
+                
                 return "I can help with building codes, permits, timelines, and budgets! Try asking about electrical requirements, plumbing codes, or project scheduling. I'm here to make your construction projects smoother and code-compliant!";
             }
         }
