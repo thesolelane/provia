@@ -2140,13 +2140,22 @@
                 const confidenceDiv = modal.querySelector('div[style*="border-top: 1px solid #eee"]');
                 
                 if (responseDiv) {
-                    responseDiv.innerHTML = response.response || response.answer || 'I can help with construction questions!';
+                    // Format the response properly and ensure it stays visible
+                    const responseText = response.response || response.answer || 'I can help with construction questions!';
+                    responseDiv.innerHTML = responseText;
+                    responseDiv.style.minHeight = '200px'; // Ensure minimum height
+                    responseDiv.style.padding = '15px';
+                    responseDiv.style.backgroundColor = '#f8f9fa';
+                    responseDiv.style.borderRadius = '8px';
+                    responseDiv.style.border = '1px solid #dee2e6';
                 }
                 
                 if (confidenceDiv) {
+                    const confidence = Math.round((response.confidence || 0.8) * 100);
+                    const sources = (response.sources || ['Construction Knowledge Base']).join(', ');
                     confidenceDiv.innerHTML = `
-                        <span>Confidence: ${Math.round((response.confidence || 0.8) * 100)}%</span>
-                        <span>Sources: ${(response.sources || ['Construction Knowledge Base']).join(', ')}</span>
+                        <span style="color: #28a745; font-weight: bold;">Confidence: ${confidence}%</span>
+                        <span style="color: #6c757d;">Sources: ${sources}</span>
                     `;
                 }
                 
@@ -2155,6 +2164,7 @@
                 if (askButton) {
                     askButton.disabled = false;
                     askButton.innerHTML = 'Ask AI';
+                    askButton.style.backgroundColor = '#007bff';
                 }
             }
         }
