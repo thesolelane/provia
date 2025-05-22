@@ -20,8 +20,9 @@ namespace JobTracker.Controllers
 
         public class WhatsAppMessageRequest
         {
-            public string PhoneNumber { get; set; }
-            public string Message { get; set; }
+            public string? PhoneNumber { get; set; }
+            public string? Message { get; set; }
+            public string? Provider { get; set; } = "Dialog360"; // Default provider
         }
 
         [HttpPost("whatsapp")]
@@ -32,16 +33,29 @@ namespace JobTracker.Controllers
                 return BadRequest(new { success = false, message = "Phone number and message are required" });
             }
 
-            _logger.LogInformation($"Sending WhatsApp message to {request.PhoneNumber}");
-            var result = await _notificationService.SendWhatsAppMessage(request.PhoneNumber, request.Message);
+            // Determine which provider to use
+            WhatsAppProvider provider = WhatsAppProvider.Dialog360; // Default
+            if (!string.IsNullOrEmpty(request.Provider))
+            {
+                if (request.Provider.Equals("Twilio", StringComparison.OrdinalIgnoreCase))
+                {
+                    provider = WhatsAppProvider.Twilio;
+                }
+            }
+
+            _logger.LogInformation($"Sending WhatsApp message to {request.PhoneNumber} using {provider} provider");
+            var result = await _notificationService.SendWhatsAppMessage(request.PhoneNumber!, request.Message!, provider);
 
             if (result)
             {
-                return Ok(new { success = true, message = "Message sent successfully" });
+                return Ok(new { success = true, message = $"Message sent successfully via {provider}" });
             }
             else
             {
-                return StatusCode(500, new { success = false, message = "Failed to send message. Check the logs for details." });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = $"Failed to send message via {provider}. Check the logs for details." 
+                });
             }
         }
     }

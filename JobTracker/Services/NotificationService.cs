@@ -27,13 +27,13 @@ namespace JobTracker.Services
         private readonly HttpClient _httpClient;
         
         // 360dialog credentials
-        private readonly string _dialog360ApiKey;
-        private readonly string _dialog360PhoneNumber;
+        private readonly string? _dialog360ApiKey;
+        private readonly string? _dialog360PhoneNumber;
         
         // Twilio credentials
-        private readonly string _twilioAccountSid;
-        private readonly string _twilioAuthToken;
-        private readonly string _twilioPhoneNumber;
+        private readonly string? _twilioAccountSid;
+        private readonly string? _twilioAuthToken;
+        private readonly string? _twilioPhoneNumber;
 
         public NotificationService(ILogger<NotificationService> logger, IConfiguration configuration)
         {
