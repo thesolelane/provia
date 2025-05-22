@@ -1,104 +1,174 @@
 using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using System.IO;
-using System.Diagnostics;
-using JobTracker.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace JobTracker.Services
 {
+    public enum WhatsAppProvider
+    {
+        Twilio,
+        Dialog360
+    }
+    
     public interface INotificationService
     {
-        Task<bool> SendWhatsAppNotification(string phoneNumber, string message);
+        Task<bool> SendWhatsAppMessage(string to, string message, WhatsAppProvider provider = WhatsAppProvider.Dialog360);
     }
 
     public class NotificationService : INotificationService
     {
         private readonly ILogger<NotificationService> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient;
+        
+        // 360dialog credentials
+        private readonly string _dialog360ApiKey;
+        private readonly string _dialog360PhoneNumber;
+        
+        // Twilio credentials
+        private readonly string _twilioAccountSid;
+        private readonly string _twilioAuthToken;
+        private readonly string _twilioPhoneNumber;
 
-        public NotificationService(ILogger<NotificationService> logger)
+        public NotificationService(ILogger<NotificationService> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
+            _httpClient = new HttpClient();
+            
+            // Get 360dialog credentials from environment variables
+            _dialog360ApiKey = Environment.GetEnvironmentVariable("DIALOG360_API_KEY");
+            _dialog360PhoneNumber = Environment.GetEnvironmentVariable("DIALOG360_PHONE_NUMBER");
+            
+            // Get Twilio credentials from environment variables
+            _twilioAccountSid = Environment.GetEnvironmentVariable("TWILIO_ACCOUNT_SID");
+            _twilioAuthToken = Environment.GetEnvironmentVariable("TWILIO_AUTH_TOKEN");
+            _twilioPhoneNumber = Environment.GetEnvironmentVariable("TWILIO_PHONE_NUMBER");
         }
 
-        public async Task<bool> SendWhatsAppNotification(string phoneNumber, string message)
+        public async Task<bool> SendWhatsAppMessage(string to, string message, WhatsAppProvider provider = WhatsAppProvider.Dialog360)
         {
             try
             {
-                // Create a Python script for WhatsApp integration using Twilio
-                string scriptPath = Path.Combine(Path.GetTempPath(), "send_whatsapp.py");
-                string scriptContent = @"
-import os
-import sys
-from twilio.rest import Client
-
-# Get environment variables
-account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-twilio_phone = os.environ.get('TWILIO_PHONE_NUMBER')
-
-if not account_sid or not auth_token or not twilio_phone:
-    print('Missing required Twilio credentials')
-    sys.exit(1)
-
-# Get phone number and message from arguments
-phone_number = sys.argv[1]
-message = sys.argv[2]
-
-try:
-    # Initialize Twilio client
-    client = Client(account_sid, auth_token)
-    
-    # Format WhatsApp number (add whatsapp: prefix)
-    whatsapp_number = f'whatsapp:{phone_number}'
-    twilio_whatsapp = f'whatsapp:{twilio_phone}'
-    
-    # Send message
-    message = client.messages.create(
-        from_=twilio_whatsapp,
-        body=message,
-        to=whatsapp_number
-    )
-    
-    print(f'Message sent successfully: {message.sid}')
-    sys.exit(0)
-except Exception as e:
-    print(f'Error sending WhatsApp message: {str(e)}')
-    sys.exit(1)
-";
-
-                await File.WriteAllTextAsync(scriptPath, scriptContent);
-
-                // Create process to run the Python script
-                var process = new Process
+                // Format phone number for WhatsApp
+                var toFormatted = to.Trim();
+                if (!toFormatted.StartsWith("+"))
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "python",
-                        Arguments = $"{scriptPath} {phoneNumber} \"{message}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                process.Start();
-                string output = await process.StandardOutput.ReadToEndAsync();
-                string error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0)
-                {
-                    _logger.LogError($"Failed to send WhatsApp notification: {error}");
-                    return false;
+                    // Add + if it's missing
+                    toFormatted = "+" + toFormatted;
                 }
-
-                _logger.LogInformation($"WhatsApp notification sent: {output}");
-                return true;
+                
+                // Choose provider based on parameter
+                if (provider == WhatsAppProvider.Dialog360)
+                {
+                    return await SendViaDialog360(toFormatted, message);
+                }
+                else
+                {
+                    return await SendViaTwilio(toFormatted, message);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending WhatsApp notification");
+                _logger.LogError($"Error sending WhatsApp message: {ex.Message}");
+                return false;
+            }
+        }
+        
+        private async Task<bool> SendViaDialog360(string to, string message)
+        {
+            // Check if 360dialog is configured
+            if (string.IsNullOrEmpty(_dialog360ApiKey) || string.IsNullOrEmpty(_dialog360PhoneNumber))
+            {
+                _logger.LogError("360dialog credentials not configured");
+                return false;
+            }
+            
+            // Create the request payload
+            var payload = new
+            {
+                to = to,
+                type = "text",
+                text = new
+                {
+                    body = message
+                }
+            };
+            
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+            
+            // Set the authorization header
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("D360-API-KEY", _dialog360ApiKey);
+            
+            // Make the API call to 360dialog
+            var response = await _httpClient.PostAsync(
+                $"https://waba.360dialog.io/v1/messages",
+                content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"WhatsApp message sent successfully via 360dialog: {responseContent}");
+                return true;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Failed to send WhatsApp message via 360dialog. Status: {response.StatusCode}, Error: {errorContent}");
+                return false;
+            }
+        }
+        
+        private async Task<bool> SendViaTwilio(string to, string message)
+        {
+            // Check if Twilio is configured
+            if (string.IsNullOrEmpty(_twilioAccountSid) || string.IsNullOrEmpty(_twilioAuthToken) || string.IsNullOrEmpty(_twilioPhoneNumber))
+            {
+                _logger.LogError("Twilio credentials not configured");
+                return false;
+            }
+            
+            // Format WhatsApp numbers
+            var fromWhatsApp = $"whatsapp:{_twilioPhoneNumber}";
+            var toWhatsApp = $"whatsapp:{to}";
+            
+            // Create the request payload
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("From", fromWhatsApp),
+                new KeyValuePair<string, string>("To", toWhatsApp),
+                new KeyValuePair<string, string>("Body", message)
+            });
+            
+            // Set the authorization header (Basic Auth for Twilio)
+            var authToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_twilioAccountSid}:{_twilioAuthToken}"));
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
+            
+            // Make the API call to Twilio
+            var response = await _httpClient.PostAsync(
+                $"https://api.twilio.com/2010-04-01/Accounts/{_twilioAccountSid}/Messages.json",
+                formContent);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"WhatsApp message sent successfully via Twilio: {responseContent}");
+                return true;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Failed to send WhatsApp message via Twilio. Status: {response.StatusCode}, Error: {errorContent}");
                 return false;
             }
         }

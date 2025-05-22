@@ -1,55 +1,48 @@
-using Microsoft.AspNetCore.Mvc;
-using JobTracker.Services;
 using System.Threading.Tasks;
-using System;
+using JobTracker.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace JobTracker.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class NotificationsController : ControllerBase
     {
-        private readonly INotificationService _notificationService;
         private readonly ILogger<NotificationsController> _logger;
+        private readonly INotificationService _notificationService;
 
-        public NotificationsController(INotificationService notificationService, ILogger<NotificationsController> logger)
+        public NotificationsController(ILogger<NotificationsController> logger, INotificationService notificationService)
         {
-            _notificationService = notificationService;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
-        // POST: api/Notifications/whatsapp
+        public class WhatsAppMessageRequest
+        {
+            public string PhoneNumber { get; set; }
+            public string Message { get; set; }
+        }
+
         [HttpPost("whatsapp")]
-        public async Task<IActionResult> SendWhatsAppNotification([FromBody] WhatsAppNotificationRequest request)
+        public async Task<IActionResult> SendWhatsAppMessage([FromBody] WhatsAppMessageRequest request)
         {
             if (string.IsNullOrEmpty(request.PhoneNumber) || string.IsNullOrEmpty(request.Message))
             {
-                return BadRequest("Phone number and message are required");
+                return BadRequest(new { success = false, message = "Phone number and message are required" });
             }
 
-            try
+            _logger.LogInformation($"Sending WhatsApp message to {request.PhoneNumber}");
+            var result = await _notificationService.SendWhatsAppMessage(request.PhoneNumber, request.Message);
+
+            if (result)
             {
-                var result = await _notificationService.SendWhatsAppNotification(request.PhoneNumber, request.Message);
-                if (result)
-                {
-                    return Ok(new { Success = true, Message = "WhatsApp notification sent successfully" });
-                }
-                else
-                {
-                    return StatusCode(500, new { Success = false, Message = "Failed to send WhatsApp notification" });
-                }
+                return Ok(new { success = true, message = "Message sent successfully" });
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error sending WhatsApp notification");
-                return StatusCode(500, new { Success = false, Message = "An error occurred while sending the WhatsApp notification" });
+                return StatusCode(500, new { success = false, message = "Failed to send message. Check the logs for details." });
             }
         }
-    }
-
-    public class WhatsAppNotificationRequest
-    {
-        public string PhoneNumber { get; set; }
-        public string Message { get; set; }
     }
 }
