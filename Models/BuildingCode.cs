@@ -1,54 +1,46 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace JobTracker.Models
+namespace JobTrackerApp.Models
 {
     public class BuildingCode
     {
-        [Key]
-        public int CodeId { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        [MaxLength(50)]
-        public string CodeNumber { get; set; }
+        [StringLength(20)]
+        public string CodeNumber { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(200)]
-        public string Title { get; set; }
+        [StringLength(200)]
+        public string Title { get; set; } = string.Empty;
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public SectionType RelatedSection { get; set; }
+        public SectionType? RelatedSectionType { get; set; }
 
-        [MaxLength(100)]
-        public string Category { get; set; }
+        [StringLength(100)]
+        public string Category { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string Subcategory { get; set; }
+        [StringLength(20)]
+        public string Version { get; set; } = "Current";
 
-        public string FullText { get; set; }
+        public DateTime EffectiveDate { get; set; }
 
-        [MaxLength(200)]
-        public string Source { get; set; }
+        public DateTime? ExpirationDate { get; set; }
 
-        [MaxLength(50)]
-        public string Version { get; set; }
+        public string? RequirementDetails { get; set; }
 
-        [MaxLength(100)]
-        public string Jurisdiction { get; set; }
+        public string? ComplianceGuidance { get; set; }
+
+        public string? ReferenceUrl { get; set; }
 
         public bool IsActive { get; set; } = true;
 
-        [MaxLength(500)]
-        public string Notes { get; set; }
-
-        // Auditing
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public string ModifiedBy { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string UpdatedBy { get; set; } = string.Empty;
     }
 }

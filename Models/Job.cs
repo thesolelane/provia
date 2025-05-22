@@ -1,71 +1,64 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace JobTracker.Models
+namespace JobTrackerApp.Models
 {
     public class Job
     {
-        [Key]
-        public int JobId { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string JobName { get; set; }
+        [StringLength(100)]
+        public string Name { get; set; } = string.Empty;
 
-        [MaxLength(200)]
-        public string Description { get; set; }
+        [StringLength(200)]
+        public string Description { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(200)]
-        public string Location { get; set; }
+        [StringLength(200)]
+        public string Location { get; set; } = string.Empty;
 
-        [MaxLength(50)]
-        public string ClientName { get; set; }
-
-        [MaxLength(50)]
-        public string ClientPhone { get; set; }
-
-        [MaxLength(100)]
-        public string ClientEmail { get; set; }
+        [StringLength(50)]
+        public string JobNumber { get; set; } = string.Empty;
 
         [Required]
         public DateTime StartDate { get; set; }
 
-        public DateTime? ExpectedCompletionDate { get; set; }
+        public DateTime? TargetCompletionDate { get; set; }
 
         public DateTime? ActualCompletionDate { get; set; }
+
+        [StringLength(50)]
+        public string Status { get; set; } = "Pending";
+
+        [StringLength(100)]
+        public string ClientName { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string ClientEmail { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string ClientPhone { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Budget { get; set; }
 
-        [Required]
-        public JobStatus Status { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ActualCost { get; set; }
 
-        [MaxLength(100)]
-        public string ProjectManager { get; set; }
+        public int? ProjectManagerId { get; set; }
+        [ForeignKey("ProjectManagerId")]
+        public Employee? ProjectManager { get; set; }
 
-        [MaxLength(500)]
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string UpdatedBy { get; set; } = string.Empty;
 
         // Navigation properties
-        public virtual ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
-        public virtual ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
-
-        // Auditing
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public string ModifiedBy { get; set; }
-    }
-
-    public enum JobStatus
-    {
-        Planned,
-        InProgress,
-        OnHold,
-        Completed,
-        Cancelled
+        public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
+        public ICollection<JobAssignment> Assignments { get; set; } = new List<JobAssignment>();
     }
 }

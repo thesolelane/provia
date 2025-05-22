@@ -1,20 +1,22 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace JobTracker.Models
+namespace JobTrackerApp.Models
 {
     public class TimeEntry
     {
-        [Key]
-        public int TimeEntryId { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        public string UserId { get; set; }
+        public int EmployeeId { get; set; }
+        
+        [ForeignKey("EmployeeId")]
+        public Employee? Employee { get; set; }
 
         public int? JobId { get; set; }
-
-        public int? JobSectionId { get; set; }
+        
+        [ForeignKey("JobId")]
+        public Job? Job { get; set; }
 
         [Required]
         public DateTime ClockInTime { get; set; }
@@ -24,23 +26,33 @@ namespace JobTracker.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? TotalHours { get; set; }
 
-        [MaxLength(500)]
-        public string Notes { get; set; }
+        public bool IsManualEntry { get; set; } = false;
 
-        // Navigation properties
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        [StringLength(200)]
+        public string? Notes { get; set; }
 
-        [ForeignKey("JobId")]
-        public virtual Job Job { get; set; }
+        [StringLength(50)]
+        public string Status { get; set; } = "Open";
 
-        [ForeignKey("JobSectionId")]
-        public virtual JobSection JobSection { get; set; }
+        public string? Location { get; set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string UpdatedBy { get; set; } = string.Empty;
 
-        // Auditing
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public string ModifiedBy { get; set; }
+        // Method to calculate total hours
+        public void CalculateTotalHours()
+        {
+            if (ClockOutTime.HasValue)
+            {
+                TimeSpan duration = ClockOutTime.Value - ClockInTime;
+                TotalHours = (decimal)duration.TotalHours;
+            }
+            else
+            {
+                TotalHours = null;
+            }
+        }
     }
 }

@@ -1,26 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using JobTracker.Data;
-using JobTracker.Models;
+using JobTrackerApp.Models;
+using JobTrackerApp.Services.BuildingCode;
 
-namespace JobTracker.Controllers
+namespace JobTrackerApp.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class BuildingCodeController : ControllerBase
     {
-        private readonly JobTrackerContext _context;
+        private readonly BuildingCodeService _buildingCodeService;
         private readonly ILogger<BuildingCodeController> _logger;
 
-        public BuildingCodeController(JobTrackerContext context, ILogger<BuildingCodeController> logger)
+        public BuildingCodeController(
+            BuildingCodeService buildingCodeService,
+            ILogger<BuildingCodeController> logger)
         {
-            _context = context;
+            _buildingCodeService = buildingCodeService;
             _logger = logger;
         }
 
@@ -30,12 +27,13 @@ namespace JobTracker.Controllers
         {
             try
             {
-                return await _context.BuildingCodes.Where(bc => bc.IsActive).ToListAsync();
+                var codes = await _buildingCodeService.GetAllCodes();
+                return Ok(codes);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving building codes");
-                return StatusCode(500, "Internal server error occurred while retrieving building codes.");
+                return StatusCode(500, "An error occurred while retrieving building codes");
             }
         }
 
@@ -45,71 +43,72 @@ namespace JobTracker.Controllers
         {
             try
             {
-                var buildingCode = await _context.BuildingCodes.FindAsync(id);
-
-                if (buildingCode == null || !buildingCode.IsActive)
+                var code = await _buildingCodeService.GetCodeById(id);
+                if (code == null)
                 {
-                    return NotFound($"Building code with ID {id} not found.");
+                    return NotFound();
                 }
-
-                return buildingCode;
+                return Ok(code);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving building code with ID {BuildingCodeId}", id);
-                return StatusCode(500, $"Internal server error occurred while retrieving building code with ID {id}.");
+                _logger.LogError(ex, "Error retrieving building code with ID {CodeId}", id);
+                return StatusCode(500, "An error occurred while retrieving the building code");
+            }
+        }
+
+        // GET: api/BuildingCode/search
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<BuildingCode>>> SearchBuildingCodes([FromQuery] string searchTerm)
+        {
+            try
+            {
+                var codes = await _buildingCodeService.SearchCodes(searchTerm);
+                return Ok(codes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching building codes with term {SearchTerm}", searchTerm);
+                return StatusCode(500, "An error occurred while searching building codes");
             }
         }
 
         // GET: api/BuildingCode/section/{sectionType}
         [HttpGet("section/{sectionType}")]
-        public async Task<ActionResult<IEnumerable<BuildingCode>>> GetBuildingCodesBySection(SectionType sectionType)
+        public async Task<ActionResult<IEnumerable<BuildingCode>>> GetCodesBySection(SectionType sectionType)
         {
             try
             {
-                return await _context.BuildingCodes
-                    .Where(bc => bc.RelatedSection == sectionType && bc.IsActive)
-                    .ToListAsync();
+                var codes = await _buildingCodeService.GetCodesBySection(sectionType);
+                return Ok(codes);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving building codes for section type {SectionType}", sectionType);
-                return StatusCode(500, $"Internal server error occurred while retrieving building codes for section type {sectionType}.");
+                return StatusCode(500, "An error occurred while retrieving building codes for the section");
             }
         }
 
-        // GET: api/BuildingCode/search?query=keyword
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<BuildingCode>>> SearchBuildingCodes(string query)
+        // GET: api/BuildingCode/category/{category}
+        [HttpGet("category/{category}")]
+        public async Task<ActionResult<IEnumerable<BuildingCode>>> GetCodesByCategory(string category)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(query))
-                {
-                    return await _context.BuildingCodes.Where(bc => bc.IsActive).Take(50).ToListAsync();
-                }
-
-                return await _context.BuildingCodes
-                    .Where(bc => bc.IsActive && (
-                        bc.CodeNumber.Contains(query) ||
-                        bc.Title.Contains(query) ||
-                        bc.Description.Contains(query) ||
-                        bc.Category.Contains(query) ||
-                        bc.Subcategory.Contains(query) ||
-                        bc.FullText.Contains(query)))
-                    .ToListAsync();
+                var codes = await _buildingCodeService.GetCodesByCategory(category);
+                return Ok(codes);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching building codes with query {Query}", query);
-                return StatusCode(500, "Internal server error occurred while searching building codes.");
+                _logger.LogError(ex, "Error retrieving building codes for category {Category}", category);
+                return StatusCode(500, "An error occurred while retrieving building codes for the category");
             }
         }
 
         // POST: api/BuildingCode
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<BuildingCode>> CreateBuildingCode(BuildingCode buildingCode)
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BuildingCode>> CreateBuildingCode(BuildingCode code)
         {
             try
             {
@@ -118,28 +117,36 @@ namespace JobTracker.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _context.BuildingCodes.Add(buildingCode);
-                await _context.SaveChangesAsync();
+                // Set metadata
+                code.CreatedAt = DateTime.UtcNow;
+                code.UpdatedAt = DateTime.UtcNow;
+                code.CreatedBy = User.Identity?.Name ?? "System";
+                code.UpdatedBy = User.Identity?.Name ?? "System";
+                code.IsActive = true;
 
-                return CreatedAtAction(nameof(GetBuildingCode), new { id = buildingCode.CodeId }, buildingCode);
+                var createdCode = await _buildingCodeService.AddCode(code);
+
+                _logger.LogInformation("Created new building code: {CodeNumber} - {Title}", code.CodeNumber, code.Title);
+                
+                return CreatedAtAction(nameof(GetBuildingCode), new { id = createdCode.Id }, createdCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating new building code");
-                return StatusCode(500, "Internal server error occurred while creating a new building code.");
+                _logger.LogError(ex, "Error creating building code");
+                return StatusCode(500, "An error occurred while creating the building code");
             }
         }
 
         // PUT: api/BuildingCode/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> UpdateBuildingCode(int id, BuildingCode buildingCode)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateBuildingCode(int id, BuildingCode code)
         {
             try
             {
-                if (id != buildingCode.CodeId)
+                if (id != code.Id)
                 {
-                    return BadRequest("Building code ID mismatch.");
+                    return BadRequest("Building code ID mismatch");
                 }
 
                 if (!ModelState.IsValid)
@@ -147,104 +154,49 @@ namespace JobTracker.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _context.Entry(buildingCode).State = EntityState.Modified;
+                // Update metadata
+                code.UpdatedAt = DateTime.UtcNow;
+                code.UpdatedBy = User.Identity?.Name ?? "System";
 
-                try
+                var success = await _buildingCodeService.UpdateCode(code);
+                if (!success)
                 {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!BuildingCodeExists(id))
-                    {
-                        return NotFound($"Building code with ID {id} not found.");
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
 
+                _logger.LogInformation("Updated building code: {CodeNumber} - {Title}", code.CodeNumber, code.Title);
+                
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating building code with ID {BuildingCodeId}", id);
-                return StatusCode(500, $"Internal server error occurred while updating building code with ID {id}.");
+                _logger.LogError(ex, "Error updating building code with ID {CodeId}", id);
+                return StatusCode(500, "An error occurred while updating the building code");
             }
         }
 
         // DELETE: api/BuildingCode/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBuildingCode(int id)
         {
             try
             {
-                var buildingCode = await _context.BuildingCodes.FindAsync(id);
-                if (buildingCode == null)
+                var success = await _buildingCodeService.DeleteCode(id);
+                if (!success)
                 {
-                    return NotFound($"Building code with ID {id} not found.");
+                    return NotFound();
                 }
 
-                // Soft delete - mark as inactive
-                buildingCode.IsActive = false;
-                await _context.SaveChangesAsync();
-
+                _logger.LogInformation("Deleted building code with ID {CodeId}", id);
+                
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting building code with ID {BuildingCodeId}", id);
-                return StatusCode(500, $"Internal server error occurred while deleting building code with ID {id}.");
+                _logger.LogError(ex, "Error deleting building code with ID {CodeId}", id);
+                return StatusCode(500, "An error occurred while deleting the building code");
             }
-        }
-
-        // GET: api/BuildingCode/categories
-        [HttpGet("categories")]
-        public async Task<ActionResult<IEnumerable<string>>> GetCategories()
-        {
-            try
-            {
-                var categories = await _context.BuildingCodes
-                    .Where(bc => bc.IsActive && !string.IsNullOrEmpty(bc.Category))
-                    .Select(bc => bc.Category)
-                    .Distinct()
-                    .ToListAsync();
-
-                return categories;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving building code categories");
-                return StatusCode(500, "Internal server error occurred while retrieving building code categories.");
-            }
-        }
-
-        // GET: api/BuildingCode/subcategories/{category}
-        [HttpGet("subcategories/{category}")]
-        public async Task<ActionResult<IEnumerable<string>>> GetSubcategories(string category)
-        {
-            try
-            {
-                var subcategories = await _context.BuildingCodes
-                    .Where(bc => bc.IsActive && bc.Category == category && !string.IsNullOrEmpty(bc.Subcategory))
-                    .Select(bc => bc.Subcategory)
-                    .Distinct()
-                    .ToListAsync();
-
-                return subcategories;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving subcategories for category {Category}", category);
-                return StatusCode(500, $"Internal server error occurred while retrieving subcategories for category {category}.");
-            }
-        }
-
-        private bool BuildingCodeExists(int id)
-        {
-            return _context.BuildingCodes.Any(e => e.CodeId == id);
         }
     }
 }

@@ -1,0 +1,7 @@
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.csproj.AssemblyReference.cache
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.AssemblyInfoInputs.cache
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.AssemblyInfo.cs
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.csproj.CoreCompileInputs.cache
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.MvcApplicationPartsAssemblyInfo.cs
+/home/runner/workspace/obj/Debug/net7.0/JobTrackerApp.MvcApplicationPartsAssemblyInfo.cache

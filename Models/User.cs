@@ -1,66 +1,36 @@
-using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace JobTracker.Models
+namespace JobTrackerApp.Models
 {
     public class User
     {
-        [Key]
-        public string UserId { get; set; } // Active Directory ID
+        public int Id { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string UserName { get; set; }
+        [StringLength(100)]
+        public string Username { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(100)]
-        public string Email { get; set; }
+        [StringLength(100)]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string FirstName { get; set; }
+        [StringLength(100)]
+        public string ActiveDirectoryId { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string LastName { get; set; }
-
-        [MaxLength(20)]
-        public string Phone { get; set; }
+        public int? EmployeeId { get; set; }
 
         [Required]
-        public UserRole Role { get; set; }
+        [StringLength(50)]
+        public string Role { get; set; } = "User"; // Admin, ProjectManager, Employee, User
 
         public bool IsActive { get; set; } = true;
 
-        [MaxLength(100)]
-        public string JobTitle { get; set; }
+        public DateTime LastLogin { get; set; }
 
-        [MaxLength(100)]
-        public string Department { get; set; }
-
-        [MaxLength(200)]
-        public string Skills { get; set; }
-
-        [MaxLength(200)]
-        public string Certifications { get; set; }
-
-        // Navigation properties
-        public virtual ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
-
-        // Auditing
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public string ModifiedBy { get; set; }
-    }
-
-    public enum UserRole
-    {
-        Administrator,
-        ProjectManager,
-        Supervisor,
-        Worker,
-        Accountant,
-        Viewer
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string UpdatedBy { get; set; } = string.Empty;
     }
 }

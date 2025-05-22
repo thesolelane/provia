@@ -1,29 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using JobTracker.Data;
-using JobTracker.Models;
-using JobTracker.Services;
+using JobTrackerApp.Data;
+using JobTrackerApp.Models;
+using JobTrackerApp.Services.CardShark;
 
-namespace JobTracker.Controllers
+namespace JobTrackerApp.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TimeTrackingController : ControllerBase
     {
-        private readonly JobTrackerContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<TimeTrackingController> _logger;
-        private readonly CardSharkService _cardSharkService;
+        private readonly CardSharkIntegrationService _cardSharkService;
 
         public TimeTrackingController(
-            JobTrackerContext context, 
+            ApplicationDbContext context,
             ILogger<TimeTrackingController> logger,
-            CardSharkService cardSharkService)
+            CardSharkIntegrationService cardSharkService)
         {
             _context = context;
             _logger = logger;
@@ -32,20 +28,51 @@ namespace JobTracker.Controllers
 
         // GET: api/TimeTracking
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TimeEntry>>> GetTimeEntries()
+        public async Task<ActionResult<IEnumerable<TimeEntry>>> GetTimeEntries(
+            [FromQuery] int? employeeId = null,
+            [FromQuery] int? jobId = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
             try
             {
-                return await _context.TimeEntries
-                    .Include(t => t.User)
-                    .Include(t => t.Job)
-                    .Include(t => t.JobSection)
-                    .ToListAsync();
+                IQueryable<TimeEntry> query = _context.TimeEntries
+                    .Include(t => t.Employee)
+                    .Include(t => t.Job);
+
+                // Apply filters
+                if (employeeId.HasValue)
+                {
+                    query = query.Where(t => t.EmployeeId == employeeId.Value);
+                }
+
+                if (jobId.HasValue)
+                {
+                    query = query.Where(t => t.JobId == jobId.Value);
+                }
+
+                if (startDate.HasValue)
+                {
+                    DateTime start = startDate.Value.Date;
+                    query = query.Where(t => t.ClockInTime >= start);
+                }
+
+                if (endDate.HasValue)
+                {
+                    DateTime end = endDate.Value.Date.AddDays(1).AddSeconds(-1); // End of day
+                    query = query.Where(t => t.ClockInTime <= end);
+                }
+
+                // Order by most recent first
+                query = query.OrderByDescending(t => t.ClockInTime);
+
+                var timeEntries = await query.ToListAsync();
+                return Ok(timeEntries);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving time entries");
-                return StatusCode(500, "Internal server error occurred while retrieving time entries.");
+                return StatusCode(500, "An error occurred while retrieving time entries");
             }
         }
 
@@ -56,278 +83,223 @@ namespace JobTracker.Controllers
             try
             {
                 var timeEntry = await _context.TimeEntries
-                    .Include(t => t.User)
+                    .Include(t => t.Employee)
                     .Include(t => t.Job)
-                    .Include(t => t.JobSection)
-                    .FirstOrDefaultAsync(t => t.TimeEntryId == id);
+                    .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (timeEntry == null)
                 {
-                    return NotFound($"Time entry with ID {id} not found.");
-                }
-
-                return timeEntry;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving time entry with ID {TimeEntryId}", id);
-                return StatusCode(500, $"Internal server error occurred while retrieving time entry with ID {id}.");
-            }
-        }
-
-        // POST: api/TimeTracking/clockin
-        [HttpPost("clockin")]
-        public async Task<ActionResult<TimeEntry>> ClockIn([FromBody] TimeEntry timeEntry)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Check if user is already clocked in
-                var existingOpenEntry = await _context.TimeEntries
-                    .Where(t => t.UserId == timeEntry.UserId && t.ClockOutTime == null)
-                    .FirstOrDefaultAsync();
-
-                if (existingOpenEntry != null)
-                {
-                    return BadRequest("User is already clocked in. Please clock out first.");
-                }
-
-                // Set clock in time to current time if not provided
-                if (timeEntry.ClockInTime == default)
-                {
-                    timeEntry.ClockInTime = DateTime.UtcNow;
-                }
-
-                _context.TimeEntries.Add(timeEntry);
-                await _context.SaveChangesAsync();
-
-                // Sync with CardShark if enabled
-                try
-                {
-                    await _cardSharkService.SyncClockIn(timeEntry);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to sync clock-in with CardShark. Time entry ID: {TimeEntryId}", timeEntry.TimeEntryId);
-                    // Continue execution even if CardShark sync fails
-                }
-
-                return CreatedAtAction(nameof(GetTimeEntry), new { id = timeEntry.TimeEntryId }, timeEntry);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing clock in");
-                return StatusCode(500, "Internal server error occurred while processing clock in.");
-            }
-        }
-
-        // POST: api/TimeTracking/clockout/5
-        [HttpPost("clockout/{id}")]
-        public async Task<ActionResult<TimeEntry>> ClockOut(int id, [FromBody] TimeEntry timeEntryUpdate)
-        {
-            try
-            {
-                var timeEntry = await _context.TimeEntries.FindAsync(id);
-                if (timeEntry == null)
-                {
-                    return NotFound($"Time entry with ID {id} not found.");
-                }
-
-                if (timeEntry.ClockOutTime != null)
-                {
-                    return BadRequest("This time entry has already been clocked out.");
-                }
-
-                // Set clock out time to current time if not provided
-                if (timeEntryUpdate.ClockOutTime == null)
-                {
-                    timeEntry.ClockOutTime = DateTime.UtcNow;
-                }
-                else
-                {
-                    timeEntry.ClockOutTime = timeEntryUpdate.ClockOutTime;
-                }
-
-                // Update notes if provided
-                if (!string.IsNullOrWhiteSpace(timeEntryUpdate.Notes))
-                {
-                    timeEntry.Notes = timeEntryUpdate.Notes;
-                }
-
-                // Calculate total hours
-                if (timeEntry.ClockOutTime.HasValue)
-                {
-                    TimeSpan duration = timeEntry.ClockOutTime.Value - timeEntry.ClockInTime;
-                    timeEntry.TotalHours = (decimal)duration.TotalHours;
-                }
-
-                await _context.SaveChangesAsync();
-
-                // Sync with CardShark if enabled
-                try
-                {
-                    await _cardSharkService.SyncClockOut(timeEntry);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to sync clock-out with CardShark. Time entry ID: {TimeEntryId}", timeEntry.TimeEntryId);
-                    // Continue execution even if CardShark sync fails
+                    return NotFound();
                 }
 
                 return Ok(timeEntry);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing clock out for time entry with ID {TimeEntryId}", id);
-                return StatusCode(500, $"Internal server error occurred while processing clock out for time entry with ID {id}.");
+                _logger.LogError(ex, "Error retrieving time entry with ID {TimeEntryId}", id);
+                return StatusCode(500, "An error occurred while retrieving the time entry");
             }
         }
 
-        // GET: api/TimeTracking/user/{userId}
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<TimeEntry>>> GetUserTimeEntries(string userId)
+        // POST: api/TimeTracking/clock-in
+        [HttpPost("clock-in")]
+        public async Task<ActionResult<TimeEntry>> ClockIn(ClockInRequest request)
         {
             try
             {
-                return await _context.TimeEntries
-                    .Include(t => t.Job)
-                    .Include(t => t.JobSection)
-                    .Where(t => t.UserId == userId)
-                    .OrderByDescending(t => t.ClockInTime)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving time entries for user with ID {UserId}", userId);
-                return StatusCode(500, $"Internal server error occurred while retrieving time entries for user with ID {userId}.");
-            }
-        }
-
-        // GET: api/TimeTracking/job/{jobId}
-        [HttpGet("job/{jobId}")]
-        public async Task<ActionResult<IEnumerable<TimeEntry>>> GetJobTimeEntries(int jobId)
-        {
-            try
-            {
-                return await _context.TimeEntries
-                    .Include(t => t.User)
-                    .Include(t => t.JobSection)
-                    .Where(t => t.JobId == jobId)
-                    .OrderByDescending(t => t.ClockInTime)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving time entries for job with ID {JobId}", jobId);
-                return StatusCode(500, $"Internal server error occurred while retrieving time entries for job with ID {jobId}.");
-            }
-        }
-
-        // GET: api/TimeTracking/section/{sectionId}
-        [HttpGet("section/{sectionId}")]
-        public async Task<ActionResult<IEnumerable<TimeEntry>>> GetSectionTimeEntries(int sectionId)
-        {
-            try
-            {
-                return await _context.TimeEntries
-                    .Include(t => t.User)
-                    .Include(t => t.Job)
-                    .Where(t => t.JobSectionId == sectionId)
-                    .OrderByDescending(t => t.ClockInTime)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving time entries for section with ID {SectionId}", sectionId);
-                return StatusCode(500, $"Internal server error occurred while retrieving time entries for section with ID {sectionId}.");
-            }
-        }
-
-        // GET: api/TimeTracking/report
-        [HttpGet("report")]
-        public async Task<ActionResult<object>> GetTimeReport([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] string userId, [FromQuery] int? jobId)
-        {
-            try
-            {
-                var query = _context.TimeEntries
-                    .Include(t => t.User)
-                    .Include(t => t.Job)
-                    .Include(t => t.JobSection)
-                    .Where(t => t.ClockOutTime != null);  // Only include completed time entries
-
-                // Apply filters
-                if (startDate.HasValue)
+                // Validate employee
+                var employee = await _context.Employees.FindAsync(request.EmployeeId);
+                if (employee == null)
                 {
-                    query = query.Where(t => t.ClockInTime >= startDate.Value);
+                    return BadRequest("Invalid employee ID");
                 }
 
-                if (endDate.HasValue)
+                // Check if employee is already clocked in
+                var openEntry = await _context.TimeEntries
+                    .FirstOrDefaultAsync(t => t.EmployeeId == request.EmployeeId && t.ClockOutTime == null);
+
+                if (openEntry != null)
                 {
-                    query = query.Where(t => t.ClockInTime <= endDate.Value);
+                    return BadRequest("Employee is already clocked in");
                 }
 
-                if (!string.IsNullOrEmpty(userId))
+                // Validate job if provided
+                if (request.JobId.HasValue)
                 {
-                    query = query.Where(t => t.UserId == userId);
-                }
-
-                if (jobId.HasValue)
-                {
-                    query = query.Where(t => t.JobId == jobId.Value);
-                }
-
-                var timeEntries = await query.ToListAsync();
-
-                // Calculate totals
-                var totalHours = timeEntries.Sum(t => t.TotalHours ?? 0);
-                var userTotals = timeEntries
-                    .GroupBy(t => new { t.UserId, UserName = t.User?.UserName })
-                    .Select(g => new
+                    var job = await _context.Jobs.FindAsync(request.JobId.Value);
+                    if (job == null)
                     {
-                        UserId = g.Key.UserId,
-                        UserName = g.Key.UserName,
-                        TotalHours = g.Sum(t => t.TotalHours ?? 0)
-                    });
+                        return BadRequest("Invalid job ID");
+                    }
+                }
 
-                var jobTotals = timeEntries
-                    .GroupBy(t => new { t.JobId, JobName = t.Job?.JobName })
-                    .Select(g => new
-                    {
-                        JobId = g.Key.JobId,
-                        JobName = g.Key.JobName,
-                        TotalHours = g.Sum(t => t.TotalHours ?? 0)
-                    });
-
-                var result = new
+                // Create new time entry
+                var timeEntry = new TimeEntry
                 {
-                    TimeEntries = timeEntries,
-                    TotalHours = totalHours,
-                    UserTotals = userTotals,
-                    JobTotals = jobTotals
+                    EmployeeId = request.EmployeeId,
+                    JobId = request.JobId,
+                    ClockInTime = request.ClockInTime ?? DateTime.UtcNow,
+                    Location = request.Location,
+                    Notes = request.Notes,
+                    Status = "Open",
+                    CreatedBy = User.Identity?.Name ?? "System",
+                    UpdatedBy = User.Identity?.Name ?? "System"
                 };
 
-                return result;
+                _context.TimeEntries.Add(timeEntry);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Employee {EmployeeId} clocked in at {ClockInTime}", 
+                    timeEntry.EmployeeId, timeEntry.ClockInTime);
+
+                return CreatedAtAction(nameof(GetTimeEntry), new { id = timeEntry.Id }, timeEntry);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating time report");
-                return StatusCode(500, "Internal server error occurred while generating time report.");
+                _logger.LogError(ex, "Error during clock in");
+                return StatusCode(500, "An error occurred during clock in");
+            }
+        }
+
+        // POST: api/TimeTracking/clock-out
+        [HttpPost("clock-out")]
+        public async Task<ActionResult<TimeEntry>> ClockOut(ClockOutRequest request)
+        {
+            try
+            {
+                // Find the open time entry
+                var timeEntry = await _context.TimeEntries
+                    .FirstOrDefaultAsync(t => t.EmployeeId == request.EmployeeId && t.ClockOutTime == null);
+
+                if (timeEntry == null)
+                {
+                    return BadRequest("No open time entry found for this employee");
+                }
+
+                // Update time entry
+                timeEntry.ClockOutTime = request.ClockOutTime ?? DateTime.UtcNow;
+                timeEntry.JobId = request.JobId ?? timeEntry.JobId; // Allow updating job ID on clock out
+                timeEntry.Notes = !string.IsNullOrEmpty(request.Notes) ? request.Notes : timeEntry.Notes;
+                timeEntry.Status = "Completed";
+                timeEntry.UpdatedAt = DateTime.UtcNow;
+                timeEntry.UpdatedBy = User.Identity?.Name ?? "System";
+
+                // Calculate total hours
+                timeEntry.CalculateTotalHours();
+
+                _context.Entry(timeEntry).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Employee {EmployeeId} clocked out at {ClockOutTime}, total hours: {TotalHours}", 
+                    timeEntry.EmployeeId, timeEntry.ClockOutTime, timeEntry.TotalHours);
+
+                // Sync with CardShark
+                try
+                {
+                    await _cardSharkService.SyncTimeEntries(new List<TimeEntry> { timeEntry });
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the request
+                    _logger.LogWarning(ex, "Failed to sync time entry with CardShark");
+                }
+
+                return Ok(timeEntry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during clock out");
+                return StatusCode(500, "An error occurred during clock out");
+            }
+        }
+
+        // POST: api/TimeTracking
+        [HttpPost]
+        [Authorize(Roles = "Admin,ProjectManager")]
+        public async Task<ActionResult<TimeEntry>> CreateTimeEntry(TimeEntry timeEntry)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Validate employee
+                var employee = await _context.Employees.FindAsync(timeEntry.EmployeeId);
+                if (employee == null)
+                {
+                    return BadRequest("Invalid employee ID");
+                }
+
+                // Validate job if provided
+                if (timeEntry.JobId.HasValue)
+                {
+                    var job = await _context.Jobs.FindAsync(timeEntry.JobId.Value);
+                    if (job == null)
+                    {
+                        return BadRequest("Invalid job ID");
+                    }
+                }
+
+                // Set as manual entry
+                timeEntry.IsManualEntry = true;
+                
+                // Set metadata
+                timeEntry.CreatedAt = DateTime.UtcNow;
+                timeEntry.UpdatedAt = DateTime.UtcNow;
+                timeEntry.CreatedBy = User.Identity?.Name ?? "System";
+                timeEntry.UpdatedBy = User.Identity?.Name ?? "System";
+
+                // Calculate total hours if both times are provided
+                if (timeEntry.ClockInTime != null && timeEntry.ClockOutTime != null)
+                {
+                    timeEntry.CalculateTotalHours();
+                    timeEntry.Status = "Completed";
+                }
+                else
+                {
+                    timeEntry.Status = "Open";
+                }
+
+                _context.TimeEntries.Add(timeEntry);
+                await _context.SaveChangesAsync();
+
+                // Sync with CardShark if entry is complete
+                if (timeEntry.ClockOutTime.HasValue)
+                {
+                    try
+                    {
+                        await _cardSharkService.SyncTimeEntries(new List<TimeEntry> { timeEntry });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log but don't fail the request
+                        _logger.LogWarning(ex, "Failed to sync time entry with CardShark");
+                    }
+                }
+
+                _logger.LogInformation("Created manual time entry for employee {EmployeeId}", timeEntry.EmployeeId);
+                
+                return CreatedAtAction(nameof(GetTimeEntry), new { id = timeEntry.Id }, timeEntry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating time entry");
+                return StatusCode(500, "An error occurred while creating the time entry");
             }
         }
 
         // PUT: api/TimeTracking/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,ProjectManager")]
         public async Task<IActionResult> UpdateTimeEntry(int id, TimeEntry timeEntry)
         {
             try
             {
-                if (id != timeEntry.TimeEntryId)
+                if (id != timeEntry.Id)
                 {
-                    return BadRequest("Time entry ID mismatch.");
+                    return BadRequest("Time entry ID mismatch");
                 }
 
                 if (!ModelState.IsValid)
@@ -335,53 +307,75 @@ namespace JobTracker.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Recalculate total hours if both clock in and clock out times are provided
-                if (timeEntry.ClockInTime != default && timeEntry.ClockOutTime.HasValue)
+                // Check if time entry exists
+                var existingEntry = await _context.TimeEntries.FindAsync(id);
+                if (existingEntry == null)
                 {
-                    TimeSpan duration = timeEntry.ClockOutTime.Value - timeEntry.ClockInTime;
-                    timeEntry.TotalHours = (decimal)duration.TotalHours;
+                    return NotFound();
                 }
 
+                // Update metadata
+                timeEntry.CreatedAt = existingEntry.CreatedAt;
+                timeEntry.CreatedBy = existingEntry.CreatedBy;
+                timeEntry.UpdatedAt = DateTime.UtcNow;
+                timeEntry.UpdatedBy = User.Identity?.Name ?? "System";
+                timeEntry.IsManualEntry = true; // Mark as edited
+
+                // Calculate total hours if both times are provided
+                if (timeEntry.ClockInTime != null && timeEntry.ClockOutTime != null)
+                {
+                    timeEntry.CalculateTotalHours();
+                    timeEntry.Status = "Completed";
+                }
+                else
+                {
+                    timeEntry.Status = "Open";
+                }
+
+                _context.Entry(existingEntry).State = EntityState.Detached;
                 _context.Entry(timeEntry).State = EntityState.Modified;
 
-                try
+                await _context.SaveChangesAsync();
+
+                // Sync with CardShark if entry is complete
+                if (timeEntry.ClockOutTime.HasValue)
                 {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TimeEntryExists(id))
+                    try
                     {
-                        return NotFound($"Time entry with ID {id} not found.");
+                        await _cardSharkService.SyncTimeEntries(new List<TimeEntry> { timeEntry });
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        throw;
+                        // Log but don't fail the request
+                        _logger.LogWarning(ex, "Failed to sync updated time entry with CardShark");
                     }
                 }
 
-                // Sync with CardShark if enabled
-                try
-                {
-                    await _cardSharkService.SyncTimeEntryUpdate(timeEntry);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to sync time entry update with CardShark. Time entry ID: {TimeEntryId}", timeEntry.TimeEntryId);
-                    // Continue execution even if CardShark sync fails
-                }
-
+                _logger.LogInformation("Updated time entry: {TimeEntryId}", timeEntry.Id);
+                
                 return NoContent();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!TimeEntryExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating time entry with ID {TimeEntryId}", id);
-                return StatusCode(500, $"Internal server error occurred while updating time entry with ID {id}.");
+                return StatusCode(500, "An error occurred while updating the time entry");
             }
         }
 
         // DELETE: api/TimeTracking/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTimeEntry(int id)
         {
             try
@@ -389,35 +383,141 @@ namespace JobTracker.Controllers
                 var timeEntry = await _context.TimeEntries.FindAsync(id);
                 if (timeEntry == null)
                 {
-                    return NotFound($"Time entry with ID {id} not found.");
+                    return NotFound();
                 }
 
                 _context.TimeEntries.Remove(timeEntry);
                 await _context.SaveChangesAsync();
 
-                // Sync with CardShark if enabled
-                try
-                {
-                    await _cardSharkService.SyncTimeEntryDeletion(timeEntry);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to sync time entry deletion with CardShark. Time entry ID: {TimeEntryId}", timeEntry.TimeEntryId);
-                    // Continue execution even if CardShark sync fails
-                }
-
+                _logger.LogInformation("Deleted time entry: {TimeEntryId}", id);
+                
                 return NoContent();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting time entry with ID {TimeEntryId}", id);
-                return StatusCode(500, $"Internal server error occurred while deleting time entry with ID {id}.");
+                return StatusCode(500, "An error occurred while deleting the time entry");
+            }
+        }
+
+        // GET: api/TimeTracking/employee/5/current
+        [HttpGet("employee/{id}/current")]
+        public async Task<ActionResult<TimeEntry>> GetCurrentTimeEntry(int id)
+        {
+            try
+            {
+                var timeEntry = await _context.TimeEntries
+                    .Include(t => t.Job)
+                    .FirstOrDefaultAsync(t => t.EmployeeId == id && t.ClockOutTime == null);
+
+                if (timeEntry == null)
+                {
+                    return NotFound("No active time entry found");
+                }
+
+                return Ok(timeEntry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving current time entry for employee {EmployeeId}", id);
+                return StatusCode(500, "An error occurred while retrieving the current time entry");
+            }
+        }
+
+        // GET: api/TimeTracking/summary
+        [HttpGet("summary")]
+        [Authorize(Roles = "Admin,ProjectManager")]
+        public async Task<ActionResult<IEnumerable<TimeEntrySummary>>> GetTimeSummary(
+            [FromQuery] int? employeeId = null,
+            [FromQuery] int? jobId = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                IQueryable<TimeEntry> query = _context.TimeEntries
+                    .Where(t => t.ClockOutTime != null); // Only completed entries
+
+                // Apply filters
+                if (employeeId.HasValue)
+                {
+                    query = query.Where(t => t.EmployeeId == employeeId.Value);
+                }
+
+                if (jobId.HasValue)
+                {
+                    query = query.Where(t => t.JobId == jobId.Value);
+                }
+
+                if (startDate.HasValue)
+                {
+                    DateTime start = startDate.Value.Date;
+                    query = query.Where(t => t.ClockInTime >= start);
+                }
+
+                if (endDate.HasValue)
+                {
+                    DateTime end = endDate.Value.Date.AddDays(1).AddSeconds(-1); // End of day
+                    query = query.Where(t => t.ClockInTime <= end);
+                }
+
+                // Group by employee and job
+                var summaries = await query
+                    .GroupBy(t => new { t.EmployeeId, t.JobId })
+                    .Select(g => new TimeEntrySummary
+                    {
+                        EmployeeId = g.Key.EmployeeId,
+                        EmployeeName = g.First().Employee.FirstName + " " + g.First().Employee.LastName,
+                        JobId = g.Key.JobId,
+                        JobName = g.Key.JobId.HasValue ? g.First().Job.Name : "No Job",
+                        TotalHours = g.Sum(t => t.TotalHours ?? 0),
+                        EntryCount = g.Count(),
+                        FirstEntry = g.Min(t => t.ClockInTime),
+                        LastEntry = g.Max(t => t.ClockOutTime)
+                    })
+                    .ToListAsync();
+
+                return Ok(summaries);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving time summary");
+                return StatusCode(500, "An error occurred while retrieving time summary");
             }
         }
 
         private bool TimeEntryExists(int id)
         {
-            return _context.TimeEntries.Any(e => e.TimeEntryId == id);
+            return _context.TimeEntries.Any(e => e.Id == id);
         }
+    }
+
+    public class ClockInRequest
+    {
+        public int EmployeeId { get; set; }
+        public int? JobId { get; set; }
+        public DateTime? ClockInTime { get; set; }
+        public string? Location { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class ClockOutRequest
+    {
+        public int EmployeeId { get; set; }
+        public int? JobId { get; set; }
+        public DateTime? ClockOutTime { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class TimeEntrySummary
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; } = string.Empty;
+        public int? JobId { get; set; }
+        public string JobName { get; set; } = string.Empty;
+        public decimal TotalHours { get; set; }
+        public int EntryCount { get; set; }
+        public DateTime FirstEntry { get; set; }
+        public DateTime? LastEntry { get; set; }
     }
 }
