@@ -224,9 +224,70 @@ namespace JobTracker.Controllers
             }
         }
 
+        // PUT: api/JobSections/{id}/collapse
+        [HttpPut("{id}/collapse")]
+        public async Task<IActionResult> UpdateSectionCollapsedState(int id, [FromBody] UpdateCollapsedStateDto request)
+        {
+            try
+            {
+                var jobSection = await _context.JobSections.FindAsync(id);
+                if (jobSection == null)
+                {
+                    return NotFound();
+                }
+
+                jobSection.IsCollapsed = request.IsCollapsed;
+                jobSection.UpdatedAt = DateTime.UtcNow;
+                
+                await _context.SaveChangesAsync();
+                return Ok(new { isCollapsed = jobSection.IsCollapsed });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating collapsed state for job section with ID {id}");
+                return StatusCode(500, $"An error occurred while updating the collapsed state");
+            }
+        }
+        
+        // PUT: api/JobSections/{id}/notes
+        [HttpPut("{id}/notes")]
+        public async Task<IActionResult> UpdateSectionNotes(int id, [FromBody] UpdateNotesDto request)
+        {
+            try
+            {
+                var jobSection = await _context.JobSections.FindAsync(id);
+                if (jobSection == null)
+                {
+                    return NotFound();
+                }
+
+                jobSection.Notes = request.Notes;
+                jobSection.UpdatedAt = DateTime.UtcNow;
+                
+                await _context.SaveChangesAsync();
+                return Ok(new { notes = jobSection.Notes });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating notes for job section with ID {id}");
+                return StatusCode(500, $"An error occurred while updating the notes");
+            }
+        }
+
         private bool JobSectionExists(int id)
         {
             return _context.JobSections.Any(e => e.Id == id);
         }
+    }
+    
+    // DTOs for the new endpoints
+    public class UpdateCollapsedStateDto
+    {
+        public bool IsCollapsed { get; set; }
+    }
+    
+    public class UpdateNotesDto
+    {
+        public string? Notes { get; set; }
     }
 }

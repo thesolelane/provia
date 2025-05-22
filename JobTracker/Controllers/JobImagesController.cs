@@ -138,6 +138,17 @@ namespace JobTracker.Controllers
                 // Create thumbnail (optional)
                 string? thumbnailPath = await _fileStorage.CreateThumbnailAsync(file, filePath, directory);
 
+                // Process image timestamp if needed (only for non-main images)
+                if (!isMainImage && file.ContentType.StartsWith("image/"))
+                {
+                    // Get job number for the timestamp
+                    var jobInfo = await _context.Jobs.FindAsync(jobId);
+                    if (jobInfo != null)
+                    {
+                        filePath = await _fileStorage.AddTimestampToImageAsync(filePath, jobInfo.JobNumber, imageNumber);
+                    }
+                }
+                
                 // Create image record
                 var jobImage = new JobImage
                 {
@@ -151,7 +162,7 @@ namespace JobTracker.Controllers
                     ImageNumber = imageNumber,
                     FileSize = file.Length,
                     ThumbnailPath = thumbnailPath,
-                    ShowTimestamp = true  // Show timestamp by default for all images except main job image
+                    ShowTimestamp = !isMainImage  // Only show timestamp on non-main images
                 };
 
                 // If this is set as main image, clear other main images
@@ -238,6 +249,17 @@ namespace JobTracker.Controllers
                 // Is this a video?
                 bool isVideo = file.ContentType.StartsWith("video/");
 
+                // Process timestamp for section images
+                if (!isVideo && file.ContentType.StartsWith("image/"))
+                {
+                    // Get job number for the timestamp
+                    var jobData = await _context.Jobs.FindAsync(section.JobId);
+                    if (jobData != null)
+                    {
+                        filePath = await _fileStorage.AddTimestampToImageAsync(filePath, jobData.JobNumber, imageNumber);
+                    }
+                }
+                
                 // Create image record
                 var jobImage = new JobImage
                 {
@@ -253,7 +275,7 @@ namespace JobTracker.Controllers
                     ImageNumber = imageNumber,
                     FileSize = file.Length,
                     ThumbnailPath = thumbnailPath,
-                    ShowTimestamp = true // Always show timestamp with job number for section images
+                    ShowTimestamp = !isVideo // Show timestamp for images only, not videos
                 };
 
                 _context.JobImages.Add(jobImage);

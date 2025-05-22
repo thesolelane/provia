@@ -346,6 +346,110 @@
             padding-bottom: 10px;
             color: #1976d2;
         }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        /* Section selection styles */
+        .section-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .section-checkbox {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-checkbox label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .section-checkbox input {
+            margin-right: 10px;
+        }
+        
+        .subcontractor-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .subcontractor-section {
+            width: 200px;
+            font-weight: 500;
+        }
+        
+        .subcontractor-select {
+            flex: 1;
+        }
+        
+        .subcontractor-budget {
+            width: 150px;
+            margin-left: 10px;
+        }
+        
+        .subcontractor-documents {
+            display: flex;
+            flex-direction: column;
+            margin-top: 5px;
+        }
+        
+        .document-upload {
+            margin-top: 10px;
+        }
+        
+        .buttons-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .action-buttons {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -357,8 +461,105 @@
     <div class="app-container">
         <div class="content">
             <h2>Jobs</h2>
-            <button class="button" id="refreshButton">Refresh Jobs</button>
+            <div class="action-buttons">
+                <button class="button" id="refreshButton">Refresh Jobs</button>
+                <button class="button" id="createJobButton">Create New Job</button>
+            </div>
             <div id="jobsList"></div>
+            
+            <!-- New Job Creation Modal -->
+            <div id="jobCreationModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Create New Job</h2>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="basicInfo">Basic Info</div>
+                        <div class="tab" data-tab="sections">Job Sections</div>
+                        <div class="tab" data-tab="client">Client Info</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="basicInfoTab">
+                        <h3>Job Details</h3>
+                        <form id="jobBasicForm">
+                            <div class="form-group">
+                                <label for="jobName">Job Name:</label>
+                                <input type="text" id="jobName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobNumber">Job Number:</label>
+                                <input type="text" id="jobNumber" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobLocation">Location:</label>
+                                <input type="text" id="jobLocation" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobDescription">Description:</label>
+                                <textarea id="jobDescription" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobStartDate">Start Date:</label>
+                                <input type="date" id="jobStartDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobTargetDate">Target Completion Date:</label>
+                                <input type="date" id="jobTargetDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="jobBudget">Budget:</label>
+                                <input type="number" id="jobBudget" class="form-control" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="button next-tab-btn" data-next="sections">Next: Sections</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-content" id="sectionsTab">
+                        <h3>Select Job Sections</h3>
+                        <p>Choose which sections are relevant for this job:</p>
+                        <div id="sectionSelectionContainer" class="section-selection">
+                            <!-- Section checkboxes will be added here dynamically -->
+                        </div>
+                        <div class="section-subcontractors">
+                            <h3>Subcontractor Assignment</h3>
+                            <p>For sections that will be subcontracted, assign subcontractors:</p>
+                            <div id="subcontractorAssignmentContainer">
+                                <!-- Subcontractor assignments will appear here based on selected sections -->
+                            </div>
+                        </div>
+                        <div class="form-group buttons-group">
+                            <button type="button" class="button back-tab-btn" data-back="basicInfo">Back</button>
+                            <button type="button" class="button next-tab-btn" data-next="client">Next: Client Info</button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="clientTab">
+                        <h3>Client Information</h3>
+                        <form id="clientInfoForm">
+                            <div class="form-group">
+                                <label for="clientName">Client Name:</label>
+                                <input type="text" id="clientName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientPhone">Client Phone:</label>
+                                <input type="tel" id="clientPhone" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientEmail">Client Email:</label>
+                                <input type="email" id="clientEmail" class="form-control">
+                            </div>
+                            <div class="form-group buttons-group">
+                                <button type="button" class="button back-tab-btn" data-back="sections">Back</button>
+                                <button type="button" id="saveJobBtn" class="button">Create Job</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="jobCreationStatus"></div>
+                </div>
+            </div>
         </div>
         
         <div class="job-details" id="jobDetails">
@@ -504,6 +705,110 @@
             document.getElementById('refreshButton').addEventListener('click', function() {
                 loadJobs();
             });
+            
+            // Initialize job creation modal
+            const modal = document.getElementById('jobCreationModal');
+            const createJobBtn = document.getElementById('createJobButton');
+            const closeBtn = document.querySelector('.close-modal');
+            
+            createJobBtn.addEventListener('click', function() {
+                // Reset form fields
+                document.getElementById('jobBasicForm').reset();
+                document.getElementById('clientInfoForm').reset();
+                
+                // Initialize section selection
+                initSectionSelection();
+                
+                // Show first tab
+                document.querySelectorAll('#jobCreationModal .tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector('#jobCreationModal .tab[data-tab="basicInfo"]').classList.add('active');
+                
+                document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('basicInfoTab').classList.add('active');
+                
+                // Clear status
+                document.getElementById('jobCreationStatus').innerHTML = '';
+                
+                // Display modal
+                modal.style.display = 'block';
+            });
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Tab navigation in the modal
+            document.querySelectorAll('#jobCreationModal .tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('#jobCreationModal .tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabName + 'Tab').classList.add('active');
+                });
+            });
+            
+            // Next/Back button navigation
+            document.querySelectorAll('.next-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const nextTab = this.getAttribute('data-next');
+                    
+                    // Activate the right tab
+                    document.querySelectorAll('#jobCreationModal .tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    document.querySelector(`#jobCreationModal .tab[data-tab="${nextTab}"]`).classList.add('active');
+                    
+                    // Show the right content
+                    document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(nextTab + 'Tab').classList.add('active');
+                    
+                    // If moving to sections tab, update subcontractor assignment section
+                    if (nextTab === 'sections') {
+                        updateSubcontractorAssignments();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.back-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const prevTab = this.getAttribute('data-back');
+                    
+                    // Activate the right tab
+                    document.querySelectorAll('#jobCreationModal .tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    document.querySelector(`#jobCreationModal .tab[data-tab="${prevTab}"]`).classList.add('active');
+                    
+                    // Show the right content
+                    document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(prevTab + 'Tab').classList.add('active');
+                });
+            });
+            
+            // Save job button
+            document.getElementById('saveJobBtn').addEventListener('click', createNewJob);
             
             document.getElementById('backButton').addEventListener('click', function() {
                 document.getElementById('jobDetails').style.display = 'none';
