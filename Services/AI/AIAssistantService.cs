@@ -100,28 +100,100 @@ Focus on Massachusetts building codes when relevant, but also provide general co
             {
                 _logger.LogError(ex, "Error getting building code assistance from AI: {ErrorMessage}", ex.Message);
                 
-                // Return a helpful construction response as fallback
-                if (query.ToLower().Contains("deck") && query.ToLower().Contains("fastener"))
+                // Return comprehensive construction knowledge for field use
+                var queryLower = query.ToLower();
+                
+                if (queryLower.Contains("deck") && queryLower.Contains("fastener"))
                 {
-                    return @"For deck construction, here are the key fastener requirements:
+                    return @"**DECK FASTENER REQUIREMENTS - Field Reference**
 
-**Deck Fasteners:**
-• **Joist Hangers**: Use galvanized steel joist hangers with appropriate joist hanger nails
-• **Deck Screws**: #8 x 2½"" galvanized or stainless steel screws for decking boards
-• **Carriage Bolts**: ½"" galvanized carriage bolts for beam connections
-• **Lag Bolts**: ½"" x 6"" galvanized lag bolts for ledger board attachment
+**Joist Connections:**
+• Joist hangers: Galvanized steel, sized for lumber (2x8, 2x10, 2x12)
+• Joist hanger nails: 1½"" galvanized, 10d minimum
+• Beam connections: ½"" galvanized carriage bolts
 
-**Massachusetts Code Requirements:**
-• All fasteners must be galvanized or stainless steel for corrosion resistance
-• Ledger boards require appropriate flashing and waterproofing
-• Structural connections require engineered fasteners rated for load
+**Decking Attachment:**
+• Deck screws: #8 x 2½"" stainless steel or galvanized
+• Spacing: 12"" on center along joists
+• End spacing: 1"" minimum from board ends
 
-**Best Practices:**
-• Pre-drill holes to prevent wood splitting
-• Use appropriate spacers for drainage
-• Follow manufacturer's installation guidelines
+**Ledger Board (House Attachment):**
+• Lag bolts: ½"" x 6"" galvanized, every 16"" on center
+• Through bolts preferred in seismic areas
+• Flashing required above ledger
 
-Check with your local building department for specific permit requirements.";
+**MA Building Code:**
+• All fasteners must resist corrosion (galvanized/stainless)
+• Structural connections require load-rated hardware
+• Spacing per IRC R507
+
+**Safety:** Pre-drill holes, use proper PPE, check load ratings.";
+                }
+                
+                if (queryLower.Contains("electrical") && (queryLower.Contains("permit") || queryLower.Contains("code")))
+                {
+                    return @"**ELECTRICAL PERMITS & CODES - Field Reference**
+
+**Permit Required For:**
+• New circuits and panels
+• GFCI installations
+• Outdoor/basement wiring
+• Hot tub/pool electrical
+
+**MA Electrical Code (527 CMR 12.00):**
+• GFCI required: bathrooms, kitchens, outdoor, basement
+• AFCI required: bedrooms, living areas (NEC 210.12)
+• Dedicated 20A circuits: kitchen appliances
+
+**Common Requirements:**
+• Boxes: Accessible, proper fill calculation
+• Wire size: 14 AWG = 15A max, 12 AWG = 20A max
+• Grounding: Required on all circuits
+
+**Inspection:** Rough-in before closing walls, final after completion.";
+                }
+                
+                if (queryLower.Contains("plumbing") && (queryLower.Contains("code") || queryLower.Contains("permit")))
+                {
+                    return @"**PLUMBING CODES & PERMITS - Field Reference**
+
+**MA Plumbing Code (248 CMR):**
+• Permits required for new fixtures, water lines, gas lines
+• Licensed plumber required for gas work
+
+**Common Requirements:**
+• Water supply: ¾"" minimum service, ½"" branch lines
+• Drainage: 3"" minimum building drain, proper slope (¼""/ft)
+• Venting: Each fixture group requires proper vent
+
+**Rough-in Standards:**
+• Toilet: 12"" center to wall, 15"" minimum side clearance
+• Sink: Hot on left, 8"" centers standard
+• Shower: 32""x32"" minimum
+
+**Testing:** Pressure test water lines, smoke/water test drains.";
+                }
+                
+                if (queryLower.Contains("foundation") || queryLower.Contains("footing"))
+                {
+                    return @"**FOUNDATION REQUIREMENTS - Field Reference**
+
+**MA Building Code (780 CMR):**
+• Frost depth: 4 feet minimum below grade
+• Footing width: Minimum 2x wall thickness
+• Concrete: 3000 PSI minimum, #4 rebar required
+
+**Excavation:**
+• Call Dig Safe (811) 72 hours before digging
+• Proper slope for safety (1:1 maximum)
+• Drainage required around foundation
+
+**Concrete Work:**
+• Forms: Level, properly braced
+• Placement: No free fall over 5 feet
+• Curing: Keep moist 7 days minimum
+
+**Inspection:** Footing/foundation before concrete pour.";
                 }
                 
                 return "I can help with building codes, permits, timelines, and budgets! Try asking about electrical requirements, plumbing codes, or project scheduling. I'm here to make your construction projects smoother and code-compliant!";
