@@ -1,44 +1,33 @@
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
 
-// Placeholder components - we'll implement these next
-const Dashboard = () => <div>Dashboard</div>;
-const JobList = () => <div>Job List</div>;
-const JobDetail = () => <div>Job Detail</div>;
-const JobForm = () => <div>Job Form</div>;
+// Import our components
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import JobList from './components/jobs/JobList';
+import JobDetail from './components/jobs/JobDetail';
+import JobForm from './components/jobs/JobForm';
+import JobSectionForm from './components/jobs/JobSectionForm';
+
+// Placeholder for sections (we'll implement these next)
 const SectionList = () => <div>Section List</div>;
 const SectionDetail = () => <div>Section Detail</div>;
 
 function App() {
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>Job Tracker</h1>
-        <nav>
-          <ul>
-            <li><Link to="/">Dashboard</Link></li>
-            <li><Link to="/jobs">Jobs</Link></li>
-            <li><Link to="/sections">Sections</Link></li>
-          </ul>
-        </nav>
-      </header>
-      
-      <main className="app-content">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/jobs" element={<JobList />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/jobs/create" element={<JobForm />} />
-          <Route path="/jobs/:id/edit" element={<JobForm />} />
-          <Route path="/sections" element={<SectionList />} />
-          <Route path="/sections/:id" element={<SectionDetail />} />
-        </Routes>
-      </main>
-      
-      <footer className="app-footer">
-        <p>&copy; {new Date().getFullYear()} Job Tracker Application</p>
-      </footer>
+      <Routes>
+        <Route path="/" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/jobs" element={<Layout><JobList /></Layout>} />
+        <Route path="/jobs/create" element={<Layout><JobForm /></Layout>} />
+        <Route path="/jobs/:id" element={<Layout><JobDetail /></Layout>} />
+        <Route path="/jobs/:id/edit" element={<Layout><JobForm /></Layout>} />
+        <Route path="/jobs/:id/sections/create" element={<Layout><JobSectionForm /></Layout>} />
+        <Route path="/sections" element={<Layout><SectionList /></Layout>} />
+        <Route path="/sections/:id" element={<Layout><SectionDetail /></Layout>} />
+        <Route path="/sections/:sectionId/edit" element={<Layout><JobSectionForm /></Layout>} />
+      </Routes>
     </div>
   );
 }
