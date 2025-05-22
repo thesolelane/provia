@@ -12,35 +12,19 @@ builder.Services.AddSwaggerGen();
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
 Console.WriteLine($"Database URL: {connectionString}");
 
-// Add database context with connection string parsing
-string processedConnectionString;
-
-if (connectionString.StartsWith("postgresql://"))
-{
-    // Parse connection string from URL format to standard format
-    var uri = new Uri(connectionString);
-    var userInfo = uri.UserInfo.Split(':');
-    
-    processedConnectionString = new Npgsql.NpgsqlConnectionStringBuilder
-    {
-        Host = uri.Host,
-        Port = uri.Port > 0 ? uri.Port : 5432,
-        Database = uri.AbsolutePath.TrimStart('/'),
-        Username = userInfo[0],
-        Password = userInfo[1],
-        SslMode = Npgsql.SslMode.Require
-    }.ToString();
-}
-else
-{
-    processedConnectionString = connectionString;
-}
-
-Console.WriteLine($"Processed connection string created");
-
+// Configure database using environment variables directly
 builder.Services.AddDbContext<JobTrackerContext>(options =>
 {
-    options.UseNpgsql(processedConnectionString);
+    var pgHost = Environment.GetEnvironmentVariable("PGHOST");
+    var pgPort = Environment.GetEnvironmentVariable("PGPORT");
+    var pgDatabase = Environment.GetEnvironmentVariable("PGDATABASE");
+    var pgUser = Environment.GetEnvironmentVariable("PGUSER");
+    var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+    
+    var connectionStr = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Prefer;Trust Server Certificate=true";
+    Console.WriteLine("Using environment variable configuration for database");
+    
+    options.UseNpgsql(connectionStr);
 });
 
 // Add CORS for the frontend
@@ -73,5 +57,22 @@ app.MapControllers();
 
 // Add simple test endpoint
 app.MapGet("/api/test", () => new { Message = "Job Tracker API is working!", Timestamp = DateTime.UtcNow });
+
+// Create database and tables on startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<JobTrackerContext>();
+        context.Database.EnsureCreated();
+        Console.WriteLine("Database and tables created successfully!");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while creating the database.");
+    }
+}
 
 app.Run();
