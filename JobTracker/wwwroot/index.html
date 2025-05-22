@@ -278,6 +278,9 @@
     </div>
     
     <script>
+        // Global variable to store current job details
+        let currentJob = null;
+        
         document.addEventListener('DOMContentLoaded', function() {
             loadJobs();
             
@@ -304,6 +307,9 @@
                     document.getElementById(tabId + 'Tab').classList.add('active');
                 });
             });
+            
+            // Add event listener for WhatsApp send button
+            document.getElementById('sendWhatsAppBtn').addEventListener('click', sendWhatsAppMessage);
         });
         
         function loadJobs() {
@@ -313,7 +319,7 @@
             fetch('/api/jobs')
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Failed to fetch jobs');
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     return response.json();
                 })
@@ -351,7 +357,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading jobs:', error);
-                    jobsList.innerHTML = '<p>Error loading jobs. Please try again later.</p>';
+                    jobsList.innerHTML = `<p>Error loading jobs. Please try again later.</p><p>Error details: ${error.message}</p>`;
                 });
         }
         
@@ -375,6 +381,9 @@
                     return response.json();
                 })
                 .then(job => {
+                    // Store current job in global variable for WhatsApp templates
+                    currentJob = job;
+                    
                     document.getElementById('jobTitle').innerHTML = `Job Details: ${job.name}`;
                     
                     // Basic Info tab
@@ -411,6 +420,11 @@
                             <p><strong>Variance:</strong> $${(job.budget - job.actualCost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                     `;
+                    
+                    // Pre-fill phone number for WhatsApp
+                    if (job.clientPhone) {
+                        document.getElementById('phoneNumber').value = job.clientPhone;
+                    }
                     
                     // Load sections for the Sections tab
                     loadJobSections(jobId);
@@ -472,6 +486,68 @@
                     console.error('Error loading job sections:', error);
                     sectionsContainer.innerHTML = '<p>Error loading sections. Please try again later.</p>';
                 });
+        }
+        
+        // Function to handle WhatsApp message sending
+        function sendWhatsAppMessage() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const message = document.getElementById('messageText').value;
+            const statusElement = document.getElementById('whatsAppStatus');
+            
+            if (!phoneNumber || !message) {
+                statusElement.className = 'status-error';
+                statusElement.textContent = 'Please provide both phone number and message.';
+                return;
+            }
+            
+            statusElement.textContent = 'Sending WhatsApp message...';
+            statusElement.className = '';
+            
+            // Send WhatsApp message via our API
+            fetch('/api/notifications/whatsapp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    phoneNumber: phoneNumber,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.className = 'status-success';
+                    statusElement.textContent = 'WhatsApp message sent successfully!';
+                } else {
+                    statusElement.className = 'status-error';
+                    statusElement.textContent = data.message || 'Failed to send WhatsApp message.';
+                }
+            })
+            .catch(error => {
+                console.error('Error sending WhatsApp message:', error);
+                statusElement.className = 'status-error';
+                statusElement.textContent = 'Error sending WhatsApp message. Check console for details.';
+            });
+        }
+        
+        // Function to fill message templates
+        function fillTemplate(type) {
+            if (!currentJob) return;
+            
+            const messageElement = document.getElementById('messageText');
+            
+            switch (type) {
+                case 'status':
+                    messageElement.value = `Update on your project "${currentJob.name}" (Job #${currentJob.jobNumber}):\n\nCurrent Status: ${currentJob.status}\nEstimated Completion: ${currentJob.targetCompletionDate ? new Date(currentJob.targetCompletionDate).toLocaleDateString() : 'To be determined'}\n\nPlease contact us if you have any questions.`;
+                    break;
+                case 'delay':
+                    messageElement.value = `Important notice regarding "${currentJob.name}" (Job #${currentJob.jobNumber}):\n\nWe're experiencing some delays with your project. This may affect the completion timeline. Our team is working to minimize the impact.\n\nPlease contact us to discuss the details.`;
+                    break;
+                case 'complete':
+                    messageElement.value = `Good news about your project "${currentJob.name}" (Job #${currentJob.jobNumber}):\n\nWe've completed a significant section of your project. Our team is making good progress toward completion.\n\nPlease contact us if you would like to schedule a walkthrough.`;
+                    break;
+            }
         }
         
         function getStatusClass(status) {
