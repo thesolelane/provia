@@ -12,11 +12,35 @@ builder.Services.AddSwaggerGen();
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
 Console.WriteLine($"Database URL: {connectionString}");
 
-// Add database context
+// Add database context with connection string parsing
+string processedConnectionString;
+
+if (connectionString.StartsWith("postgresql://"))
+{
+    // Parse connection string from URL format to standard format
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    
+    processedConnectionString = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Database = uri.AbsolutePath.TrimStart('/'),
+        Username = userInfo[0],
+        Password = userInfo[1],
+        SslMode = Npgsql.SslMode.Require
+    }.ToString();
+}
+else
+{
+    processedConnectionString = connectionString;
+}
+
+Console.WriteLine($"Processed connection string created");
+
 builder.Services.AddDbContext<JobTrackerContext>(options =>
 {
-    // Directly use the connection string from the environment variable
-    options.UseNpgsql(connectionString);
+    options.UseNpgsql(processedConnectionString);
 });
 
 // Add CORS for the frontend
@@ -49,18 +73,5 @@ app.MapControllers();
 
 // Add simple test endpoint
 app.MapGet("/api/test", () => new { Message = "Job Tracker API is working!", Timestamp = DateTime.UtcNow });
-
-// Create a sample jobs endpoint for testing
-app.MapGet("/api/jobs", () => 
-{
-    var jobs = new[]
-    {
-        new { Id = 1, Name = "Kitchen Renovation", Location = "123 Main St", Status = "In Progress" },
-        new { Id = 2, Name = "Bathroom Remodel", Location = "456 Oak Ave", Status = "Pending" },
-        new { Id = 3, Name = "Basement Finishing", Location = "789 Pine Rd", Status = "Completed" }
-    };
-    
-    return jobs;
-});
 
 app.Run();
