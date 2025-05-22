@@ -2020,6 +2020,25 @@
             return false;
         }
 
+        function askAIQuestion() {
+            const input = document.getElementById('aiQuestionInput');
+            if (input && input.value.trim()) {
+                const question = input.value.trim();
+                
+                // Show loading message
+                const responseDiv = input.closest('.ai-modal').querySelector('div[style*="white-space: pre-wrap"]');
+                responseDiv.innerHTML = '🤔 Thinking about your question: "' + question + '"...\n\nPlease wait while I analyze construction requirements and best practices.';
+                
+                // Clear input and disable button
+                input.value = '';
+                document.getElementById('askAIButton').disabled = true;
+                document.getElementById('askAIButton').innerHTML = 'Thinking...';
+                
+                // Get AI response
+                getAIAssistance(question);
+            }
+        }
+
         function getAIAssistance(query) {
             console.log('Sending request to AI:', query);
             fetch('/api/AIAssistant/building-code-assistance', {
@@ -2038,7 +2057,7 @@
             })
             .then(data => {
                 console.log('AI Response data:', data);
-                showAIResponse(data);
+                updateAIResponse(data);
             })
             .catch(error => {
                 console.error('Error getting AI assistance:', error);
@@ -2086,6 +2105,18 @@
                 <div style="border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; font-size: 14px; color: #666;">
                     <span>Confidence: ${Math.round(response.confidence * 100)}%</span>
                     <span>Sources: ${response.sources.join(', ')}</span>
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Ask me anything about construction:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="aiQuestionInput" placeholder="e.g., electrical permits, plumbing codes, foundation requirements..." 
+                               style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               onkeypress="if(event.key==='Enter') document.getElementById('askAIButton').click()">
+                        <button id="askAIButton" onclick="askAIQuestion()" 
+                                style="background: #2196f3; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                            Ask AI
+                        </button>
+                    </div>
                 </div>
             `;
             
