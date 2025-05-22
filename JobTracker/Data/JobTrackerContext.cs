@@ -12,6 +12,7 @@ namespace JobTracker.Data
 
         public DbSet<Job> Jobs { get; set; } = null!;
         public DbSet<JobSection> JobSections { get; set; } = null!;
+        public DbSet<JobImage> JobImages { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,10 +29,25 @@ namespace JobTracker.Data
             modelBuilder.Entity<Job>().Property(e => e.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<JobSection>().Property(e => e.CreatedAt).HasDefaultValueSql("now()");
 
+            // Configure JobImage relationships
+            modelBuilder.Entity<JobImage>()
+                .HasOne(i => i.Job)
+                .WithMany(j => j.Images)
+                .HasForeignKey(i => i.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            modelBuilder.Entity<JobImage>()
+                .HasOne(i => i.JobSection)
+                .WithMany(s => s.Images)
+                .HasForeignKey(i => i.JobSectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
             modelBuilder.Entity<JobSection>().HasIndex(js => js.Status);
             modelBuilder.Entity<JobSection>().HasIndex(js => js.SectionType);
+            modelBuilder.Entity<JobImage>().HasIndex(i => i.IsMainImage);
+            modelBuilder.Entity<JobImage>().HasIndex(i => i.JobSectionId);
         }
 
         public override int SaveChanges()

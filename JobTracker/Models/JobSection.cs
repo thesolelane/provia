@@ -47,6 +47,8 @@ namespace JobTracker.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
-        // Additional navigational properties would go here
+        // Collection of images for this section
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ICollection<JobImage> Images { get; set; } = new List<JobImage>();
     }
 }

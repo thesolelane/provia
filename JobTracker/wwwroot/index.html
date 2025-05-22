@@ -232,6 +232,7 @@
                 <div class="tab active" data-tab="details">Details</div>
                 <div class="tab" data-tab="sections">Sections</div>
                 <div class="tab" data-tab="finances">Finances</div>
+                <div class="tab" data-tab="photos">Photos</div>
                 <div class="tab" data-tab="notifications">Notifications</div>
             </div>
             
@@ -245,6 +246,61 @@
             
             <div class="tab-content" id="financesTab">
                 <div class="info-grid" id="jobFinances"></div>
+            </div>
+            
+            <div class="tab-content" id="photosTab">
+                <div class="photos-container">
+                    <div class="info-card">
+                        <h3>Job Photos</h3>
+                        <div id="jobPhotos" class="photo-gallery"></div>
+                        <div class="upload-container">
+                            <h4>Upload New Photo</h4>
+                            <form id="jobPhotoForm" class="upload-form">
+                                <div class="form-group">
+                                    <label for="photoFile">Select Image:</label>
+                                    <input type="file" id="photoFile" class="form-control" accept="image/*">
+                                </div>
+                                <div class="form-group">
+                                    <label for="photoDescription">Description:</label>
+                                    <input type="text" id="photoDescription" class="form-control" placeholder="Enter a description...">
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="isMainImage"> Set as main image for this job
+                                    </label>
+                                </div>
+                                <button type="button" id="uploadJobPhotoBtn" class="button">Upload Photo</button>
+                                <div id="photoUploadStatus"></div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card section-photos">
+                        <h3>Section Photos</h3>
+                        <div class="form-group">
+                            <label for="sectionSelect">Select Section:</label>
+                            <select id="sectionSelect" class="form-control">
+                                <option value="">-- Select a section --</option>
+                            </select>
+                        </div>
+                        <div id="sectionPhotos" class="photo-gallery"></div>
+                        <div class="upload-container" id="sectionPhotoUpload" style="display: none;">
+                            <h4>Upload Section Photo/Video</h4>
+                            <form id="sectionPhotoForm" class="upload-form">
+                                <div class="form-group">
+                                    <label for="sectionPhotoFile">Select File:</label>
+                                    <input type="file" id="sectionPhotoFile" class="form-control" accept="image/*,video/*">
+                                </div>
+                                <div class="form-group">
+                                    <label for="sectionPhotoDescription">Description:</label>
+                                    <input type="text" id="sectionPhotoDescription" class="form-control" placeholder="Enter a description...">
+                                </div>
+                                <button type="button" id="uploadSectionPhotoBtn" class="button">Upload</button>
+                                <div id="sectionPhotoUploadStatus"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="tab-content" id="notificationsTab">

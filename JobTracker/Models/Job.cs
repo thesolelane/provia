@@ -55,5 +55,8 @@ namespace JobTracker.Models
         // Navigation properties
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
+        
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ICollection<JobImage> Images { get; set; } = new List<JobImage>();
     }
 }

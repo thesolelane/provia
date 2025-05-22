@@ -13,8 +13,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 });
 
-// Register NotificationService
+// Register services
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -61,6 +62,13 @@ app.UseHttpsRedirection();
 
 // Serve static files for the React app
 app.UseStaticFiles();
+
+// Create uploads directory if it doesn't exist
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
 
 app.UseCors("AllowReactApp");
 
