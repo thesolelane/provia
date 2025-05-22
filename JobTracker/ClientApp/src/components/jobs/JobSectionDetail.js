@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobSectionDetail() {
   const { id } = useParams();
@@ -15,16 +16,7 @@ function JobSectionDetail() {
   const fetchSection = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/jobsections/${id}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Section not found');
-        }
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobSections.getById(id);
       setSection(data);
       setError(null);
     } catch (err) {
@@ -41,14 +33,7 @@ function JobSectionDetail() {
     }
     
     try {
-      const response = await fetch(`/api/jobsections/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
+      await apiService.jobSections.delete(id);
       navigate(`/jobs/${section.jobId}`);
     } catch (err) {
       setError('Failed to delete section. Please try again later.');

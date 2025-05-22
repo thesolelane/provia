@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
 
 function JobList() {
   const [jobs, setJobs] = useState([]);
