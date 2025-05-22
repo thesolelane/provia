@@ -44,6 +44,13 @@ namespace JobTracker.Models
         
         public string? InspectionNotes { get; set; }
         
+        // Additional notes field for section
+        [StringLength(1000)]
+        public string? Notes { get; set; }
+        
+        // Flag to track if section is collapsed in UI
+        public bool IsCollapsed { get; set; } = false;
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         

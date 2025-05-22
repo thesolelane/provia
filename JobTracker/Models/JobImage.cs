@@ -55,5 +55,11 @@ namespace JobTracker.Models
         // Image dimensions if applicable
         public int? Width { get; set; }
         public int? Height { get; set; }
+        
+        // Image number in sequence (for each job or section)
+        public int ImageNumber { get; set; }
+        
+        // Flag to show timestamp overlay on image
+        public bool ShowTimestamp { get; set; } = true;
     }
 }
