@@ -1447,6 +1447,198 @@
                 default: return '';
             }
         }
+
+        // Missing functions for job creation modal
+        function openCreateJobModal() {
+            document.getElementById('createJobModal').style.display = 'block';
+            showTab('basicInfo');
+        }
+
+        function closeCreateJobModal() {
+            document.getElementById('createJobModal').style.display = 'none';
+            document.getElementById('createJobForm').reset();
+        }
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.style.display = 'none');
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+            
+            // Add active class to selected tab
+            const tabButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+        }
+
+        function toggleSectionSelection(sectionName, checkbox) {
+            const sectionKey = sectionName.replace(/\s+/g, '');
+            const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
+            if (subcontractorRow) {
+                if (checkbox.checked) {
+                    subcontractorRow.style.display = 'flex';
+                } else {
+                    subcontractorRow.style.display = 'none';
+                    // Clear subcontractor selection when section is unchecked
+                    const select = subcontractorRow.querySelector('select');
+                    if (select) select.value = '';
+                    const budget = subcontractorRow.querySelector('input[type="number"]');
+                    if (budget) budget.value = '';
+                }
+            }
+        }
+
+        function handleFileUpload(input, docType, sectionName) {
+            const file = input.files[0];
+            if (file) {
+                // Store file info for later processing
+                if (!window.uploadedFiles) {
+                    window.uploadedFiles = {};
+                }
+                if (!window.uploadedFiles[sectionName]) {
+                    window.uploadedFiles[sectionName] = {};
+                }
+                window.uploadedFiles[sectionName][docType] = file;
+                
+                // Update UI to show file selected
+                const fileName = input.nextElementSibling;
+                if (fileName && fileName.classList.contains('file-name')) {
+                    fileName.textContent = `Selected: ${file.name}`;
+                    fileName.style.color = '#28a745';
+                }
+            }
+        }
+
+        function createJob() {
+            const form = document.getElementById('createJobForm');
+            if (!form) {
+                alert('Form not found');
+                return;
+            }
+            
+            const formData = new FormData(form);
+            
+            // Get selected sections
+            const selectedSections = [];
+            const sectionCheckboxes = document.querySelectorAll('input[name="sections"]:checked');
+            sectionCheckboxes.forEach(checkbox => {
+                selectedSections.push(checkbox.value);
+            });
+            
+            // Prepare job data
+            const jobData = {
+                name: formData.get('jobName'),
+                description: formData.get('description'),
+                location: formData.get('location'),
+                clientName: formData.get('clientName'),
+                clientPhone: formData.get('clientPhone'),
+                clientEmail: formData.get('clientEmail'),
+                budget: parseFloat(formData.get('budget')) || 0,
+                startDate: formData.get('startDate'),
+                targetCompletionDate: formData.get('targetCompletionDate'),
+                selectedSections: selectedSections,
+                subcontractorAssignments: getSubcontractorAssignments()
+            };
+
+            // Submit the job
+            fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(jobData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create job');
+                }
+                return response.json();
+            })
+            .then(job => {
+                console.log('Job created successfully:', job);
+                closeCreateJobModal();
+                loadJobs(); // Refresh the jobs list
+                
+                // Handle file uploads if any
+                if (window.uploadedFiles) {
+                    uploadSubcontractorDocuments(job.id);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating job:', error);
+                alert('Failed to create job. Please try again.');
+            });
+        }
+
+        function getSubcontractorAssignments() {
+            const assignments = [];
+            const selectedSections = document.querySelectorAll('input[name="sections"]:checked');
+            
+            selectedSections.forEach(checkbox => {
+                const sectionName = checkbox.value;
+                const sectionKey = sectionName.replace(/\s+/g, '');
+                const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
+                
+                if (subcontractorRow && subcontractorRow.style.display !== 'none') {
+                    const select = subcontractorRow.querySelector('select');
+                    const budgetInput = subcontractorRow.querySelector('input[type="number"]');
+                    
+                    if (select && select.value) {
+                        assignments.push({
+                            sectionName: sectionName,
+                            subcontractorId: parseInt(select.value),
+                            budget: parseFloat(budgetInput.value) || 0
+                        });
+                    }
+                }
+            });
+            
+            return assignments;
+        }
+
+        function uploadSubcontractorDocuments(jobId) {
+            if (!window.uploadedFiles) return;
+            
+            Object.keys(window.uploadedFiles).forEach(sectionName => {
+                const sectionFiles = window.uploadedFiles[sectionName];
+                
+                Object.keys(sectionFiles).forEach(docType => {
+                    const file = sectionFiles[docType];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('jobId', jobId);
+                    formData.append('sectionName', sectionName);
+                    formData.append('documentType', docType);
+                    
+                    fetch('/api/subcontractor-documents', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to upload ${docType} for ${sectionName}`);
+                        }
+                        console.log(`Uploaded ${docType} for ${sectionName}`);
+                    })
+                    .catch(error => {
+                        console.error('Error uploading document:', error);
+                    });
+                });
+            });
+            
+            // Clear uploaded files
+            window.uploadedFiles = {};
+        }
     </script>
 </body>
 </html>
