@@ -2014,8 +2014,8 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    query: query,
-                    sectionType: null
+                    Query: query,
+                    SectionType: null
                 })
             })
             .then(response => response.json())
@@ -2029,7 +2029,7 @@
         }
 
         function showAIResponse(response) {
-            const message = `AI Assistant says:\n\n${response.Response}\n\nConfidence: ${Math.round(response.Confidence * 100)}%\n\nSources: ${response.Sources.join(', ')}`;
+            const message = `🤖 AI Construction Assistant:\n\n${response.response}\n\nConfidence: ${Math.round(response.confidence * 100)}%\n\nSources: ${response.sources.join(', ')}`;
             alert(message);
         }
     </script>
