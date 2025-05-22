@@ -323,7 +323,10 @@
                     }
                     return response.json();
                 })
-                .then(jobs => {
+                .then(data => {
+                    // Handle the JSON reference format from System.Text.Json
+                    const jobs = data.$values || [];
+                    
                     if (jobs.length === 0) {
                         jobsList.innerHTML = '<p>No jobs found. Create a new job to get started.</p>';
                         return;
@@ -447,7 +450,10 @@
                     }
                     return response.json();
                 })
-                .then(sections => {
+                .then(data => {
+                    // Handle the JSON reference format from System.Text.Json
+                    const sections = data.$values || [];
+                    
                     if (sections.length === 0) {
                         sectionsContainer.innerHTML = '<p>No sections found for this job.</p>';
                         return;
