@@ -119,14 +119,19 @@ namespace JobTracker.Controllers
         {
             try
             {
+                // Load job without complex joins first to avoid column issues
                 var job = await _context.Jobs
-                    .Include(j => j.Sections)
                     .FirstOrDefaultAsync(j => j.Id == id);
 
                 if (job == null)
                 {
                     return NotFound();
                 }
+
+                // Load sections separately
+                job.Sections = await _context.JobSections
+                    .Where(s => s.JobId == id)
+                    .ToListAsync();
 
                 return job;
             }
