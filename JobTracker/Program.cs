@@ -1,12 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
+using JobTracker.Services;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+});
+
+// Register NotificationService
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
