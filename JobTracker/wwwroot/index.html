@@ -252,26 +252,50 @@
                     <h3>Send WhatsApp Notification</h3>
                     <p>Send updates to the client or team members via WhatsApp</p>
                     
-                    <div class="form-group">
-                        <label for="phoneNumber">Phone Number (with country code, e.g., +1234567890)</label>
-                        <input type="text" id="phoneNumber" class="form-control" placeholder="+1234567890">
+                    <div class="notification-panel">
+                        <div class="notification-form">
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number (with country code, e.g., +1234567890)</label>
+                                <input type="text" id="phoneNumber" class="form-control" placeholder="+1234567890">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="messageText">Message</label>
+                                <textarea id="messageText" class="form-control" rows="6" 
+                                    placeholder="Enter your message here..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="whatsappProvider">WhatsApp Provider:</label>
+                                <select id="whatsappProvider" class="form-control">
+                                    <option value="Dialog360">360dialog</option>
+                                    <option value="Twilio">Twilio</option>
+                                </select>
+                                <small class="provider-note">Note: API credentials must be configured for the selected provider.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="template-panel">
+                            <div id="whatsAppTemplates" class="form-group">
+                                <h4>Message Templates</h4>
+                                <p>Click a template to quickly fill the message field:</p>
+                                <button onclick="fillTemplate('status')" class="button btn-template">Status Update</button>
+                                <button onclick="fillTemplate('delay')" class="button btn-template">Delay Notification</button>
+                                <button onclick="fillTemplate('complete')" class="button btn-template">Section Completed</button>
+                                <button onclick="fillTemplate('custom')" class="button btn-template">Custom Template</button>
+                            </div>
+                            
+                            <div class="notification-history">
+                                <h4>Recently Sent</h4>
+                                <p><em>Message history will appear here after sending messages.</em></p>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="messageText">Message</label>
-                        <textarea id="messageText" class="form-control" rows="4" 
-                            placeholder="Enter your message here..."></textarea>
+                    <div class="action-panel">
+                        <button id="sendWhatsAppBtn" class="button send-button">Send WhatsApp Message</button>
+                        <div id="whatsAppStatus" class="status-message"></div>
                     </div>
-                    
-                    <div id="whatsAppTemplates" class="form-group">
-                        <label>Quick Templates:</label>
-                        <button onclick="fillTemplate('status')" class="button btn-template">Status Update</button>
-                        <button onclick="fillTemplate('delay')" class="button btn-template">Delay Notification</button>
-                        <button onclick="fillTemplate('complete')" class="button btn-template">Section Completed</button>
-                    </div>
-                    
-                    <button id="sendWhatsAppBtn" class="button">Send WhatsApp Message</button>
-                    <div id="whatsAppStatus"></div>
                 </div>
             </div>
         </div>
@@ -498,6 +522,7 @@
         function sendWhatsAppMessage() {
             const phoneNumber = document.getElementById('phoneNumber').value;
             const message = document.getElementById('messageText').value;
+            const provider = document.getElementById('whatsappProvider').value;
             const statusElement = document.getElementById('whatsAppStatus');
             
             if (!phoneNumber || !message) {
@@ -506,7 +531,7 @@
                 return;
             }
             
-            statusElement.textContent = 'Sending WhatsApp message...';
+            statusElement.textContent = `Sending WhatsApp message via ${provider}...`;
             statusElement.className = '';
             
             // Send WhatsApp message via our API
@@ -517,7 +542,8 @@
                 },
                 body: JSON.stringify({
                     phoneNumber: phoneNumber,
-                    message: message
+                    message: message,
+                    provider: provider
                 })
             })
             .then(response => response.json())
