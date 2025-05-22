@@ -13,13 +13,7 @@ function JobList() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/jobs');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.jobs.getAll();
       setJobs(data);
       setError(null);
     } catch (err) {
