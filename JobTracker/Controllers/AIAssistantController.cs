@@ -36,7 +36,37 @@ namespace JobTracker.Controllers
         {
             query = query.ToLower();
 
-            if (query.Contains("electrical") || query.Contains("electric"))
+            if ((query.Contains("deck") || query.Contains("decking")) && (query.Contains("fastener") || query.Contains("fastners") || query.Contains("screw") || query.Contains("bolt")))
+            {
+                return new {
+                    Response = @"**DECK FASTENER REQUIREMENTS - Field Reference**
+
+**Joist Connections:**
+• Joist hangers: Galvanized steel, sized for lumber (2x8, 2x10, 2x12)
+• Joist hanger nails: 1½"" galvanized, 10d minimum
+• Beam connections: ½"" galvanized carriage bolts
+
+**Decking Attachment:**
+• Deck screws: #8 x 2½"" stainless steel or galvanized
+• Spacing: 12"" on center along joists
+• End spacing: 1"" minimum from board ends
+
+**Ledger Board (House Attachment):**
+• Lag bolts: ½"" x 6"" galvanized, every 16"" on center
+• Through bolts preferred in seismic areas
+• Flashing required above ledger
+
+**MA Building Code:**
+• All fasteners must resist corrosion (galvanized/stainless)
+• Structural connections require load-rated hardware
+• Spacing per IRC R507
+
+**Safety:** Pre-drill holes, use proper PPE, check load ratings.",
+                    Confidence = 0.95f,
+                    Sources = new[] { "Massachusetts Building Code", "IRC R507", "Construction Standards" }
+                };
+            }
+            else if (query.Contains("electrical") || query.Contains("electric"))
             {
                 return new {
                     Response = @"Electrical Work Requirements in Massachusetts:
