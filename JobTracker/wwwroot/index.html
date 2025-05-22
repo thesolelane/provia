@@ -713,25 +713,37 @@
             
             createJobBtn.addEventListener('click', function() {
                 // Reset form fields
-                document.getElementById('jobBasicForm').reset();
-                document.getElementById('clientInfoForm').reset();
+                const basicForm = document.getElementById('jobBasicForm');
+                const clientForm = document.getElementById('clientInfoForm');
+                if (basicForm) basicForm.reset();
+                if (clientForm) clientForm.reset();
                 
-                // Initialize section selection
-                initSectionSelection();
+                // Initialize section selection - hide all subcontractor rows
+                const sectionNames = ['Demolition', 'Foundation', 'Framing', 'Electrical', 'Plumbing', 'HVAC', 'Drywall', 'Painting', 'Flooring', 'Finishing', 'Inspection'];
+                sectionNames.forEach(sectionName => {
+                    const sectionKey = sectionName.replace(/\s+/g, '');
+                    const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
+                    if (subcontractorRow) {
+                        subcontractorRow.style.display = 'none';
+                    }
+                });
                 
                 // Show first tab
                 document.querySelectorAll('#jobCreationModal .tab').forEach(tab => {
                     tab.classList.remove('active');
                 });
-                document.querySelector('#jobCreationModal .tab[data-tab="basicInfo"]').classList.add('active');
+                const firstTab = document.querySelector('#jobCreationModal .tab[data-tab="basicInfo"]');
+                if (firstTab) firstTab.classList.add('active');
                 
                 document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
                     content.classList.remove('active');
                 });
-                document.getElementById('basicInfoTab').classList.add('active');
+                const firstTabContent = document.getElementById('basicInfoTab');
+                if (firstTabContent) firstTabContent.classList.add('active');
                 
                 // Clear status
-                document.getElementById('jobCreationStatus').innerHTML = '';
+                const statusElement = document.getElementById('jobCreationStatus');
+                if (statusElement) statusElement.innerHTML = '';
                 
                 // Display modal
                 modal.style.display = 'block';
