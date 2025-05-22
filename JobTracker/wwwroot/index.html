@@ -2003,16 +2003,20 @@
         }
 
         // AI Assistant functionality
-        function openAIAssistant() {
-            // Prevent default browser behavior
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const query = prompt("Ask the AI Assistant about building codes, timelines, budgets, or construction best practices:");
-            if (query && query.trim()) {
-                console.log('Asking AI:', query);
-                getAIAssistance(query.trim());
+        function openAIAssistant(event) {
+            // Completely prevent any navigation
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
             }
+            
+            // Show a demo response first to test the popup
+            showAIResponse({
+                response: "🏗️ Hi! I'm your AI Construction Assistant! I can help you with:\n\n• Building codes and permits\n• Project timelines and scheduling\n• Material requirements\n• Safety regulations\n• Cost estimates\n\nWhat would you like to know about your construction project?",
+                confidence: 1.0,
+                sources: ["AI Construction Knowledge Base"]
+            });
+            
             return false;
         }
 
