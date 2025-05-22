@@ -1294,7 +1294,7 @@
                 .catch(error => {
                     console.error('Error loading job details:', error);
                     document.getElementById('jobTitle').innerHTML = 'Error loading job details';
-                    document.getElementById('jobBasicInfo').innerHTML = '<p>Failed to load job details. Please try again later.</p>';
+                    document.getElementById('jobBasicInfo').innerHTML = `<p>Failed to load job details: ${error.message}</p><p>Please check the console for more details.</p>`;
                 });
         }
         
