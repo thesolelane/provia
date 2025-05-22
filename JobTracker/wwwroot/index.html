@@ -464,6 +464,7 @@
             <div class="action-buttons">
                 <button class="button" id="refreshButton">Refresh Jobs</button>
                 <button class="button" id="createJobButton">Create New Job</button>
+                <button class="button" id="aiAssistantButton">AI Assistant</button>
             </div>
             <div id="jobsList"></div>
             
@@ -1021,6 +1022,10 @@
             
             document.getElementById('refreshButton').addEventListener('click', function() {
                 loadJobs();
+            });
+            
+            document.getElementById('aiAssistantButton').addEventListener('click', function() {
+                openAIAssistant();
             });
             
             // Initialize job creation modal
@@ -1992,6 +1997,40 @@
             if (activeTab) {
                 activeTab.classList.add('active');
             }
+        }
+
+        // AI Assistant functionality
+        function openAIAssistant() {
+            const query = prompt("Ask the AI Assistant about building codes, timelines, budgets, or construction best practices:");
+            if (query) {
+                getAIAssistance(query);
+            }
+        }
+
+        function getAIAssistance(query) {
+            fetch('/api/AIAssistant/building-code-assistance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    sectionType: null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAIResponse(data);
+            })
+            .catch(error => {
+                console.error('Error getting AI assistance:', error);
+                alert('Sorry, I had trouble getting an answer. Please try again.');
+            });
+        }
+
+        function showAIResponse(response) {
+            const message = `AI Assistant says:\n\n${response.Response}\n\nConfidence: ${Math.round(response.Confidence * 100)}%\n\nSources: ${response.Sources.join(', ')}`;
+            alert(message);
         }
     </script>
 </body>
