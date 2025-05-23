@@ -235,10 +235,10 @@ Massachusetts Considerations:
                     Sources = new[] { "Massachusetts Building Code", "EPA Guidelines", "Historic Building Standards" }
                 };
             }
-            else if (query.Contains("tension") || query.Contains("tie") || query.Contains("hurricane") || query.Contains("seismic") || query.Contains("connector"))
+            else if (query.Contains("tension") || query.Contains("tie") || query.Contains("hurricane") || query.Contains("seismic") || query.Contains("connector") || query.Contains("ledger"))
             {
                 return new {
-                    Response = @"**STRUCTURAL CONNECTORS & TENSION TIES**
+                    Response = @"**STRUCTURAL CONNECTORS & HARDWARE**
 
 **Hurricane/Seismic Ties:**
 • Simpson Strong-Tie H1 Hurricane Ties: Common for joist-to-plate connections
@@ -246,30 +246,40 @@ Massachusetts Considerations:
 • LTP Tension Ties: Uplift resistance for roof systems
 • Install with specified Simpson nails (typically 10d x 1.5"")
 
+**Ledger Locks & Deck Hardware:**
+• Ledger locks: Self-drilling screws for ledger board attachment
+• Typical size: 1/2"" diameter, 6"" to 8"" length
+• Use with proper flashing and joist hangers
+• Required spacing: typically 16"" o.c. maximum
+• Alternative to lag bolts for deck ledger connections
+
 **Tension Ties Applications:**
 • Required in high-wind areas (120+ mph zones)
 • Seismic regions (Massachusetts generally low seismic)
 • Connects framing members to resist uplift forces
 • Joist hangers for beam connections
+• Deck-to-house connections per 780 CMR 5502.2.1
 
 **Installation Requirements:**
 • Use only manufacturer-specified fasteners
 • Pre-drill when required to prevent splitting
 • Follow spacing requirements exactly
+• Positive attachment required - no toenails for deck connections
 • Check local wind load requirements
 
 **Massachusetts Code Notes:**
+• Deck attachment must resist vertical and lateral loads
 • Refer to IRC Table R602.3(1) for fastening schedules
-• Wind speeds: Check local jurisdiction requirements
 • Some coastal areas require enhanced tie-down systems
 • Building official may require engineered connections
 
-**Common Sizes:**
-- 2x lumber: H1, H2.5, H3
-- Engineered lumber: Consult manufacturer
-- Heavy timber: Custom fabricated ties may be required",
+**Common Applications:**
+- Deck ledger boards to rim joists
+- Joist hangers and beam connections
+- Hurricane/wind uplift resistance
+- Engineered lumber connections",
                     Confidence = 0.90f,
-                    Sources = new[] { "Massachusetts Building Code", "IRC R602", "Simpson Strong-Tie Standards" }
+                    Sources = new[] { "Massachusetts Building Code", "780 CMR 5502.2.1", "Simpson Strong-Tie Standards" }
                 };
             }
             else if (query.Contains("nail") || query.Contains("fastener") || query.Contains("screw") || query.Contains("stud") || query.Contains("joist") || query.Contains("rafter"))
@@ -461,9 +471,37 @@ Massachusetts Considerations:
             else
             {
                 return new {
-                    Response = "I can help you with building codes, permits, timelines, budgets, and construction hardware! Try asking about electrical requirements, plumbing codes, tension ties, fasteners, permits, inspections, or project scheduling. I'm here to make your construction projects smoother and code-compliant!",
-                    Confidence = 0.60f,
-                    Sources = new[] { "General Construction Knowledge" }
+                    Response = @"**I'd be happy to help with your construction question!**
+
+To provide you with the most accurate, code-compliant guidance, could you provide a bit more detail about:
+
+**Building Type:**
+• Residential (1-3 family units)
+• Commercial (4+ units)
+• Mixed-use or special occupancy
+
+**Specific Information Needed:**
+• Location/jurisdiction requirements
+• Load conditions or structural details
+• Installation context or application
+
+**I specialize in:**
+✓ Massachusetts Building Codes (780 CMR)
+✓ Lumber spans and structural requirements
+✓ Fastening schedules and hardware specifications
+✓ Permit processes and inspection requirements
+✓ Electrical, plumbing, and mechanical codes
+✓ Project planning and subcontractor coordination
+
+**For complex or specialized questions beyond my current knowledge base, I recommend:**
+• Consulting with a licensed professional engineer
+• Contacting your local building official
+• Reviewing manufacturer specifications
+• Checking with specialized trade associations
+
+Please feel free to rephrase your question with more context, and I'll provide detailed, code-specific guidance!",
+                    Confidence = 0.70f,
+                    Sources = new[] { "Massachusetts Building Code", "Professional Construction Standards" }
                 };
             }
         }
