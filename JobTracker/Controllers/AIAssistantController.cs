@@ -56,10 +56,11 @@ namespace JobTracker.Controllers
 • Through bolts preferred in seismic areas
 • Flashing required above ledger
 
-**MA Building Code:**
+**MA Building Code (10th Edition - 780 CMR):**
 • All fasteners must resist corrosion (galvanized/stainless)
 • Structural connections require load-rated hardware
-• Spacing per IRC R507
+• Spacing per IRC R507 (2021 ICC standards)
+• Effective October 2024, concurrency period until June 2025
 
 **Safety:** Pre-drill holes, use proper PPE, check load ratings.",
                     Confidence = 0.95f,
