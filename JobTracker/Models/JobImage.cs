@@ -45,8 +45,15 @@ namespace JobTracker.Models
         
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
         
-        // Size in bytes
+        // Size in bytes (max 10MB = 10,485,760 bytes)
         public long FileSize { get; set; }
+        
+        // Quality setting for JPG compression (1-100)
+        public int? CompressionQuality { get; set; } = 85;
+        
+        // Image format optimization type
+        [StringLength(20)]
+        public string ImageFormat { get; set; } = "JPG"; // JPG, SVG, PNG
         
         // Optional thumbnail path for faster loading
         [StringLength(255)]
