@@ -505,6 +505,38 @@
             color: #007bff;
             margin-bottom: 15px;
         }
+        
+        .section-group {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        
+        .main-section {
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .section-main-label {
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .subsections {
+            padding: 10px 15px 15px 30px;
+        }
+        
+        .subsection-checkbox {
+            margin: 8px 0;
+        }
+        
+        .subsection-checkbox label {
+            font-weight: normal;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -1638,27 +1670,46 @@
             if (!sectionContainer) return;
             
             const sections = [
-                { id: 0, name: 'Demolition' },
-                { id: 1, name: 'Foundation' },
-                { id: 2, name: 'Framing' },
-                { id: 3, name: 'Electrical' },
-                { id: 4, name: 'Plumbing' },
-                { id: 5, name: 'HVAC' },
-                { id: 6, name: 'Drywall' },
-                { id: 7, name: 'Painting' },
-                { id: 8, name: 'Flooring' },
-                { id: 9, name: 'Finishing' },
-                { id: 10, name: 'Inspection' }
+                { id: 0, name: 'Demolition', subsections: ['Interior Demo', 'Exterior Demo'] },
+                { id: 1, name: 'Foundation', subsections: ['Excavation', 'Footings', 'Foundation Walls'] },
+                { id: 2, name: 'Framing', subsections: ['Exterior Framing', 'Interior Framing', 'Roof Framing'] },
+                { id: 3, name: 'Electrical', subsections: ['Rough-in', 'Finish Work', 'Panel/Service'] },
+                { id: 4, name: 'Plumbing', subsections: ['Rough-in', 'Finish Work', 'Water/Sewer Connection'] },
+                { id: 5, name: 'HVAC', subsections: ['Ductwork', 'Equipment Install', 'Controls/Testing'] },
+                { id: 6, name: 'Drywall', subsections: ['Hanging', 'Taping/Finishing', 'Priming'] },
+                { id: 7, name: 'Painting', subsections: ['Interior', 'Exterior', 'Trim/Detail Work'] },
+                { id: 8, name: 'Flooring', subsections: ['Hardwood', 'Tile/Stone', 'Carpet/Vinyl'] },
+                { id: 9, name: 'Finishing', subsections: ['Trim/Molding', 'Cabinets', 'Hardware/Fixtures'] },
+                { id: 10, name: 'Inspection', subsections: ['Rough Inspections', 'Final Inspection', 'Certificate of Occupancy'] }
             ];
             
             let html = '<div class="section-grid">';
             sections.forEach(section => {
                 html += `
-                    <div class="section-checkbox">
-                        <label>
-                            <input type="checkbox" name="selectedSections" value="${section.id}" onchange="updateSubcontractorAssignments()">
-                            ${section.name}
-                        </label>
+                    <div class="section-group">
+                        <div class="main-section">
+                            <label class="section-main-label">
+                                <input type="checkbox" name="mainSection" value="${section.id}" onchange="toggleMainSection(${section.id})">
+                                <strong>${section.name}</strong>
+                            </label>
+                        </div>
+                        <div class="subsections" id="subsections-${section.id}" style="display: none;">
+                `;
+                
+                section.subsections.forEach((subsection, index) => {
+                    const subsectionId = `${section.id}_${index}`;
+                    html += `
+                        <div class="subsection-checkbox">
+                            <label>
+                                <input type="checkbox" name="selectedSections" value="${subsectionId}" data-main-section="${section.id}" onchange="updateSubcontractorAssignments()">
+                                ${subsection}
+                            </label>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
                     </div>
                 `;
             });
@@ -1667,6 +1718,23 @@
             sectionContainer.innerHTML = html;
         }
         
+        function toggleMainSection(sectionId) {
+            const mainCheckbox = document.querySelector(`input[name="mainSection"][value="${sectionId}"]`);
+            const subsectionsDiv = document.getElementById(`subsections-${sectionId}`);
+            const subsectionCheckboxes = subsectionsDiv.querySelectorAll('input[type="checkbox"]');
+            
+            if (mainCheckbox.checked) {
+                subsectionsDiv.style.display = 'block';
+            } else {
+                subsectionsDiv.style.display = 'none';
+                // Uncheck all subsections
+                subsectionCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateSubcontractorAssignments();
+            }
+        }
+
         function updateSubcontractorAssignments() {
             const container = document.getElementById('subcontractorAssignmentContainer');
             if (!container) return;
