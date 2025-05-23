@@ -450,6 +450,61 @@
         .action-buttons {
             margin-bottom: 20px;
         }
+        
+        .subcontractor-assignment-row {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .section-header h4 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .subcontractor-checkbox {
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .subcontractor-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .insurance-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #007bff;
+        }
+        
+        .insurance-section h5 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -1630,21 +1685,77 @@
                 
                 html += `
                     <div class="subcontractor-assignment-row" data-section="${sectionId}">
-                        <div class="section-name">${sectionName}</div>
-                        <div class="assignment-controls">
-                            <label>
-                                <input type="checkbox" name="subcontracted_${sectionId}" onchange="toggleSubcontractorSelect(${sectionId})">
-                                Subcontracted
+                        <div class="section-header">
+                            <h4>${sectionName}</h4>
+                            <label class="subcontractor-checkbox">
+                                <input type="checkbox" name="subcontracted_${sectionId}" onchange="toggleSubcontractorDetails(${sectionId})">
+                                Assign to Subcontractor
                             </label>
-                            <select name="subcontractor_${sectionId}" class="form-control subcontractor-select" disabled>
-                                <option value="">Select Subcontractor</option>
-                                <option value="1">ABC Construction</option>
-                                <option value="2">Elite Electrical</option>
-                                <option value="3">Perfect Plumbing</option>
-                                <option value="4">Quality HVAC</option>
-                                <option value="5">Pro Painters</option>
-                            </select>
-                            <input type="number" name="budget_${sectionId}" class="form-control budget-input" placeholder="Budget $" min="0" step="100">
+                        </div>
+                        
+                        <div id="subcontractor-details-${sectionId}" class="subcontractor-details" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Company Name:</label>
+                                    <input type="text" name="company_${sectionId}" class="form-control" placeholder="Subcontractor Company Name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Point of Contact:</label>
+                                    <input type="text" name="contact_${sectionId}" class="form-control" placeholder="Contact Person Name">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Phone:</label>
+                                    <input type="tel" name="phone_${sectionId}" class="form-control" placeholder="(555) 123-4567">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email:</label>
+                                    <input type="email" name="email_${sectionId}" class="form-control" placeholder="contact@company.com">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>WhatsApp (if available):</label>
+                                    <input type="tel" name="whatsapp_${sectionId}" class="form-control" placeholder="WhatsApp Number">
+                                </div>
+                                <div class="form-group">
+                                    <label>Section Budget:</label>
+                                    <input type="number" name="budget_${sectionId}" class="form-control" placeholder="Budget $" min="0" step="100">
+                                </div>
+                            </div>
+                            
+                            <div class="insurance-section">
+                                <h5>Workers Compensation & Insurance Info</h5>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Workers Comp Policy #:</label>
+                                        <input type="text" name="workerscomp_${sectionId}" class="form-control" placeholder="Policy Number">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Expiration Date:</label>
+                                        <input type="date" name="workerscomp_exp_${sectionId}" class="form-control">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Liability Insurance:</label>
+                                        <input type="text" name="liability_${sectionId}" class="form-control" placeholder="Liability Policy #">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>License Number:</label>
+                                        <input type="text" name="license_${sectionId}" class="form-control" placeholder="State License #">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Additional Notes:</label>
+                                    <textarea name="notes_${sectionId}" class="form-control" rows="2" placeholder="Special requirements, certifications, etc."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1653,17 +1764,23 @@
             container.innerHTML = html;
         }
         
-        function toggleSubcontractorSelect(sectionId) {
+        function toggleSubcontractorDetails(sectionId) {
             const checkbox = document.querySelector(`input[name="subcontracted_${sectionId}"]`);
-            const select = document.querySelector(`select[name="subcontractor_${sectionId}"]`);
+            const detailsDiv = document.getElementById(`subcontractor-details-${sectionId}`);
             
             if (checkbox.checked) {
-                select.disabled = false;
-                select.required = true;
+                detailsDiv.style.display = 'block';
+                // Make required fields required
+                detailsDiv.querySelectorAll('input[name^="company_"], input[name^="contact_"], input[name^="phone_"]').forEach(input => {
+                    input.required = true;
+                });
             } else {
-                select.disabled = true;
-                select.required = false;
-                select.value = '';
+                detailsDiv.style.display = 'none';
+                // Clear all fields and remove required
+                detailsDiv.querySelectorAll('input, textarea').forEach(input => {
+                    input.value = '';
+                    input.required = false;
+                });
             }
         }
         
