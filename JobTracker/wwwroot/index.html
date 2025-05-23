@@ -2216,6 +2216,89 @@
                 });
         }
         
+        function createNewJob() {
+            const basicForm = document.getElementById('jobBasicForm');
+            const clientForm = document.getElementById('clientInfoForm');
+            
+            // Get basic job info
+            const jobData = {
+                name: basicForm.querySelector('input[name="name"]').value,
+                description: basicForm.querySelector('textarea[name="description"]').value,
+                location: basicForm.querySelector('input[name="location"]').value,
+                startDate: basicForm.querySelector('input[name="startDate"]').value,
+                targetCompletionDate: basicForm.querySelector('input[name="targetCompletionDate"]').value,
+                budget: parseFloat(basicForm.querySelector('input[name="budget"]').value) || 0,
+                clientName: clientForm.querySelector('input[name="clientName"]').value,
+                clientPhone: clientForm.querySelector('input[name="clientPhone"]').value,
+                clientEmail: clientForm.querySelector('input[name="clientEmail"]').value,
+                notes: clientForm.querySelector('textarea[name="notes"]').value || ''
+            };
+            
+            // Get selected sections
+            const selectedSections = [];
+            const sectionCheckboxes = document.querySelectorAll('input[name="selectedSections"]:checked');
+            
+            sectionCheckboxes.forEach(checkbox => {
+                const sectionId = checkbox.getAttribute('data-main-section');
+                const subsectionName = checkbox.value;
+                
+                selectedSections.push({
+                    sectionType: parseInt(sectionId),
+                    description: subsectionName,
+                    isSubcontracted: false,
+                    notes: ''
+                });
+            });
+            
+            // Create job with sections
+            fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...jobData,
+                    sections: selectedSections
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create job');
+                }
+                return response.json();
+            })
+            .then(data => {
+                closeJobCreationModal();
+                loadJobs(); // Refresh job list
+                alert('Job created successfully!');
+            })
+            .catch(error => {
+                console.error('Error creating job:', error);
+                alert('Error creating job. Please try again.');
+            });
+        }
+        
+        function closeJobCreationModal() {
+            const modal = document.getElementById('jobCreationModal');
+            modal.style.display = 'none';
+            
+            // Reset all forms
+            const forms = modal.querySelectorAll('form');
+            forms.forEach(form => form.reset());
+            
+            // Reset tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector('.tab[data-tab="basicInfo"]').classList.add('active');
+            document.getElementById('basicInfoTab').classList.add('active');
+            
+            // Clear section selections
+            const sectionContainer = document.getElementById('jobSectionSelection');
+            if (sectionContainer) {
+                sectionContainer.innerHTML = '';
+            }
+        }
+
         function getStatusClass(status) {
             status = status.toLowerCase();
             if (status === 'in progress') {
