@@ -1133,7 +1133,7 @@
                 if (clientForm) clientForm.reset();
                 
                 // Initialize section selection - hide all subcontractor rows
-                const sectionNames = ['Demolition', 'Foundation', 'Framing', 'Electrical', 'Plumbing', 'HVAC', 'Drywall', 'Painting', 'Flooring', 'Finishing', 'Inspection'];
+                const sectionNames = ['Permit Approval', 'Demolition', 'Foundation', 'Framing', 'Electrical', 'Plumbing', 'HVAC', 'Insulation', 'Drywall', 'Painting', 'Flooring', 'Finishing', 'Final Inspection'];
                 sectionNames.forEach(sectionName => {
                     const sectionKey = sectionName.replace(/\s+/g, '');
                     const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
@@ -2324,17 +2324,19 @@
         
         function getSectionTypeName(sectionType) {
             switch (sectionType) {
-                case 0: return 'Demolition';
-                case 1: return 'Foundation';
-                case 2: return 'Framing';
-                case 3: return 'Electrical';
-                case 4: return 'Plumbing';
-                case 5: return 'HVAC';
-                case 6: return 'Drywall';
-                case 7: return 'Painting';
-                case 8: return 'Flooring';
-                case 9: return 'Finishing';
-                case 10: return 'Inspection';
+                case 0: return 'Permit Approval';
+                case 1: return 'Demolition';
+                case 2: return 'Foundation';
+                case 3: return 'Framing';
+                case 4: return 'Electrical';
+                case 5: return 'Plumbing';
+                case 6: return 'HVAC';
+                case 7: return 'Insulation';
+                case 8: return 'Drywall';
+                case 9: return 'Painting';
+                case 10: return 'Flooring';
+                case 11: return 'Finishing';
+                case 12: return 'Final Inspection';
                 default: return 'Unknown';
             }
         }
