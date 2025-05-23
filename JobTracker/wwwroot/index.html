@@ -1072,6 +1072,9 @@
                 const statusElement = document.getElementById('jobCreationStatus');
                 if (statusElement) statusElement.innerHTML = '';
                 
+                // Initialize section checkboxes when modal opens
+                initializeSectionSelection();
+                
                 // Display modal
                 modal.style.display = 'block';
             });
@@ -1146,11 +1149,8 @@
                 });
             });
             
-            // Initialize section selection when modal opens
-            initializeSectionSelection();
-            
-            // Save job button
-            document.getElementById('saveJobBtn').addEventListener('click', createNewJob);
+            // Save job button - remove old reference
+            // document.getElementById('saveJobBtn').addEventListener('click', createNewJob);
             
             document.getElementById('backButton').addEventListener('click', function() {
                 document.getElementById('jobDetails').style.display = 'none';
