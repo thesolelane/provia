@@ -152,6 +152,9 @@ namespace JobTracker.Services
                 // 2. Add text overlay with DateTime.Now.ToString() and jobNumber
                 // 3. Save the modified image
                 
+                // Use Task.CompletedTask to make this properly async
+                await Task.CompletedTask;
+                
                 _logger.LogInformation($"Timestamp and job number added to image {imagePath}");
                 
                 return imagePath;
