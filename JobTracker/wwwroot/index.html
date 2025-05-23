@@ -1144,6 +1144,9 @@
                 });
             });
             
+            // Initialize section selection when modal opens
+            initializeSectionSelection();
+            
             // Save job button
             document.getElementById('saveJobBtn').addEventListener('click', createNewJob);
             
@@ -1434,6 +1437,162 @@
                     messageElement.value = `Regarding your project "${currentJob.name}" (Job #${currentJob.jobNumber}):\n\n[Your custom message here]\n\nPlease contact us if you have any questions.`;
                     break;
             }
+        }
+        
+        // Job creation functions
+        function initializeSectionSelection() {
+            const sectionContainer = document.getElementById('sectionSelectionContainer');
+            if (!sectionContainer) return;
+            
+            const sections = [
+                { id: 0, name: 'Demolition' },
+                { id: 1, name: 'Foundation' },
+                { id: 2, name: 'Framing' },
+                { id: 3, name: 'Electrical' },
+                { id: 4, name: 'Plumbing' },
+                { id: 5, name: 'HVAC' },
+                { id: 6, name: 'Drywall' },
+                { id: 7, name: 'Painting' },
+                { id: 8, name: 'Flooring' },
+                { id: 9, name: 'Finishing' },
+                { id: 10, name: 'Inspection' }
+            ];
+            
+            let html = '<div class="section-grid">';
+            sections.forEach(section => {
+                html += `
+                    <div class="section-checkbox">
+                        <label>
+                            <input type="checkbox" name="selectedSections" value="${section.id}" onchange="updateSubcontractorAssignments()">
+                            ${section.name}
+                        </label>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            sectionContainer.innerHTML = html;
+        }
+        
+        function updateSubcontractorAssignments() {
+            const container = document.getElementById('subcontractorAssignmentContainer');
+            if (!container) return;
+            
+            const selectedSections = document.querySelectorAll('input[name="selectedSections"]:checked');
+            
+            if (selectedSections.length === 0) {
+                container.innerHTML = '<p class="text-muted">Please select sections first to assign subcontractors.</p>';
+                return;
+            }
+            
+            let html = '';
+            selectedSections.forEach(checkbox => {
+                const sectionId = checkbox.value;
+                const sectionName = checkbox.parentElement.textContent.trim();
+                
+                html += `
+                    <div class="subcontractor-assignment-row" data-section="${sectionId}">
+                        <div class="section-name">${sectionName}</div>
+                        <div class="assignment-controls">
+                            <label>
+                                <input type="checkbox" name="subcontracted_${sectionId}" onchange="toggleSubcontractorSelect(${sectionId})">
+                                Subcontracted
+                            </label>
+                            <select name="subcontractor_${sectionId}" class="form-control subcontractor-select" disabled>
+                                <option value="">Select Subcontractor</option>
+                                <option value="1">ABC Construction</option>
+                                <option value="2">Elite Electrical</option>
+                                <option value="3">Perfect Plumbing</option>
+                                <option value="4">Quality HVAC</option>
+                                <option value="5">Pro Painters</option>
+                            </select>
+                            <input type="number" name="budget_${sectionId}" class="form-control budget-input" placeholder="Budget $" min="0" step="100">
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function toggleSubcontractorSelect(sectionId) {
+            const checkbox = document.querySelector(`input[name="subcontracted_${sectionId}"]`);
+            const select = document.querySelector(`select[name="subcontractor_${sectionId}"]`);
+            
+            if (checkbox.checked) {
+                select.disabled = false;
+                select.required = true;
+            } else {
+                select.disabled = true;
+                select.required = false;
+                select.value = '';
+            }
+        }
+        
+        function createNewJob() {
+            const statusElement = document.getElementById('jobCreationStatus');
+            statusElement.innerHTML = '<div class="loading">Creating job...</div>';
+            
+            // Collect basic job information
+            const jobData = {
+                name: document.getElementById('jobName').value,
+                jobNumber: document.getElementById('jobNumber').value,
+                location: document.getElementById('jobLocation').value,
+                description: document.getElementById('jobDescription').value,
+                startDate: document.getElementById('jobStartDate').value,
+                targetCompletionDate: document.getElementById('jobEndDate').value,
+                budget: parseFloat(document.getElementById('jobBudget').value) || 0,
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                status: 'Planning'
+            };
+            
+            // Collect selected sections and subcontractor assignments
+            const selectedSections = [];
+            document.querySelectorAll('input[name="selectedSections"]:checked').forEach(checkbox => {
+                const sectionId = parseInt(checkbox.value);
+                const isSubcontracted = document.querySelector(`input[name="subcontracted_${sectionId}"]`)?.checked || false;
+                const subcontractorId = document.querySelector(`select[name="subcontractor_${sectionId}"]`)?.value || null;
+                const budget = parseFloat(document.querySelector(`input[name="budget_${sectionId}"]`)?.value) || 0;
+                
+                selectedSections.push({
+                    sectionType: sectionId,
+                    isSubcontracted: isSubcontracted,
+                    subcontractorId: subcontractorId ? parseInt(subcontractorId) : null,
+                    budget: budget,
+                    status: 1, // Not Started
+                    description: `${getSectionTypeName(sectionId)} work for ${jobData.name}`
+                });
+            });
+            
+            jobData.sections = selectedSections;
+            
+            // Send to API
+            fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jobData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create job');
+                }
+                return response.json();
+            })
+            .then(job => {
+                statusElement.innerHTML = '<div class="status-success">Job created successfully!</div>';
+                setTimeout(() => {
+                    document.getElementById('jobCreationModal').style.display = 'none';
+                    loadJobs(); // Refresh the job list
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Error creating job:', error);
+                statusElement.innerHTML = `<div class="status-error">Failed to create job: ${error.message}</div>`;
+            });
         }
         
         // Photo management functions
