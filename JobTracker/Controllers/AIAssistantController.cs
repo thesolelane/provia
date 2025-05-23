@@ -409,6 +409,55 @@ Massachusetts Considerations:
                     Sources = new[] { "780 CMR", "Massachusetts Building Code 10th Edition", "M.G.L. c. 143" }
                 };
             }
+            else if (query.Contains("span") || query.Contains("joist") || query.Contains("2x6") || query.Contains("2x8") || query.Contains("2x10") || query.Contains("2x12") || query.Contains("lumber"))
+            {
+                return new {
+                    Response = @"**MASSACHUSETTS LUMBER SPAN TABLES (780 CMR 5502.3)**
+
+**FLOOR JOIST SPANS - SLEEPING AREAS (Live Load = 30 psf, Dead Load = 10 psf):**
+
+**2x6 Floor Joists @ 16"" o.c.:**
+• Douglas Fir-Larch #1: 10'-11""
+• Douglas Fir-Larch #2: 10'-9""
+• Southern Pine #1: 10'-11""
+• Southern Pine #2: 10'-9""
+• Hem-Fir #1: 10'-6""
+• Spruce-Pine-Fir #1/#2: 10'-3""
+
+**2x8 Floor Joists @ 16"" o.c.:**
+• Douglas Fir-Larch #1: 14'-5""
+• Douglas Fir-Larch #2: 14'-1""
+• Southern Pine #1: 14'-5""
+• Southern Pine #2: 14'-2""
+• Hem-Fir #1: 13'-10""
+• Spruce-Pine-Fir #1/#2: 13'-6""
+
+**2x10 Floor Joists @ 16"" o.c.:**
+• Douglas Fir-Larch #1: 18'-5""
+• Douglas Fir-Larch #2: 17'-2""
+• Southern Pine #1: 18'-5""
+• Southern Pine #2: 18'-0""
+• Hem-Fir #1: 17'-8""
+• Spruce-Pine-Fir #1/#2: 17'-2""
+
+**2x12 Floor Joists @ 16"" o.c.:**
+• Douglas Fir-Larch #1: 21'-4""
+• Douglas Fir-Larch #2: 19'-11""
+• Southern Pine #1: 22'-5""
+• Southern Pine #2: 21'-1""
+• Hem-Fir #1: 20'-9""
+• Spruce-Pine-Fir #1/#2: 19'-11""
+
+**NOTES:**
+• For other areas (40 psf live load): Use Table 5502.3.1(2)
+• For pressure treated lumber: Same spans apply if grade marked
+• Cantilevers: Max span = nominal joist depth
+• For 12"" o.c. spacing: Increase spans by ~8%
+• Always verify lumber grade marking per 780 CMR 5502.1",
+                    Confidence = 0.95f,
+                    Sources = new[] { "780 CMR Table 5502.3.1", "Massachusetts Floor Joist Spans", "780 CMR 55.00" }
+                };
+            }
             else
             {
                 return new {
