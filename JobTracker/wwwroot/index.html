@@ -1194,10 +1194,17 @@
                 });
             });
             
-            // Next/Back button navigation
+            // Next/Back button navigation with progressive save
             document.querySelectorAll('.next-tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
+                    const currentTab = document.querySelector('.tab.active').getAttribute('data-tab');
                     const nextTab = this.getAttribute('data-next');
+                    
+                    // Progressive save when leaving basic info tab
+                    if (currentTab === 'basicInfo') {
+                        saveBasicJobInfo(nextTab);
+                        return;
+                    }
                     
                     // Activate the right tab
                     document.querySelectorAll('#jobCreationModal .tab').forEach(t => {
@@ -2278,6 +2285,76 @@
             });
         }
         
+        // Global variable to store the job ID for progressive save
+        let currentJobId = null;
+        
+        function saveBasicJobInfo(nextTab) {
+            const basicForm = document.getElementById('jobBasicForm');
+            
+            // Get basic job info
+            const jobData = {
+                name: basicForm.querySelector('input[name="name"]').value,
+                description: basicForm.querySelector('textarea[name="description"]').value,
+                location: basicForm.querySelector('input[name="location"]').value,
+                startDate: basicForm.querySelector('input[name="startDate"]').value,
+                targetCompletionDate: basicForm.querySelector('input[name="targetCompletionDate"]').value,
+                budget: parseFloat(basicForm.querySelector('input[name="budget"]').value) || 0,
+                clientName: 'TBD', // Will be filled in client tab
+                clientPhone: '',
+                clientEmail: '',
+                notes: ''
+            };
+            
+            // Validate required fields
+            if (!jobData.name || !jobData.location || !jobData.startDate) {
+                alert('Please fill in all required fields: Job Name, Location, and Start Date');
+                return;
+            }
+            
+            // Save job to database
+            fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jobData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save job');
+                }
+                return response.json();
+            })
+            .then(data => {
+                currentJobId = data.id;
+                
+                // Show success message
+                const statusElement = document.getElementById('jobCreationStatus');
+                if (statusElement) {
+                    statusElement.innerHTML = `<div class="alert alert-success">✅ Basic job info saved! Job ID: ${currentJobId}</div>`;
+                }
+                
+                // Navigate to next tab
+                navigateToTab(nextTab);
+            })
+            .catch(error => {
+                console.error('Error saving job:', error);
+                alert('Error saving job. Please try again.');
+            });
+        }
+        
+        function navigateToTab(tabName) {
+            document.querySelectorAll('#jobCreationModal .tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            document.querySelectorAll('#jobCreationModal .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
         function closeJobCreationModal() {
             const modal = document.getElementById('jobCreationModal');
             modal.style.display = 'none';
