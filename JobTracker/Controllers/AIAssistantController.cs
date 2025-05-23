@@ -272,10 +272,147 @@ Massachusetts Considerations:
                     Sources = new[] { "Massachusetts Building Code", "IRC R602", "Simpson Strong-Tie Standards" }
                 };
             }
+            else if (query.Contains("nail") || query.Contains("fastener") || query.Contains("screw") || query.Contains("stud") || query.Contains("joist") || query.Contains("rafter"))
+            {
+                return new {
+                    Response = @"**MASSACHUSETTS FASTENING SCHEDULE (780 CMR 120.Q)**
+
+**FRAMING CONNECTIONS:**
+• Stud to sole plate: 8d common (4 toe-nail) or 16d common (2 direct-nail)
+• Stud to cap plate: 16d common (2 toe-nail or 2 direct-nail)
+• Double studs: 10d common @ 12"" o.c. direct
+• Corner studs: 16d common @ 24"" o.c. direct
+• Sole plate to joist/blocking: 16d common @ 16"" o.c.
+
+**ROOF FRAMING:**
+• Roof rafter to plate: 8d common (3 toe-nail)
+• Roof rafter to ridge: 16d common (2 toe-nail or direct nail)
+• Jack rafter to hip: 10d or 16d common (3 toe-nail or 2 direct-nail)
+
+**FLOOR FRAMING:**
+• Floor joists to studs (no ceiling joists): 10d common (5 direct or 3 direct)
+• Floor joists to studs (with ceiling joists): 10d common (2 direct)
+• Floor joists to sill or girder: 3d common (3 toe-nail)
+• Ceiling joists to plate: 16d common (3 toe-nail)
+
+**SHEATHING & SUBFLOORING:**
+• Plywood roof/wall (½"" or less): 6d common @ 6"" o.c. edges, 12"" o.c. field
+• Plywood roof/wall (⅝"" or greater): 8d common @ 6"" o.c. edges, 12"" o.c. field
+• Plywood subflooring (¾""): 8d common @ 6"" o.c. edges, 10"" o.c. field
+• 1"" subflooring (8"" or more): 8d common (3 each direct joist)
+
+**GYPSUM WALLBOARD:**
+• ½"" thickness: 7"" o.c. nails, 12"" o.c. screws (16"" framing)
+• ⅝"" thickness: 7"" o.c. nails, 12"" o.c. screws (16"" framing)
+• Use No. 13 gauge nails or No. 6 screws meeting ASTM C514",
+                    Confidence = 0.95f,
+                    Sources = new[] { "780 CMR 120.Q", "Massachusetts Fastening Schedule", "10th Edition Building Code" }
+                };
+            }
+            else if (query.Contains("plumbing") || query.Contains("pipe") || query.Contains("water") || query.Contains("sewer") || query.Contains("gas"))
+            {
+                return new {
+                    Response = @"**MASSACHUSETTS PLUMBING CODES (248 CMR)**
+
+**Key Requirements:**
+• All plumbing work governed by 248 CMR: Board of State Examiners of Plumbers and Gas Fitters
+• Licensed plumber required for gas and plumbing installations
+• Permits required for new installations and major repairs
+
+**Gas Appliances:**
+• Gas fired appliances governed by 248 CMR
+• Oil fired appliances governed by 527 CMR 1.00: Fire Safety Code
+• Use only approved gas connectors and fittings
+• Pressure testing required on all new gas lines
+
+**Water/Sewer Connections:**
+• Connection permits required from local authority
+• Backflow prevention devices required per local codes
+• Water service sizing based on fixture unit calculations
+• Septic systems require Board of Health approval
+
+**Common Applications:**
+• Rough-in inspections before concealment
+• Final inspections before occupancy
+• Fixture installations and connections
+• Gas line extensions and new meters",
+                    Confidence = 0.90f,
+                    Sources = new[] { "248 CMR", "Massachusetts Plumbing Code", "527 CMR Fire Safety" }
+                };
+            }
+            else if (query.Contains("electrical") || query.Contains("wire") || query.Contains("outlet") || query.Contains("panel") || query.Contains("circuit"))
+            {
+                return new {
+                    Response = @"**MASSACHUSETTS ELECTRICAL CODE (527 CMR 12.00)**
+
+**Key Requirements:**
+• All electrical work governed by 527 CMR 12.00: Massachusetts Electrical Code
+• Licensed electrician required for most electrical work
+• Permits required for new circuits, panels, and major modifications
+
+**Common Residential Requirements:**
+• GFCI protection required in bathrooms, kitchens, garages, basements
+• AFCI protection required in bedrooms and living areas
+• Minimum 20-amp circuits for kitchen countertop outlets
+• Dedicated circuits for major appliances
+
+**Service and Panels:**
+• 200-amp service standard for new construction
+• Panel locations must meet clearance requirements
+• Proper grounding and bonding required
+• Emergency disconnects required per local amendments
+
+**Inspections Required:**
+• Rough-in inspection before concealment
+• Final inspection before energizing
+• Service entrance inspections for new services
+• Certificate of compliance required for occupancy",
+                    Confidence = 0.90f,
+                    Sources = new[] { "527 CMR 12.00", "Massachusetts Electrical Code", "NEC Amendments" }
+                };
+            }
+            else if (query.Contains("permit") || query.Contains("inspection") || query.Contains("building official") || query.Contains("code enforcement"))
+            {
+                return new {
+                    Response = @"**MASSACHUSETTS PERMIT & INSPECTION PROCESS**
+
+**Building Permits Required For:**
+• New construction and additions
+• Structural alterations and renovations
+• Mechanical, electrical, and plumbing systems
+• Roofing and siding (check local requirements)
+
+**Specialized Permits:**
+• Electrical: 527 CMR 12.00 (Licensed electrician required)
+• Plumbing/Gas: 248 CMR (Licensed plumber required)
+• Fire Protection: 527 CMR 1.00
+• Architectural Access: 521 CMR
+
+**Inspection Schedule:**
+• Foundation inspection before concrete pour
+• Framing inspection before concealment
+• Rough-in inspections (electrical, plumbing, mechanical)
+• Insulation inspection before drywall
+• Final inspection before occupancy
+
+**Code Enforcement:**
+• Building official enforces 780 CMR
+• Fire official enforces 527 CMR 1.00
+• Appeals process available through local boards
+• Certificate of Occupancy required for new construction
+
+**10th Edition Notes:**
+• Effective October 11, 2024
+• Concurrency period through June 30, 2025
+• Applications may use 9th or 10th edition until June 2025",
+                    Confidence = 0.95f,
+                    Sources = new[] { "780 CMR", "Massachusetts Building Code 10th Edition", "M.G.L. c. 143" }
+                };
+            }
             else
             {
                 return new {
-                    Response = "I can help you with building codes, permits, timelines, budgets, and construction hardware! Try asking about electrical requirements, plumbing codes, tension ties, fasteners, or project scheduling. I'm here to make your construction projects smoother and code-compliant!",
+                    Response = "I can help you with building codes, permits, timelines, budgets, and construction hardware! Try asking about electrical requirements, plumbing codes, tension ties, fasteners, permits, inspections, or project scheduling. I'm here to make your construction projects smoother and code-compliant!",
                     Confidence = 0.60f,
                     Sources = new[] { "General Construction Knowledge" }
                 };
