@@ -235,10 +235,47 @@ Massachusetts Considerations:
                     Sources = new[] { "Massachusetts Building Code", "EPA Guidelines", "Historic Building Standards" }
                 };
             }
+            else if (query.Contains("tension") || query.Contains("tie") || query.Contains("hurricane") || query.Contains("seismic") || query.Contains("connector"))
+            {
+                return new {
+                    Response = @"**STRUCTURAL CONNECTORS & TENSION TIES**
+
+**Hurricane/Seismic Ties:**
+• Simpson Strong-Tie H1 Hurricane Ties: Common for joist-to-plate connections
+• H2.5A Hurricane Ties: Heavy-duty rafter-to-plate connections
+• LTP Tension Ties: Uplift resistance for roof systems
+• Install with specified Simpson nails (typically 10d x 1.5"")
+
+**Tension Ties Applications:**
+• Required in high-wind areas (120+ mph zones)
+• Seismic regions (Massachusetts generally low seismic)
+• Connects framing members to resist uplift forces
+• Joist hangers for beam connections
+
+**Installation Requirements:**
+• Use only manufacturer-specified fasteners
+• Pre-drill when required to prevent splitting
+• Follow spacing requirements exactly
+• Check local wind load requirements
+
+**Massachusetts Code Notes:**
+• Refer to IRC Table R602.3(1) for fastening schedules
+• Wind speeds: Check local jurisdiction requirements
+• Some coastal areas require enhanced tie-down systems
+• Building official may require engineered connections
+
+**Common Sizes:**
+- 2x lumber: H1, H2.5, H3
+- Engineered lumber: Consult manufacturer
+- Heavy timber: Custom fabricated ties may be required",
+                    Confidence = 0.90f,
+                    Sources = new[] { "Massachusetts Building Code", "IRC R602", "Simpson Strong-Tie Standards" }
+                };
+            }
             else
             {
                 return new {
-                    Response = "I can help you with building codes, permits, timelines, and budgets! Try asking about electrical requirements, plumbing codes, or project scheduling. I'm here to make your construction projects smoother and code-compliant!",
+                    Response = "I can help you with building codes, permits, timelines, budgets, and construction hardware! Try asking about electrical requirements, plumbing codes, tension ties, fasteners, or project scheduling. I'm here to make your construction projects smoother and code-compliant!",
                     Confidence = 0.60f,
                     Sources = new[] { "General Construction Knowledge" }
                 };
