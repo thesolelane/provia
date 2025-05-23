@@ -511,7 +511,8 @@
                                 <label for="jobBudget">Budget:</label>
                                 <input type="number" id="jobBudget" class="form-control" step="0.01" min="0">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group buttons-group">
+                                <button type="button" class="button" onclick="saveBasicInfo()">Save Basic Info</button>
                                 <button type="button" class="button next-tab-btn" data-next="sections">Next: Sections</button>
                             </div>
                         </form>
@@ -532,6 +533,7 @@
                         </div>
                         <div class="form-group buttons-group">
                             <button type="button" class="button back-tab-btn" data-back="basicInfo">Back</button>
+                            <button type="button" class="button" onclick="saveSections()">Save Sections</button>
                             <button type="button" class="button next-tab-btn" data-next="client">Next: Client Info</button>
                         </div>
                     </div>
@@ -553,7 +555,7 @@
                             </div>
                             <div class="form-group buttons-group">
                                 <button type="button" class="button back-tab-btn" data-back="sections">Back</button>
-                                <button type="button" id="saveJobBtn" class="button">Create Job</button>
+                                <button type="button" class="button" onclick="saveClientInfo()">Finish & Save Job</button>
                             </div>
                         </form>
                     </div>
@@ -1437,6 +1439,142 @@
                     messageElement.value = `Regarding your project "${currentJob.name}" (Job #${currentJob.jobNumber}):\n\n[Your custom message here]\n\nPlease contact us if you have any questions.`;
                     break;
             }
+        }
+        
+        // Progressive save functionality
+        let currentJobId = null; // Store the job ID for progressive saves
+        
+        function saveBasicInfo() {
+            const statusElement = document.getElementById('jobCreationStatus');
+            statusElement.innerHTML = '<div class="loading">Saving basic information...</div>';
+            
+            const jobData = {
+                name: document.getElementById('jobName').value,
+                jobNumber: document.getElementById('jobNumber').value,
+                location: document.getElementById('jobLocation').value,
+                description: document.getElementById('jobDescription').value,
+                startDate: document.getElementById('jobStartDate').value,
+                targetCompletionDate: document.getElementById('jobEndDate').value,
+                budget: parseFloat(document.getElementById('jobBudget').value) || 0,
+                status: 'Planning'
+            };
+            
+            // Validate required fields
+            if (!jobData.name || !jobData.jobNumber || !jobData.location) {
+                statusElement.innerHTML = '<div class="status-error">Please fill in all required fields (Name, Job Number, Location)</div>';
+                return;
+            }
+            
+            const apiCall = currentJobId ? 
+                fetch(`/api/jobs/${currentJobId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({...jobData, id: currentJobId})
+                }) :
+                fetch('/api/jobs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jobData)
+                });
+            
+            apiCall
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to save basic info');
+                    return response.json();
+                })
+                .then(job => {
+                    currentJobId = job.id;
+                    statusElement.innerHTML = '<div class="status-success">Basic information saved!</div>';
+                    setTimeout(() => statusElement.innerHTML = '', 3000);
+                })
+                .catch(error => {
+                    console.error('Error saving basic info:', error);
+                    statusElement.innerHTML = `<div class="status-error">Failed to save: ${error.message}</div>`;
+                });
+        }
+        
+        function saveSections() {
+            if (!currentJobId) {
+                alert('Please save basic information first.');
+                return;
+            }
+            
+            const statusElement = document.getElementById('jobCreationStatus');
+            statusElement.innerHTML = '<div class="loading">Saving sections...</div>';
+            
+            const selectedSections = [];
+            document.querySelectorAll('input[name="selectedSections"]:checked').forEach(checkbox => {
+                const sectionId = parseInt(checkbox.value);
+                const isSubcontracted = document.querySelector(`input[name="subcontracted_${sectionId}"]`)?.checked || false;
+                const subcontractorId = document.querySelector(`select[name="subcontractor_${sectionId}"]`)?.value || null;
+                const budget = parseFloat(document.querySelector(`input[name="budget_${sectionId}"]`)?.value) || 0;
+                
+                selectedSections.push({
+                    jobId: currentJobId,
+                    sectionType: sectionId,
+                    isSubcontracted: isSubcontracted,
+                    subcontractorId: subcontractorId ? parseInt(subcontractorId) : null,
+                    status: 1, // Not Started
+                    description: `${getSectionTypeName(sectionId)} work`
+                });
+            });
+            
+            // Save sections via API
+            Promise.all(selectedSections.map(section => 
+                fetch('/api/jobsections', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(section)
+                })
+            ))
+            .then(responses => {
+                if (responses.some(r => !r.ok)) throw new Error('Failed to save some sections');
+                statusElement.innerHTML = '<div class="status-success">Sections saved!</div>';
+                setTimeout(() => statusElement.innerHTML = '', 3000);
+            })
+            .catch(error => {
+                console.error('Error saving sections:', error);
+                statusElement.innerHTML = `<div class="status-error">Failed to save sections: ${error.message}</div>`;
+            });
+        }
+        
+        function saveClientInfo() {
+            if (!currentJobId) {
+                alert('Please save basic information first.');
+                return;
+            }
+            
+            const statusElement = document.getElementById('jobCreationStatus');
+            statusElement.innerHTML = '<div class="loading">Saving client information...</div>';
+            
+            const clientData = {
+                id: currentJobId,
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientEmail: document.getElementById('clientEmail').value
+            };
+            
+            fetch(`/api/jobs/${currentJobId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(clientData)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to save client info');
+                return response.json();
+            })
+            .then(job => {
+                statusElement.innerHTML = '<div class="status-success">Job created successfully!</div>';
+                setTimeout(() => {
+                    document.getElementById('jobCreationModal').style.display = 'none';
+                    currentJobId = null; // Reset for next job
+                    loadJobs(); // Refresh the job list
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error saving client info:', error);
+                statusElement.innerHTML = `<div class="status-error">Failed to save client info: ${error.message}</div>`;
+            });
         }
         
         // Job creation functions
