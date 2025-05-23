@@ -1133,7 +1133,7 @@
                 if (clientForm) clientForm.reset();
                 
                 // Initialize section selection - hide all subcontractor rows
-                const sectionNames = ['Permit Approval', 'Demolition', 'Foundation', 'Framing', 'Electrical', 'Plumbing', 'HVAC', 'Insulation', 'Drywall', 'Painting', 'Flooring', 'Finishing', 'Final Inspection'];
+                const sectionNames = ['Permits', 'Demolition', 'Foundation', 'Framing', 'Rough-in Electrical', 'Rough-in Plumbing', 'HVAC', 'Insulation', 'Drywall', 'Finish Electrical', 'Finish Plumbing', 'Painting', 'Flooring', 'Finishing', 'Final Inspection'];
                 sectionNames.forEach(sectionName => {
                     const sectionKey = sectionName.replace(/\s+/g, '');
                     const subcontractorRow = document.getElementById(`subcontractor-${sectionKey}`);
@@ -2401,19 +2401,21 @@
         
         function getSectionTypeName(sectionType) {
             switch (sectionType) {
-                case 0: return 'Permit Approval';
+                case 0: return 'Permits';
                 case 1: return 'Demolition';
                 case 2: return 'Foundation';
                 case 3: return 'Framing';
-                case 4: return 'Electrical';
-                case 5: return 'Plumbing';
+                case 4: return 'Rough-in Electrical';
+                case 5: return 'Rough-in Plumbing';
                 case 6: return 'HVAC';
                 case 7: return 'Insulation';
                 case 8: return 'Drywall';
-                case 9: return 'Painting';
-                case 10: return 'Flooring';
-                case 11: return 'Finishing';
-                case 12: return 'Final Inspection';
+                case 9: return 'Finish Electrical';
+                case 10: return 'Finish Plumbing';
+                case 11: return 'Painting';
+                case 12: return 'Flooring';
+                case 13: return 'Finishing';
+                case 14: return 'Final Inspection';
                 default: return 'Unknown';
             }
         }
