@@ -598,6 +598,76 @@
                                 <label for="jobBudget">Budget:</label>
                                 <input type="number" id="jobBudget" class="form-control" step="0.01" min="0">
                             </div>
+                            
+                            <!-- Smart Questions Based on Residential vs Commercial Checklist -->
+                            <div class="form-section">
+                                <h4>Project Classification</h4>
+                                <div class="form-group">
+                                    <label for="projectType">Project Type:</label>
+                                    <select id="projectType" class="form-control" onchange="updateProjectQuestions()">
+                                        <option value="">Select Type...</option>
+                                        <option value="residential">Residential (1-3 units)</option>
+                                        <option value="commercial">Commercial (4+ units or business)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="rehabScope">Rehab Scope:</label>
+                                    <select id="rehabScope" class="form-control" onchange="updateScopeQuestions()">
+                                        <option value="">Select Scope...</option>
+                                        <option value="cosmetic">Cosmetic (finishes, paint, minor updates)</option>
+                                        <option value="gut">Gut Rehab (full interior renovation)</option>
+                                        <option value="repurpose">Repurposing (change of use)</option>
+                                        <option value="addition">Addition/Structural Changes</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="buildingAge">Building Age:</label>
+                                    <select id="buildingAge" class="form-control" onchange="updateHazardRequirements()">
+                                        <option value="">Select Age...</option>
+                                        <option value="new">Post-1980 (No hazard testing typically required)</option>
+                                        <option value="old">Pre-1980 (Lead/asbestos testing required)</option>
+                                        <option value="historic">Historic (Additional compliance needed)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Auto-suggested Professional Requirements -->
+                            <div class="form-section" id="professionalRequirements" style="display: none;">
+                                <h4>Professional Requirements</h4>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="needArchitect"> Architect Required</label>
+                                    <label><input type="checkbox" id="needMEP"> MEP Engineers Required</label>
+                                    <label><input type="checkbox" id="needStructural"> Structural Engineer Required</label>
+                                    <label><input type="checkbox" id="needCodeConsultant"> Code Consultant Required</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Auto-suggested Permit Requirements -->
+                            <div class="form-section" id="permitRequirements" style="display: none;">
+                                <h4>Anticipated Permits</h4>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="needConstructionPermit"> Construction Permit</label>
+                                    <label><input type="checkbox" id="needElectricalPermit"> Electrical Permit</label>
+                                    <label><input type="checkbox" id="needPlumbingPermit"> Plumbing Permit</label>
+                                    <label><input type="checkbox" id="needMechanicalPermit"> Mechanical Permit</label>
+                                    <label><input type="checkbox" id="needUseChange"> Use Change Permit</label>
+                                    <label><input type="checkbox" id="needOccupancy"> Occupancy Permit</label>
+                                    <label><input type="checkbox" id="needFireSafety"> Fire/Life Safety Permit</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Compliance Requirements for Commercial -->
+                            <div class="form-section" id="complianceRequirements" style="display: none;">
+                                <h4>Compliance Requirements</h4>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="needADA"> ADA Compliance Required</label>
+                                    <label><input type="checkbox" id="needFireSuppression"> Fire Suppression System</label>
+                                    <label><input type="checkbox" id="needEgress"> Emergency Egress Updates</label>
+                                    <label><input type="checkbox" id="needOccupancyLoad"> Occupancy Load Analysis</label>
+                                </div>
+                            </div>
                             <div class="form-group buttons-group">
                                 <button type="button" class="button" onclick="saveBasicInfo()">Save Basic Info</button>
                                 <button type="button" class="button next-tab-btn" data-next="sections">Next: Sections</button>
@@ -2200,6 +2270,87 @@
                 console.error('Error setting main image:', error);
                 alert('Error setting main image. Please try again.');
             });
+        }
+        
+        // Smart Job Creation Functions Based on Residential vs Commercial Checklist
+        function updateProjectQuestions() {
+            const projectType = document.getElementById('projectType').value;
+            const professionalReq = document.getElementById('professionalRequirements');
+            const permitReq = document.getElementById('permitRequirements');
+            const complianceReq = document.getElementById('complianceRequirements');
+            
+            if (projectType) {
+                professionalReq.style.display = 'block';
+                permitReq.style.display = 'block';
+                
+                if (projectType === 'commercial') {
+                    complianceReq.style.display = 'block';
+                    // Auto-check commercial requirements
+                    document.getElementById('needArchitect').checked = true;
+                    document.getElementById('needMEP').checked = true;
+                    document.getElementById('needADA').checked = true;
+                    document.getElementById('needUseChange').checked = true;
+                    document.getElementById('needOccupancy').checked = true;
+                    document.getElementById('needFireSafety').checked = true;
+                } else {
+                    complianceReq.style.display = 'none';
+                    // Clear commercial-specific requirements
+                    document.getElementById('needADA').checked = false;
+                    document.getElementById('needFireSuppression').checked = false;
+                    document.getElementById('needEgress').checked = false;
+                    document.getElementById('needOccupancyLoad').checked = false;
+                }
+            }
+        }
+        
+        function updateScopeQuestions() {
+            const scope = document.getElementById('rehabScope').value;
+            
+            // Auto-suggest permits based on scope
+            if (scope === 'gut' || scope === 'addition') {
+                document.getElementById('needConstructionPermit').checked = true;
+                document.getElementById('needElectricalPermit').checked = true;
+                document.getElementById('needPlumbingPermit').checked = true;
+                document.getElementById('needMechanicalPermit').checked = true;
+                document.getElementById('needArchitect').checked = true;
+                document.getElementById('needStructural').checked = true;
+            } else if (scope === 'repurpose') {
+                document.getElementById('needConstructionPermit').checked = true;
+                document.getElementById('needUseChange').checked = true;
+                document.getElementById('needArchitect').checked = true;
+                document.getElementById('needCodeConsultant').checked = true;
+            } else if (scope === 'cosmetic') {
+                // Minimal permits for cosmetic work
+                document.getElementById('needConstructionPermit').checked = false;
+                document.getElementById('needArchitect').checked = false;
+            }
+        }
+        
+        function updateHazardRequirements() {
+            const buildingAge = document.getElementById('buildingAge').value;
+            
+            // Show warning for pre-1980 buildings
+            if (buildingAge === 'old') {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'hazard-warning';
+                warningDiv.innerHTML = '<strong>⚠️ Pre-1980 Building:</strong> Lead and asbestos testing required by law. Budget for potential remediation.';
+                
+                // Remove existing warning if present
+                const existingWarning = document.querySelector('.hazard-warning');
+                if (existingWarning) existingWarning.remove();
+                
+                document.getElementById('buildingAge').parentNode.appendChild(warningDiv);
+            } else if (buildingAge === 'historic') {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'hazard-warning';
+                warningDiv.innerHTML = '<strong>🏛️ Historic Building:</strong> Additional preservation compliance and approvals may be required.';
+                
+                // Remove existing warning if present
+                const existingWarning = document.querySelector('.hazard-warning');
+                if (existingWarning) existingWarning.remove();
+                
+                document.getElementById('buildingAge').parentNode.appendChild(warningDiv);
+            }
         }
         
         function populateSectionDropdown(jobId) {
