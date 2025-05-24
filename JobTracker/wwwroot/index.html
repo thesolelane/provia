@@ -308,7 +308,11 @@
             if (startDateField) {
                 startDateField.value = today;
             }
+            
+            // Always reset form to create mode
+            resetCreateForm();
             generateJobNumber();
+            
             // Reset page title back to main dashboard
             document.title = 'Job Tracker Pro - Construction Management';
         }
@@ -578,18 +582,29 @@
             });
         }
 
-        function editJob(jobId) {
+        async function editJob(jobId) {
             // Close the details modal first
             const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
             if (detailsModal) {
                 detailsModal.hide();
             }
             
-            // Find the job data
-            const job = jobsData.find(j => j.id === jobId);
+            // Find the job data, or fetch it if not available
+            let job = jobsData ? jobsData.find(j => j.id === jobId) : null;
             if (!job) {
-                alert('Job not found');
-                return;
+                try {
+                    const response = await fetch(`/api/jobs/${jobId}`);
+                    if (response.ok) {
+                        job = await response.json();
+                    } else {
+                        alert('Could not load job details for editing');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error fetching job:', error);
+                    alert('Error loading job details for editing');
+                    return;
+                }
             }
             
             // Update page title
