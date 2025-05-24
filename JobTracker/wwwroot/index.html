@@ -51,6 +51,12 @@
         
         .job-card:hover {
             transform: translateY(-5px);
+            cursor: pointer;
+        }
+        
+        .bg-light-green {
+            background-color: #32CD32 !important;
+            color: #000 !important;
         }
         
         .modal-content {
@@ -428,7 +434,7 @@
                 
                 html += `
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="job-card">
+                        <div class="job-card" onclick="viewJobDetails(${job.id})">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="mb-0">${job.name}</h5>
                                 <span class="badge bg-${statusColor}">${job.status}</span>
@@ -470,7 +476,7 @@
         function getStatusColor(status) {
             const statusColors = {
                 'NotStarted': 'secondary',
-                'InProgress': 'success',
+                'InProgress': 'light-green',
                 'OnHold': 'warning',
                 'Completed': 'primary',
                 'Cancelled': 'danger'
@@ -486,6 +492,94 @@
                 const jobCount = jobsData ? jobsData.length : 0;
                 document.title = `Job Tracker Pro - ${jobCount} Jobs`;
             });
+        }
+
+        function viewJobDetails(jobId) {
+            // Update page title
+            document.title = 'Loading Job Details - Job Tracker Pro';
+            
+            // Find the job in our data
+            const job = jobsData.find(j => j.id === jobId);
+            if (!job) {
+                alert('Job not found');
+                return;
+            }
+            
+            // Update page title with job name
+            document.title = `${job.name} - Job Details`;
+            
+            // Create and show job details modal
+            const modalHtml = `
+                <div class="modal fade" id="jobDetailsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Job Details: ${job.name}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Job Information</h6>
+                                        <p><strong>Job Number:</strong> ${job.jobNumber}</p>
+                                        <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(job.status)}">${job.status}</span></p>
+                                        <p><strong>Location:</strong> ${job.location}</p>
+                                        <p><strong>Start Date:</strong> ${new Date(job.startDate).toLocaleDateString()}</p>
+                                        ${job.targetCompletionDate ? `<p><strong>Target Completion:</strong> ${new Date(job.targetCompletionDate).toLocaleDateString()}</p>` : ''}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Client Information</h6>
+                                        ${job.clientName ? `<p><strong>Client:</strong> ${job.clientName}</p>` : '<p>No client assigned</p>'}
+                                        ${job.clientPhone ? `<p><strong>Phone:</strong> ${job.clientPhone}</p>` : ''}
+                                        ${job.clientEmail ? `<p><strong>Email:</strong> ${job.clientEmail}</p>` : ''}
+                                        <h6>Budget</h6>
+                                        <p><strong>Budget:</strong> ${job.budget ? `$${job.budget.toLocaleString()}` : 'Not set'}</p>
+                                    </div>
+                                </div>
+                                ${job.description ? `
+                                    <div class="mt-3">
+                                        <h6>Description</h6>
+                                        <p>${job.description}</p>
+                                    </div>
+                                ` : ''}
+                                ${job.notes ? `
+                                    <div class="mt-3">
+                                        <h6>Notes</h6>
+                                        <p>${job.notes}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="editJob(${job.id})">Edit Job</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('jobDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to page
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
+            modal.show();
+            
+            // Clean up when modal is closed
+            document.getElementById('jobDetailsModal').addEventListener('hidden.bs.modal', function() {
+                document.title = `Job Tracker Pro - ${jobsData.length} Jobs`;
+                this.remove();
+            });
+        }
+
+        function editJob(jobId) {
+            alert('Edit functionality coming soon!');
         }
     </script>
 </body>
