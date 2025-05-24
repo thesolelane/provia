@@ -1,5 +1,7 @@
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/appsettings.Development.json
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/appsettings.json
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/ClientApp/package.json
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/JobTracker.staticwebassets.runtime.json
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/JobTracker
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/JobTracker.deps.json
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/JobTracker.runtimeconfig.json
@@ -41,5 +43,3 @@
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/JobTracker.pdb
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/JobTracker.genruntimeconfig.cache
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/ref/JobTracker.dll
-/home/runner/workspace/JobTracker/bin/Debug/net7.0/ClientApp/package.json
-/home/runner/workspace/JobTracker/bin/Debug/net7.0/JobTracker.staticwebassets.runtime.json
