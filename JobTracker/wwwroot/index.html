@@ -281,6 +281,8 @@
                 activeModal = new bootstrap.Modal(modalElement);
                 activeModal.show();
                 generateJobNumber();
+                // Update page title when creating job
+                document.title = 'Create New Job - Job Tracker Pro';
             }
         }
 
@@ -301,6 +303,8 @@
                 startDateField.value = today;
             }
             generateJobNumber();
+            // Reset page title back to main dashboard
+            document.title = 'Job Tracker Pro - Construction Management';
         }
 
         async function createJob() {
@@ -353,6 +357,9 @@
                 const result = await response.json();
                 
                 status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job created successfully!</div>';
+                
+                // Update page title to show success
+                document.title = 'Job Created Successfully - Job Tracker Pro';
                 
                 setTimeout(() => {
                     closeCreateModal();
@@ -472,7 +479,13 @@
         }
 
         function refreshJobs() {
-            loadJobs();
+            // Update page title during refresh
+            document.title = 'Refreshing Jobs - Job Tracker Pro';
+            loadJobs().then(() => {
+                // Update title with job count after loading
+                const jobCount = jobsData ? jobsData.length : 0;
+                document.title = `Job Tracker Pro - ${jobCount} Jobs`;
+            });
         }
     </script>
 </body>
