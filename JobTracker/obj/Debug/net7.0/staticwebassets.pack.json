@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets/index_backup.html"
     },
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/index_working.html",
+      "PackagePath": "staticwebassets/index_working.html"
+    },
+    {
       "Id": "obj/Debug/net7.0/staticwebassets/msbuild.JobTracker.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
