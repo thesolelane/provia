@@ -463,9 +463,9 @@
         function getStatusColor(status) {
             const statusColors = {
                 'NotStarted': 'secondary',
-                'InProgress': 'primary',
+                'InProgress': 'success',
                 'OnHold': 'warning',
-                'Completed': 'success',
+                'Completed': 'primary',
                 'Cancelled': 'danger'
             };
             return statusColors[status] || 'secondary';
