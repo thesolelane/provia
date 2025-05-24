@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "TlBC7TU//alZC0Nl0E5Ef7J4OoDD7HShb0PapX47HqE=",
+  "Hash": "z2aoCwujkNkeqeUFjBok0PCHq8cYAJVI5Sjitlrr7mg=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -17,40 +17,6 @@
   ],
   "Assets": [
     {
-      "Identity": "/home/runner/workspace/JobTracker/wwwroot/index_backup.html",
-      "SourceId": "JobTracker",
-      "SourceType": "Discovered",
-      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
-      "BasePath": "_content/JobTracker",
-      "RelativePath": "index_backup.html",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/index_backup.html"
-    },
-    {
-      "Identity": "/home/runner/workspace/JobTracker/wwwroot/index_working.html",
-      "SourceId": "JobTracker",
-      "SourceType": "Discovered",
-      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
-      "BasePath": "_content/JobTracker",
-      "RelativePath": "index_working.html",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/index_working.html"
-    },
-    {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/index.html",
       "SourceId": "JobTracker",
       "SourceType": "Discovered",
@@ -66,6 +32,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/index.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/simple.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "simple.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/simple.html"
     }
   ]
 }
