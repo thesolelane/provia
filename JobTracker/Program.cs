@@ -36,10 +36,13 @@ builder.Services.AddDbContext<JobTrackerContext>(options =>
     var pgUser = Environment.GetEnvironmentVariable("PGUSER");
     var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
     
-    var connectionStr = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Prefer;Trust Server Certificate=true";
+    var connectionStr = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Prefer;Trust Server Certificate=true;Connection Idle Lifetime=300;Command Timeout=60;Timeout=30";
     Console.WriteLine("Using environment variable configuration for database");
     
-    options.UseNpgsql(connectionStr);
+    options.UseNpgsql(connectionStr, npgsqlOptions => 
+    {
+        npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
+    });
 });
 
 // Add CORS for the frontend
