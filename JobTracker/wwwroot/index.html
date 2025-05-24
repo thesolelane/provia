@@ -1677,17 +1677,30 @@
             if (!sectionContainer) return;
             
             const sections = [
-                { id: 0, name: 'Demolition', subsections: ['Interior Demo', 'Exterior Demo'] },
-                { id: 1, name: 'Foundation', subsections: ['Excavation', 'Footings', 'Foundation Walls'] },
-                { id: 2, name: 'Framing', subsections: ['Exterior Framing', 'Interior Framing', 'Roof Framing'] },
-                { id: 3, name: 'Electrical', subsections: ['Rough-in', 'Finish Work', 'Panel/Service'] },
-                { id: 4, name: 'Plumbing', subsections: ['Rough-in', 'Finish Work', 'Water/Sewer Connection'] },
-                { id: 5, name: 'HVAC', subsections: ['Ductwork', 'Equipment Install', 'Controls/Testing'] },
-                { id: 6, name: 'Drywall', subsections: ['Hanging', 'Taping/Finishing', 'Priming'] },
-                { id: 7, name: 'Painting', subsections: ['Interior', 'Exterior', 'Trim/Detail Work'] },
-                { id: 8, name: 'Flooring', subsections: ['Hardwood', 'Tile/Stone', 'Carpet/Vinyl'] },
-                { id: 9, name: 'Finishing', subsections: ['Trim/Molding', 'Cabinets', 'Hardware/Fixtures'] },
-                { id: 10, name: 'Inspection', subsections: ['Rough Inspections', 'Final Inspection', 'Certificate of Occupancy'] }
+                { 
+                    id: 0, 
+                    name: 'Permits', 
+                    subsections: [
+                        'Construction Permit (Building/Renovating/Altering)', 
+                        'Electrical Permit (Installing/Altering Electrical)', 
+                        'Plumbing Permit (Water/Drain/Waste/Vent Systems)', 
+                        'Mechanical Permit (HVAC/Gas Piping)'
+                    ]
+                },
+                { id: 1, name: 'Demolition', subsections: ['Interior Demo', 'Exterior Demo', 'Debris Removal'] },
+                { id: 2, name: 'Foundation', subsections: ['Excavation', 'Footings', 'Foundation Walls', 'Waterproofing'] },
+                { id: 3, name: 'Framing', subsections: ['Exterior Framing', 'Interior Framing', 'Roof Framing', 'Fireblocking'] },
+                { id: 4, name: 'Rough-in Electrical', subsections: ['Panel/Service', 'Wiring/Circuits', 'Boxes/Outlets', 'Rough Inspection'] },
+                { id: 5, name: 'Rough-in Plumbing', subsections: ['Supply Lines', 'Drain/Waste Lines', 'Vent Systems', 'Rough Inspection'] },
+                { id: 6, name: 'HVAC', subsections: ['Ductwork', 'Equipment Install', 'Gas Piping', 'Controls/Testing'] },
+                { id: 7, name: 'Insulation', subsections: ['Wall Insulation', 'Attic Insulation', 'Basement Insulation', 'Insulation Inspection'] },
+                { id: 8, name: 'Drywall', subsections: ['Hanging', 'Taping/Finishing', 'Priming'] },
+                { id: 9, name: 'Finish Electrical', subsections: ['Fixtures/Switches', 'Outlets/Covers', 'Final Connections', 'Electrical Sign-off'] },
+                { id: 10, name: 'Finish Plumbing', subsections: ['Fixtures', 'Faucets/Valves', 'Final Connections', 'Plumbing Sign-off'] },
+                { id: 11, name: 'Painting', subsections: ['Interior Painting', 'Exterior Painting', 'Trim/Detail Work'] },
+                { id: 12, name: 'Flooring', subsections: ['Hardwood', 'Tile/Stone', 'Carpet/Vinyl'] },
+                { id: 13, name: 'Finishing', subsections: ['Trim/Molding', 'Cabinets', 'Hardware/Fixtures'] },
+                { id: 14, name: 'Final Inspection', subsections: ['Framing Inspection', 'Final Building Inspection', 'Certificate of Occupancy'] }
             ];
             
             let html = '<div class="section-grid">';
