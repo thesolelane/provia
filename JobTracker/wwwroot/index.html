@@ -579,7 +579,113 @@
         }
 
         function editJob(jobId) {
-            alert('Edit functionality coming soon!');
+            // Close the details modal first
+            const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
+            if (detailsModal) {
+                detailsModal.hide();
+            }
+            
+            // Find the job data
+            const job = jobsData.find(j => j.id === jobId);
+            if (!job) {
+                alert('Job not found');
+                return;
+            }
+            
+            // Update page title
+            document.title = `Editing ${job.name} - Job Tracker Pro`;
+            
+            // Populate the create form with existing job data
+            document.getElementById('jobName').value = job.name || '';
+            document.getElementById('location').value = job.location || '';
+            document.getElementById('startDate').value = job.startDate ? job.startDate.split('T')[0] : '';
+            document.getElementById('description').value = job.description || '';
+            document.getElementById('status').value = job.status || 'NotStarted';
+            document.getElementById('budget').value = job.budget || '';
+            document.getElementById('clientName').value = job.clientName || '';
+            document.getElementById('clientPhone').value = job.clientPhone || '';
+            document.getElementById('clientEmail').value = job.clientEmail || '';
+            document.getElementById('notes').value = job.notes || '';
+            
+            // Set job number as read-only since we're editing
+            document.getElementById('jobNumber').value = job.jobNumber;
+            document.getElementById('jobNumber').readOnly = true;
+            
+            // Change the form title and button
+            document.querySelector('#createJobModal .modal-title').textContent = `Edit Job: ${job.name}`;
+            document.querySelector('#createJobModal .btn-primary').textContent = 'Update Job';
+            document.querySelector('#createJobModal .btn-primary').onclick = () => updateJob(jobId);
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('createJobModal'));
+            modal.show();
+        }
+
+        async function updateJob(jobId) {
+            const form = document.getElementById('createJobForm');
+            const status = document.getElementById('createJobStatus');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const updatedJob = {
+                id: jobId,
+                name: document.getElementById('jobName').value,
+                location: document.getElementById('location').value,
+                startDate: document.getElementById('startDate').value,
+                description: document.getElementById('description').value,
+                status: document.getElementById('status').value,
+                budget: document.getElementById('budget').value ? parseFloat(document.getElementById('budget').value) : null,
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                notes: document.getElementById('notes').value,
+                jobNumber: document.getElementById('jobNumber').value
+            };
+
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedJob)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job updated successfully!</div>';
+                
+                // Update page title
+                document.title = 'Job Updated Successfully - Job Tracker Pro';
+                
+                setTimeout(() => {
+                    closeCreateModal();
+                    resetCreateForm();
+                    loadJobs();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error updating job:', error);
+                status.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error updating job. Please try again.</div>';
+            }
+        }
+
+        function resetCreateForm() {
+            // Reset form title and button for creating new jobs
+            document.querySelector('#createJobModal .modal-title').textContent = 'Create New Job';
+            document.querySelector('#createJobModal .btn-primary').textContent = 'Create Job';
+            document.querySelector('#createJobModal .btn-primary').onclick = createJob;
+            
+            // Make job number editable again
+            document.getElementById('jobNumber').readOnly = false;
+            
+            // Generate new job number for next create
+            generateJobNumber();
         }
     </script>
 </body>
