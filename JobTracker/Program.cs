@@ -5,6 +5,9 @@ using Microsoft.Extensions.FileProviders;
 using System.IO;
 using System.Text.Json.Serialization;
 
+// Enable legacy timestamp behavior for PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
