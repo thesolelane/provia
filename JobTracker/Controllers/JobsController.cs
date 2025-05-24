@@ -151,6 +151,22 @@ namespace JobTracker.Controllers
                 job.CreatedAt = DateTime.UtcNow;
                 job.UpdatedAt = DateTime.UtcNow;
                 
+                // Ensure all DateTime properties are UTC
+                if (job.StartDate.Kind != DateTimeKind.Utc)
+                {
+                    job.StartDate = DateTime.SpecifyKind(job.StartDate, DateTimeKind.Utc);
+                }
+                
+                if (job.TargetCompletionDate.HasValue && job.TargetCompletionDate.Value.Kind != DateTimeKind.Utc)
+                {
+                    job.TargetCompletionDate = DateTime.SpecifyKind(job.TargetCompletionDate.Value, DateTimeKind.Utc);
+                }
+                
+                if (job.ActualCompletionDate.HasValue && job.ActualCompletionDate.Value.Kind != DateTimeKind.Utc)
+                {
+                    job.ActualCompletionDate = DateTime.SpecifyKind(job.ActualCompletionDate.Value, DateTimeKind.Utc);
+                }
+                
                 _context.Jobs.Add(job);
                 await _context.SaveChangesAsync();
 
