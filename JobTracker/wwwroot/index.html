@@ -7,14 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-        }
-        
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
@@ -67,18 +59,6 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
         
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-        }
-        
         .job-number-preview {
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
@@ -87,28 +67,7 @@
             margin-top: 0.5rem;
             font-family: 'Courier New', monospace;
             font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            color: #2c3e50;
         }
     </style>
 </head>
@@ -125,10 +84,10 @@
                     <p class="text-muted mb-0">Construction Project Management System</p>
                 </div>
                 <div class="col-md-4 text-end">
-                    <button class="btn btn-primary btn-custom me-2" onclick="JobManager.openCreateModal()">
+                    <button class="btn btn-primary btn-custom me-2" onclick="openCreateModal()">
                         <i class="fas fa-plus me-2"></i>Create New Job
                     </button>
-                    <button class="btn btn-outline-secondary btn-custom" onclick="JobManager.refreshJobs()">
+                    <button class="btn btn-outline-secondary btn-custom" onclick="refreshJobs()">
                         <i class="fas fa-sync-alt me-2"></i>Refresh
                     </button>
                 </div>
@@ -138,7 +97,6 @@
         <!-- Jobs List -->
         <div id="jobsContainer" class="row">
             <div class="col-12 text-center">
-                <div class="loading-spinner"></div>
                 <p class="mt-3">Loading jobs...</p>
             </div>
         </div>
@@ -152,7 +110,7 @@
                     <h5 class="modal-title">
                         <i class="fas fa-plus-circle me-2"></i>Create New Job
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" onclick="JobManager.closeCreateModal()"></button>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeCreateModal()"></button>
                 </div>
                 <div class="modal-body">
                     <form id="createJobForm">
@@ -164,7 +122,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="jobLocation" class="form-label">Job Location *</label>
-                                <input type="text" class="form-control" id="jobLocation" placeholder="123 Main Street, City, State" required onchange="JobManager.generateJobNumber()">
+                                <input type="text" class="form-control" id="jobLocation" placeholder="123 Main Street, City, State" required onchange="generateJobNumber()">
                             </div>
                         </div>
 
@@ -183,11 +141,11 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label for="hearthEstimateNumber" class="form-label">GetHearth Estimate Number</label>
-                                <input type="text" class="form-control" id="hearthEstimateNumber" placeholder="Enter estimate number from GetHearth" onchange="JobManager.generateJobNumber()">
+                                <input type="text" class="form-control" id="hearthEstimateNumber" placeholder="Enter estimate number from GetHearth" onchange="generateJobNumber()">
                             </div>
                             <div class="col-md-6">
                                 <label for="startDate" class="form-label">Start Date *</label>
-                                <input type="date" class="form-control" id="startDate" required onchange="JobManager.generateJobNumber()">
+                                <input type="date" class="form-control" id="startDate" required onchange="generateJobNumber()">
                             </div>
                         </div>
 
@@ -234,8 +192,8 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="JobManager.closeCreateModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-custom" onclick="JobManager.createJob()">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-custom" onclick="createJob()">
                         <i class="fas fa-save me-2"></i>Create Job
                     </button>
                 </div>
@@ -246,255 +204,274 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Professional Job Management System
-        class JobTracker {
-            constructor() {
-                this.jobs = [];
-                this.init();
+        // Clean global variables without conflicts
+        let jobsData = [];
+        let activeModal = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadJobs();
+            // Initialize date field with today's date
+            const today = new Date().toISOString().split('T')[0];
+            const startDateField = document.getElementById('startDate');
+            if (startDateField) {
+                startDateField.value = today;
+            }
+            generateJobNumber();
+        });
+
+        // Smart Job Number Generation
+        function generateJobNumber() {
+            const startDateField = document.getElementById('startDate');
+            const locationField = document.getElementById('jobLocation');
+            const estimateField = document.getElementById('hearthEstimateNumber');
+            const previewElement = document.getElementById('jobNumberPreview');
+
+            if (!startDateField || !locationField || !previewElement) return;
+
+            const startDate = startDateField.value;
+            const location = locationField.value;
+            const estimateNumber = estimateField ? estimateField.value || '001' : '001';
+
+            if (!startDate || !location) {
+                previewElement.textContent = 'Please enter start date and location to generate job number';
+                return;
             }
 
-            init() {
-                this.loadJobs();
-                // Initialize date field with today's date
-                document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
-                this.generateJobNumber();
-            }
+            try {
+                // Parse date
+                const date = new Date(startDate);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
 
-            // Smart Job Number Generation
-            generateJobNumber() {
-                const startDate = document.getElementById('startDate').value;
-                const location = document.getElementById('jobLocation').value;
-                const estimateNumber = document.getElementById('hearthEstimateNumber').value || '001';
+                // Parse location
+                const locationParts = location.trim().split(/[\s,]+/);
+                let streetNumber = '';
+                let streetName = '';
 
-                if (!startDate || !location) {
-                    document.getElementById('jobNumberPreview').textContent = 
-                        'Please enter start date and location to generate job number';
-                    return;
-                }
-
-                try {
-                    // Parse date
-                    const date = new Date(startDate);
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-
-                    // Parse location
-                    const locationParts = location.trim().split(/[\s,]+/);
-                    let streetNumber = '';
-                    let streetName = '';
-
-                    // Extract street number and name
-                    for (let i = 0; i < locationParts.length; i++) {
-                        const part = locationParts[i];
-                        if (/^\d+/.test(part)) {
-                            streetNumber = part.match(/^\d+/)[0];
-                            streetName = locationParts[i + 1] || '';
-                            break;
-                        }
+                // Extract street number and name
+                for (let i = 0; i < locationParts.length; i++) {
+                    const part = locationParts[i];
+                    if (/^\d+/.test(part)) {
+                        streetNumber = part.match(/^\d+/)[0];
+                        streetName = locationParts[i + 1] || '';
+                        break;
                     }
-
-                    // Get first 3 letters of street name
-                    const streetCode = streetName.substring(0, 3).toUpperCase().padEnd(3, 'X');
-
-                    // Generate job number
-                    const jobNumber = `${year}-${month}-${day}-${streetCode}${streetNumber}-${estimateNumber}`;
-                    
-                    document.getElementById('jobNumberPreview').innerHTML = 
-                        `<i class="fas fa-check-circle text-success me-2"></i>${jobNumber}`;
-
-                } catch (error) {
-                    document.getElementById('jobNumberPreview').textContent = 
-                        'Invalid date or location format';
                 }
-            }
 
-            openCreateModal() {
-                const modal = new bootstrap.Modal(document.getElementById('createJobModal'));
-                modal.show();
-                this.generateJobNumber();
-            }
+                // Get first 3 letters of street name
+                const streetCode = streetName.substring(0, 3).toUpperCase().padEnd(3, 'X');
 
-            closeCreateModal() {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('createJobModal'));
-                if (modal) modal.hide();
-                document.getElementById('createJobForm').reset();
-                document.getElementById('createJobStatus').innerHTML = '';
-                // Reset date to today
-                document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
-                this.generateJobNumber();
-            }
-
-            async createJob() {
-                const form = document.getElementById('createJobForm');
-                const status = document.getElementById('createJobStatus');
+                // Generate job number
+                const jobNumber = `${year}-${month}-${day}-${streetCode}${streetNumber}-${estimateNumber}`;
                 
-                // Validate required fields
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
+                previewElement.innerHTML = `<i class="fas fa-check-circle text-success me-2"></i>${jobNumber}`;
 
-                status.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Creating job...</div>';
-
-                // Get generated job number
-                const jobNumberElement = document.getElementById('jobNumberPreview');
-                const jobNumber = jobNumberElement.textContent.includes('✓') ? 
-                    jobNumberElement.textContent.replace(/.*✓\s*/, '') : 
-                    `TEMP-${Date.now()}`;
-
-                const jobData = {
-                    name: document.getElementById('jobName').value,
-                    jobNumber: jobNumber,
-                    location: document.getElementById('jobLocation').value,
-                    description: document.getElementById('jobDescription').value,
-                    startDate: document.getElementById('startDate').value,
-                    targetCompletionDate: document.getElementById('targetDate').value || null,
-                    budget: parseFloat(document.getElementById('budget').value) || 0,
-                    clientName: document.getElementById('clientName').value,
-                    clientPhone: document.getElementById('clientPhone').value,
-                    clientEmail: document.getElementById('clientEmail').value,
-                    hearthEstimateNumber: document.getElementById('hearthEstimateNumber').value
-                };
-
-                try {
-                    const response = await fetch('/api/jobs', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(jobData)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    
-                    status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job created successfully!</div>';
-                    
-                    setTimeout(() => {
-                        this.closeCreateModal();
-                        this.loadJobs();
-                    }, 1500);
-
-                } catch (error) {
-                    console.error('Error creating job:', error);
-                    status.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error creating job. Please try again.</div>';
-                }
-            }
-
-            async loadJobs() {
-                const container = document.getElementById('jobsContainer');
-                container.innerHTML = '<div class="col-12 text-center"><div class="loading-spinner"></div><p class="mt-3">Loading jobs...</p></div>';
-
-                try {
-                    const response = await fetch('/api/jobs');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    this.jobs = data.$values || data || [];
-                    this.renderJobs();
-
-                } catch (error) {
-                    console.error('Error loading jobs:', error);
-                    container.innerHTML = `
-                        <div class="col-12">
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Error loading jobs. Please check your connection and try again.
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            renderJobs() {
-                const container = document.getElementById('jobsContainer');
-                
-                if (!this.jobs || this.jobs.length === 0) {
-                    container.innerHTML = `
-                        <div class="col-12 text-center">
-                            <div class="job-card">
-                                <i class="fas fa-hard-hat fa-3x text-muted mb-3"></i>
-                                <h4>No Jobs Found</h4>
-                                <p class="text-muted">Start by creating your first construction job!</p>
-                                <button class="btn btn-primary btn-custom" onclick="JobManager.openCreateModal()">
-                                    <i class="fas fa-plus me-2"></i>Create First Job
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = '';
-                this.jobs.forEach(job => {
-                    const statusColor = this.getStatusColor(job.status);
-                    const budget = job.budget ? `$${job.budget.toLocaleString()}` : 'Not set';
-                    
-                    html += `
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="job-card">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h5 class="mb-0">${job.name}</h5>
-                                    <span class="status-badge bg-${statusColor}">${job.status}</span>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <small class="text-muted">Job #</small>
-                                    <div class="fw-bold">${job.jobNumber}</div>
-                                </div>
-                                
-                                <div class="mb-2">
-                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
-                                    <small>${job.location}</small>
-                                </div>
-                                
-                                <div class="mb-2">
-                                    <i class="fas fa-calendar text-muted me-2"></i>
-                                    <small>Started: ${new Date(job.startDate).toLocaleDateString()}</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <i class="fas fa-dollar-sign text-muted me-2"></i>
-                                    <small>Budget: ${budget}</small>
-                                </div>
-                                
-                                ${job.clientName ? `
-                                    <div class="border-top pt-2">
-                                        <small class="text-muted">Client: ${job.clientName}</small>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-            }
-
-            getStatusColor(status) {
-                const statusColors = {
-                    'NotStarted': 'secondary',
-                    'InProgress': 'primary',
-                    'OnHold': 'warning',
-                    'Completed': 'success',
-                    'Cancelled': 'danger'
-                };
-                return statusColors[status] || 'secondary';
-            }
-
-            refreshJobs() {
-                this.loadJobs();
+            } catch (error) {
+                previewElement.textContent = 'Invalid date or location format';
             }
         }
 
-        // Initialize the application
-        const JobManager = new JobTracker();
+        function openCreateModal() {
+            const modalElement = document.getElementById('createJobModal');
+            if (modalElement) {
+                activeModal = new bootstrap.Modal(modalElement);
+                activeModal.show();
+                generateJobNumber();
+            }
+        }
+
+        function closeCreateModal() {
+            if (activeModal) {
+                activeModal.hide();
+                activeModal = null;
+            }
+            const form = document.getElementById('createJobForm');
+            if (form) form.reset();
+            const status = document.getElementById('createJobStatus');
+            if (status) status.innerHTML = '';
+            
+            // Reset date to today
+            const today = new Date().toISOString().split('T')[0];
+            const startDateField = document.getElementById('startDate');
+            if (startDateField) {
+                startDateField.value = today;
+            }
+            generateJobNumber();
+        }
+
+        async function createJob() {
+            const form = document.getElementById('createJobForm');
+            const status = document.getElementById('createJobStatus');
+            
+            if (!form || !status) return;
+            
+            // Validate required fields
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            status.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Creating job...</div>';
+
+            // Get generated job number
+            const jobNumberElement = document.getElementById('jobNumberPreview');
+            const jobNumber = jobNumberElement && jobNumberElement.textContent.includes('✓') ? 
+                jobNumberElement.textContent.replace(/.*✓\s*/, '') : 
+                `TEMP-${Date.now()}`;
+
+            const jobData = {
+                name: document.getElementById('jobName').value,
+                jobNumber: jobNumber,
+                location: document.getElementById('jobLocation').value,
+                description: document.getElementById('jobDescription').value,
+                startDate: document.getElementById('startDate').value,
+                targetCompletionDate: document.getElementById('targetDate').value || null,
+                budget: parseFloat(document.getElementById('budget').value) || 0,
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                hearthEstimateNumber: document.getElementById('hearthEstimateNumber').value
+            };
+
+            try {
+                const response = await fetch('/api/jobs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jobData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job created successfully!</div>';
+                
+                setTimeout(() => {
+                    closeCreateModal();
+                    loadJobs();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error creating job:', error);
+                status.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error creating job. Please try again.</div>';
+            }
+        }
+
+        async function loadJobs() {
+            const container = document.getElementById('jobsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '<div class="col-12 text-center"><p class="mt-3">Loading jobs...</p></div>';
+
+            try {
+                const response = await fetch('/api/jobs');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                jobsData = data.$values || data || [];
+                renderJobs();
+
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error loading jobs. Please check your connection and try again.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderJobs() {
+            const container = document.getElementById('jobsContainer');
+            if (!container) return;
+            
+            if (!jobsData || jobsData.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="job-card">
+                            <i class="fas fa-hard-hat fa-3x text-muted mb-3"></i>
+                            <h4>No Jobs Found</h4>
+                            <p class="text-muted">Start by creating your first construction job!</p>
+                            <button class="btn btn-primary btn-custom" onclick="openCreateModal()">
+                                <i class="fas fa-plus me-2"></i>Create First Job
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            jobsData.forEach(job => {
+                const statusColor = getStatusColor(job.status);
+                const budget = job.budget ? `$${job.budget.toLocaleString()}` : 'Not set';
+                
+                html += `
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="job-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="mb-0">${job.name}</h5>
+                                <span class="badge bg-${statusColor}">${job.status}</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">Job #</small>
+                                <div class="fw-bold">${job.jobNumber}</div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                <small>${job.location}</small>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <i class="fas fa-calendar text-muted me-2"></i>
+                                <small>Started: ${new Date(job.startDate).toLocaleDateString()}</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <i class="fas fa-dollar-sign text-muted me-2"></i>
+                                <small>Budget: ${budget}</small>
+                            </div>
+                            
+                            ${job.clientName ? `
+                                <div class="border-top pt-2">
+                                    <small class="text-muted">Client: ${job.clientName}</small>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getStatusColor(status) {
+            const statusColors = {
+                'NotStarted': 'secondary',
+                'InProgress': 'primary',
+                'OnHold': 'warning',
+                'Completed': 'success',
+                'Cancelled': 'danger'
+            };
+            return statusColors[status] || 'secondary';
+        }
+
+        function refreshJobs() {
+            loadJobs();
+        }
     </script>
 </body>
 </html>

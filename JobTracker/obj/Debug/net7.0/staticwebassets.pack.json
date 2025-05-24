@@ -5,10 +5,6 @@
       "PackagePath": "staticwebassets/index.html"
     },
     {
-      "Id": "/home/runner/workspace/JobTracker/wwwroot/simple.html",
-      "PackagePath": "staticwebassets/simple.html"
-    },
-    {
       "Id": "obj/Debug/net7.0/staticwebassets/msbuild.JobTracker.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
