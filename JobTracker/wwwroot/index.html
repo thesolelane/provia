@@ -1173,8 +1173,9 @@
     </div>
     
     <script>
-        // Global variable to store current job details
+        // Global variables to store current job details
         let currentJob = null;
+        let currentJobId = null; // Store the job ID for progressive saves
         
         document.addEventListener('DOMContentLoaded', function() {
             loadJobs();
@@ -1605,8 +1606,7 @@
             }
         }
         
-        // Progressive save functionality
-        let currentJobId = null; // Store the job ID for progressive saves
+        // Progressive save functionality (currentJobId declared above)
         
         function saveBasicInfo() {
             const statusElement = document.getElementById('jobCreationStatus');
