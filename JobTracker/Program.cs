@@ -21,6 +21,8 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<InspectionTrackingService>();
+builder.Services.AddScoped<JobTracker.Services.AI.AIAssistantService>();
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
