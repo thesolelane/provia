@@ -552,6 +552,12 @@
                                         <p>${job.notes}</p>
                                     </div>
                                 ` : ''}
+                                <div class="mt-3">
+                                    <h6>Job Sections</h6>
+                                    <div id="jobSections${job.id}">
+                                        <p class="text-muted">Loading sections...</p>
+                                    </div>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -583,14 +589,28 @@
         }
 
         async function editJob(jobId) {
-            // Close the details modal first
+            // Store the job ID for after modal closes
+            window.pendingEditJobId = jobId;
+            
+            // Close the details modal and wait for it to complete
             const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
             if (detailsModal) {
+                // Add event listener for when modal is fully hidden
+                document.getElementById('jobDetailsModal').addEventListener('hidden.bs.modal', function handleModalHidden() {
+                    // Remove the event listener to avoid multiple calls
+                    this.removeEventListener('hidden.bs.modal', handleModalHidden);
+                    // Now open the edit modal
+                    openEditModalForJob(window.pendingEditJobId);
+                });
                 detailsModal.hide();
-                // Wait for the modal to fully close before opening edit modal
-                await new Promise(resolve => setTimeout(resolve, 300));
+                return; // Exit here, let the event handler continue
             }
             
+            // If no details modal was open, proceed directly
+            openEditModalForJob(jobId);
+        }
+
+        async function openEditModalForJob(jobId) {
             // Find the job data, or fetch it if not available
             let job = jobsData ? jobsData.find(j => j.id === jobId) : null;
             if (!job) {
