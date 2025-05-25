@@ -1068,7 +1068,7 @@
             });
         }
 
-        function saveSectionToJob(jobId) {
+        async function saveSectionToJob(jobId) {
             const selectedSection = document.querySelector('input[name="sectionType"]:checked');
             if (!selectedSection) {
                 alert('Please select a section type');
@@ -1076,15 +1076,47 @@
             }
             
             const sectionData = {
-                sectionType: selectedSection.value,
-                status: document.getElementById('sectionStatus').value,
-                assignmentType: document.getElementById('assignmentType').value,
-                subcontractorName: document.getElementById('subcontractorName').value || null,
-                notes: document.getElementById('sectionNotes').value || null
+                jobId: parseInt(jobId),
+                sectionType: getSectionTypeNumber(selectedSection.value),
+                status: getStatusNumber(document.getElementById('sectionStatus').value),
+                isSubcontracted: document.getElementById('assignmentType').value === 'subcontractor',
+                notes: document.getElementById('sectionNotes').value || '',
+                description: `${selectedSection.value} work for job`
             };
             
-            // For now, just add it to the local display
-            addSectionToDisplay(jobId, sectionData);
+            try {
+                // Save to database via API
+                const response = await fetch('/api/jobsections', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sectionData)
+                });
+                
+                if (response.ok) {
+                    const savedSection = await response.json();
+                    
+                    // Add to display with the saved section data
+                    addSectionToDisplay(jobId, {
+                        ...sectionData,
+                        id: savedSection.id,
+                        sectionType: selectedSection.value,
+                        status: document.getElementById('sectionStatus').value,
+                        assignmentType: document.getElementById('assignmentType').value,
+                        subcontractorName: document.getElementById('subcontractorName').value || null,
+                        notes: document.getElementById('sectionNotes').value || null
+                    });
+                    
+                    alert('Section saved successfully!');
+                } else {
+                    throw new Error('Failed to save section');
+                }
+            } catch (error) {
+                console.error('Error saving section:', error);
+                alert('Error saving section. Please try again.');
+                return;
+            }
             
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('addSectionModal'));
@@ -1386,6 +1418,33 @@ Massachusetts Building Code Requirements:
 - Use only approved fire blocking materials
 - Proper installation and inspection required`;
             }
+        }
+
+        function getSectionTypeNumber(sectionName) {
+            const sectionMap = {
+                'Permits': 1,
+                'Demolition': 2,
+                'Foundation': 3,
+                'Framing': 4,
+                'Electrical': 5,
+                'Plumbing': 6,
+                'HVAC': 7,
+                'Insulation': 8,
+                'Drywall': 9,
+                'Flooring': 10,
+                'FinalInspection': 11
+            };
+            return sectionMap[sectionName] || 1;
+        }
+
+        function getStatusNumber(statusName) {
+            const statusMap = {
+                'Not Started': 1,
+                'In Progress': 2,
+                'Completed': 3,
+                'On Hold': 4
+            };
+            return statusMap[statusName] || 1;
         }
 
         function generateSectionSuggestions() {
