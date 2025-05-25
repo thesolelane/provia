@@ -2,292 +2,204 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
+using JobTracker.Services;
 
 namespace JobTracker.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class JobSectionsController : ControllerBase
     {
         private readonly JobTrackerContext _context;
+        private readonly InspectionTrackingService _inspectionService;
         private readonly ILogger<JobSectionsController> _logger;
 
-        public JobSectionsController(JobTrackerContext context, ILogger<JobSectionsController> logger)
+        public JobSectionsController(JobTrackerContext context, InspectionTrackingService inspectionService, ILogger<JobSectionsController> logger)
         {
             _context = context;
+            _inspectionService = inspectionService;
             _logger = logger;
         }
 
-        // GET: api/JobSections
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSections()
-        {
-            try
-            {
-                return await _context.JobSections
-                    .Include(js => js.Job)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving job sections");
-                return StatusCode(500, "An error occurred while retrieving job sections");
-            }
-        }
-
-        // GET: api/JobSections/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<JobSection>> GetJobSection(int id)
-        {
-            try
-            {
-                var jobSection = await _context.JobSections
-                    .Include(js => js.Job)
-                    .FirstOrDefaultAsync(js => js.Id == id);
-
-                if (jobSection == null)
-                {
-                    return NotFound();
-                }
-
-                return jobSection;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error retrieving job section with ID {id}");
-                return StatusCode(500, $"An error occurred while retrieving job section with ID {id}");
-            }
-        }
-
-        // GET: api/JobSections/job/5 or api/JobSections/ByJob/5
         [HttpGet("job/{jobId}")]
-        [HttpGet("ByJob/{jobId}")]
-        public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSectionsByJob(int jobId)
+        public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSections(int jobId)
         {
             try
             {
-                var job = await _context.Jobs.FindAsync(jobId);
-                if (job == null)
-                {
-                    return NotFound($"Job with ID {jobId} not found");
-                }
-
-                return await _context.JobSections
-                    .Where(js => js.JobId == jobId)
+                var sections = await _context.JobSections
+                    .Where(s => s.JobId == jobId)
+                    .Include(s => s.Images)
+                    .OrderBy(s => s.SectionType)
                     .ToListAsync();
+
+                return Ok(sections);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error retrieving job sections for job ID {jobId}");
-                return StatusCode(500, $"An error occurred while retrieving job sections for job ID {jobId}");
+                _logger.LogError(ex, "Error retrieving job sections for job {JobId}", jobId);
+                return StatusCode(500, "Error retrieving job sections");
             }
         }
 
-        // POST: api/JobSections
         [HttpPost]
         public async Task<ActionResult<JobSection>> CreateJobSection(JobSection jobSection)
         {
             try
             {
                 // Validate that the job exists
-                var jobExists = await _context.Jobs.AnyAsync(j => j.Id == jobSection.JobId);
-                if (!jobExists)
+                var job = await _context.Jobs.FindAsync(jobSection.JobId);
+                if (job == null)
                 {
-                    return BadRequest($"Job with ID {jobSection.JobId} does not exist");
+                    return NotFound($"Job with ID {jobSection.JobId} not found");
                 }
 
+                // Set timestamps
                 jobSection.CreatedAt = DateTime.UtcNow;
                 jobSection.UpdatedAt = DateTime.UtcNow;
-                
+
+                // Determine if inspection is required based on section type
+                SetInspectionRequirements(jobSection);
+
                 _context.JobSections.Add(jobSection);
                 await _context.SaveChangesAsync();
+
+                // If section requires inspection, create reminders when completed
+                if (jobSection.Status == 3 && jobSection.RequiresInspection) // Status 3 = Completed
+                {
+                    await _inspectionService.CheckAndCreateInspectionReminders(jobSection.Id);
+                }
 
                 return CreatedAtAction(nameof(GetJobSection), new { id = jobSection.Id }, jobSection);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating job section");
-                return StatusCode(500, "An error occurred while creating the job section");
+                return StatusCode(500, "Error creating job section");
             }
         }
 
-        // PUT: api/JobSections/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<JobSection>> GetJobSection(int id)
+        {
+            try
+            {
+                var section = await _context.JobSections
+                    .Include(s => s.Images)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
+                if (section == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(section);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving job section {SectionId}", id);
+                return StatusCode(500, "Error retrieving job section");
+            }
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateJobSection(int id, JobSection jobSection)
         {
             if (id != jobSection.Id)
             {
-                return BadRequest("ID in the URL does not match the ID in the request body");
+                return BadRequest("Section ID mismatch");
             }
 
             try
             {
-                // Validate that the job exists
-                var jobExists = await _context.Jobs.AnyAsync(j => j.Id == jobSection.JobId);
-                if (!jobExists)
-                {
-                    return BadRequest($"Job with ID {jobSection.JobId} does not exist");
-                }
-
-                jobSection.UpdatedAt = DateTime.UtcNow;
-                
-                _context.Entry(jobSection).State = EntityState.Modified;
-                // Don't modify the CreatedAt field
-                _context.Entry(jobSection).Property(x => x.CreatedAt).IsModified = false;
-                
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!JobSectionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error updating job section with ID {id}");
-                return StatusCode(500, $"An error occurred while updating job section with ID {id}");
-            }
-
-            return NoContent();
-        }
-
-        // PUT: api/JobSections/5/UpdateStatus/2
-        [HttpPut("{id}/UpdateStatus/{status}")]
-        public async Task<IActionResult> UpdateJobSectionStatus(int id, int status)
-        {
-            try
-            {
-                // Validate status is in valid range (1-8)
-                if (status < 1 || status > 8)
-                {
-                    return BadRequest("Status must be between 1 and 8");
-                }
-
-                var jobSection = await _context.JobSections.FindAsync(id);
-                if (jobSection == null)
+                var existingSection = await _context.JobSections.FindAsync(id);
+                if (existingSection == null)
                 {
                     return NotFound();
                 }
 
-                jobSection.Status = status;
-                jobSection.UpdatedAt = DateTime.UtcNow;
-                
-                // If status is Completed (3), set the completion date
-                if (status == 3 && jobSection.CompletionDate == null)
-                {
-                    jobSection.CompletionDate = DateTime.UtcNow;
-                }
-                
-                // If status is In Progress (2) and there's no start date, set it
-                if (status == 2 && jobSection.StartDate == null)
-                {
-                    jobSection.StartDate = DateTime.UtcNow;
-                }
+                // Check if status changed to completed
+                bool wasCompleted = existingSection.Status == 3;
+                bool nowCompleted = jobSection.Status == 3;
+
+                // Update properties
+                existingSection.Status = jobSection.Status;
+                existingSection.Description = jobSection.Description;
+                existingSection.StartDate = jobSection.StartDate;
+                existingSection.CompletionDate = jobSection.CompletionDate;
+                existingSection.IsSubcontracted = jobSection.IsSubcontracted;
+                existingSection.SubcontractorId = jobSection.SubcontractorId;
+                existingSection.ContractReference = jobSection.ContractReference;
+                existingSection.ResponsibleEmployeeId = jobSection.ResponsibleEmployeeId;
+                existingSection.MaterialsOrdered = jobSection.MaterialsOrdered;
+                existingSection.MaterialsDelivered = jobSection.MaterialsDelivered;
+                existingSection.Notes = jobSection.Notes;
+                existingSection.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
+
+                // Create inspection reminders if section was just completed
+                if (!wasCompleted && nowCompleted && existingSection.RequiresInspection)
+                {
+                    await _inspectionService.CheckAndCreateInspectionReminders(existingSection.Id);
+                }
+
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error updating status for job section with ID {id}");
-                return StatusCode(500, $"An error occurred while updating the status for job section with ID {id}");
+                _logger.LogError(ex, "Error updating job section {SectionId}", id);
+                return StatusCode(500, "Error updating job section");
             }
         }
 
-        // DELETE: api/JobSections/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJobSection(int id)
         {
             try
             {
-                var jobSection = await _context.JobSections.FindAsync(id);
-                if (jobSection == null)
+                var section = await _context.JobSections.FindAsync(id);
+                if (section == null)
                 {
                     return NotFound();
                 }
 
-                _context.JobSections.Remove(jobSection);
+                _context.JobSections.Remove(section);
                 await _context.SaveChangesAsync();
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error deleting job section with ID {id}");
-                return StatusCode(500, $"An error occurred while deleting job section with ID {id}");
+                _logger.LogError(ex, "Error deleting job section {SectionId}", id);
+                return StatusCode(500, "Error deleting job section");
             }
         }
 
-        // PUT: api/JobSections/{id}/collapse
-        [HttpPut("{id}/collapse")]
-        public async Task<IActionResult> UpdateSectionCollapsedState(int id, [FromBody] UpdateCollapsedStateDto request)
+        private void SetInspectionRequirements(JobSection section)
         {
-            try
+            // Set inspection requirements based on section type
+            switch (section.SectionType)
             {
-                var jobSection = await _context.JobSections.FindAsync(id);
-                if (jobSection == null)
-                {
-                    return NotFound();
-                }
-
-                jobSection.IsCollapsed = request.IsCollapsed;
-                jobSection.UpdatedAt = DateTime.UtcNow;
-                
-                await _context.SaveChangesAsync();
-                return Ok(new { isCollapsed = jobSection.IsCollapsed });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error updating collapsed state for job section with ID {id}");
-                return StatusCode(500, $"An error occurred while updating the collapsed state");
-            }
-        }
-        
-        // PUT: api/JobSections/{id}/notes
-        [HttpPut("{id}/notes")]
-        public async Task<IActionResult> UpdateSectionNotes(int id, [FromBody] UpdateNotesDto request)
-        {
-            try
-            {
-                var jobSection = await _context.JobSections.FindAsync(id);
-                if (jobSection == null)
-                {
-                    return NotFound();
-                }
-
-                jobSection.Notes = request.Notes;
-                jobSection.UpdatedAt = DateTime.UtcNow;
-                
-                await _context.SaveChangesAsync();
-                return Ok(new { notes = jobSection.Notes });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error updating notes for job section with ID {id}");
-                return StatusCode(500, $"An error occurred while updating the notes");
+                case 4: // Framing
+                    section.RequiresInspection = true;
+                    section.BuildingInspectionRequired = true;
+                    break;
+                case 5: // Electrical
+                    section.RequiresInspection = true;
+                    section.ElectricalInspectionRequired = true;
+                    break;
+                case 6: // Plumbing
+                    section.RequiresInspection = true;
+                    section.PlumbingInspectionRequired = true;
+                    break;
+                case 8: // Insulation
+                    section.RequiresInspection = true;
+                    section.BuildingInspectionRequired = true;
+                    break;
+                default:
+                    section.RequiresInspection = false;
+                    break;
             }
         }
-
-        private bool JobSectionExists(int id)
-        {
-            return _context.JobSections.Any(e => e.Id == id);
-        }
-    }
-    
-    // DTOs for the new endpoints
-    public class UpdateCollapsedStateDto
-    {
-        public bool IsCollapsed { get; set; }
-    }
-    
-    public class UpdateNotesDto
-    {
-        public string? Notes { get; set; }
     }
 }
