@@ -179,6 +179,54 @@
                             </div>
                         </div>
 
+                        <!-- Smart Section Questions -->
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>Project Planning
+                        </h6>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <p class="mb-3"><small class="text-muted">Answer these questions to get suggested sections and permits for your project:</small></p>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Project Type:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="projectType" value="residential" id="residential">
+                                            <label class="form-check-label" for="residential">Residential</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="projectType" value="commercial" id="commercial">
+                                            <label class="form-check-label" for="commercial">Commercial</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Work includes:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="needsDemo">
+                                            <label class="form-check-label" for="needsDemo">Demolition work</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="needsElectrical">
+                                            <label class="form-check-label" for="needsElectrical">Electrical work</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="needsPlumbing">
+                                            <label class="form-check-label" for="needsPlumbing">Plumbing work</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="needsStructural">
+                                            <label class="form-check-label" for="needsStructural">Structural changes</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateSectionSuggestions()">
+                                    <i class="fas fa-magic me-1"></i>Get Smart Suggestions
+                                </button>
+                                <div id="sectionSuggestions" class="mt-2"></div>
+                            </div>
+                        </div>
+
                         <!-- Client Information -->
                         <h6 class="text-primary mb-3">
                             <i class="fas fa-user me-2"></i>Client Information
@@ -887,6 +935,12 @@
                                     <div class="col-md-6">
                                         <h6>Select Section Type:</h6>
                                         <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="sectionType" value="Permits" id="permits">
+                                            <label class="form-check-label" for="permits">
+                                                <i class="fas fa-file-alt text-success me-2"></i>Permits & Approvals
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="sectionType" value="Demolition" id="demolition">
                                             <label class="form-check-label" for="demolition">
                                                 <i class="fas fa-hammer text-warning me-2"></i>Demolition
@@ -1081,6 +1135,7 @@
 
         function getSectionIcon(sectionType) {
             const icons = {
+                'Permits': '<i class="fas fa-file-alt text-success"></i>',
                 'Demolition': '<i class="fas fa-hammer text-warning"></i>',
                 'Foundation': '<i class="fas fa-cube text-secondary"></i>',
                 'Framing': '<i class="fas fa-home text-info"></i>',
@@ -1102,6 +1157,72 @@
         function removeSection(button) {
             if (confirm('Are you sure you want to remove this section?')) {
                 button.closest('.card').remove();
+            }
+        }
+
+        function generateSectionSuggestions() {
+            const projectType = document.querySelector('input[name="projectType"]:checked');
+            const needsDemo = document.getElementById('needsDemo').checked;
+            const needsElectrical = document.getElementById('needsElectrical').checked;
+            const needsPlumbing = document.getElementById('needsPlumbing').checked;
+            const needsStructural = document.getElementById('needsStructural').checked;
+            
+            let suggestions = [];
+            let permits = [];
+            
+            // Always suggest permits first
+            permits.push('Permits & Approvals');
+            
+            // Based on project type
+            if (projectType) {
+                if (projectType.value === 'residential') {
+                    suggestions.push('Foundation', 'Framing', 'Insulation', 'Drywall', 'Flooring', 'Final Inspection');
+                } else if (projectType.value === 'commercial') {
+                    suggestions.push('Foundation', 'Framing', 'HVAC', 'Final Inspection');
+                }
+            }
+            
+            // Based on specific work types
+            if (needsDemo) {
+                suggestions.unshift('Demolition'); // Add at beginning
+            }
+            if (needsElectrical) {
+                suggestions.push('Electrical');
+            }
+            if (needsPlumbing) {
+                suggestions.push('Plumbing');
+            }
+            if (needsStructural) {
+                if (!suggestions.includes('Foundation')) suggestions.push('Foundation');
+                if (!suggestions.includes('Framing')) suggestions.push('Framing');
+            }
+            
+            // Combine permits and sections
+            const allSuggestions = [...permits, ...suggestions];
+            
+            // Remove duplicates
+            const uniqueSuggestions = [...new Set(allSuggestions)];
+            
+            // Display suggestions
+            const suggestionsDiv = document.getElementById('sectionSuggestions');
+            if (uniqueSuggestions.length > 0) {
+                suggestionsDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Suggested Sections for Your Project:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${uniqueSuggestions.map(section => 
+                                `<span class="badge bg-primary">${getSectionIcon(section)} ${section}</span>`
+                            ).join('')}
+                        </div>
+                        <small class="d-block mt-2">You can add these sections after creating the job in the "Manage Job & Sections" page.</small>
+                    </div>
+                `;
+            } else {
+                suggestionsDiv.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Please select your project type and work requirements to get smart suggestions.
+                    </div>
+                `;
             }
         }
     </script>
