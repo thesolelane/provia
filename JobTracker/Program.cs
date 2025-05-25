@@ -20,6 +20,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 // Register services
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<InspectionTrackingService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
