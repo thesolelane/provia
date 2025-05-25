@@ -1163,7 +1163,7 @@
 
         function getInspectionControls(section) {
             const sectionType = section.sectionType || section;
-            const sectionsRequiringInspection = ['Framing', 'Electrical', 'Plumbing'];
+            const sectionsRequiringInspection = ['Framing', 'Electrical', 'Plumbing', 'Insulation'];
             
             if (!sectionsRequiringInspection.includes(sectionType)) {
                 return '';
@@ -1171,16 +1171,27 @@
             
             // Determine which inspections are needed
             let inspectionTypes = [];
+            let inspectionDescription = '';
+            
             if (sectionType === 'Framing') {
-                inspectionTypes = ['Building'];
+                inspectionTypes = ['Framing Rough-in'];
+                inspectionDescription = 'Required before covering framing. Includes fire blocking verification.';
             } else if (sectionType === 'Electrical') {
-                inspectionTypes = ['Electrical'];
+                inspectionTypes = ['Electrical Rough-in'];
+                inspectionDescription = 'Required before insulation/drywall. Verify all rough wiring and fire blocking of penetrations.';
             } else if (sectionType === 'Plumbing') {
-                inspectionTypes = ['Plumbing'];
+                inspectionTypes = ['Plumbing Rough-in'];
+                inspectionDescription = 'Required before covering pipes. Verify rough plumbing and fire blocking of floor penetrations.';
+            } else if (sectionType === 'Insulation') {
+                inspectionTypes = ['Insulation'];
+                inspectionDescription = 'Required before drywall installation.';
             }
             
             return `
                 <div class="inspection-status mt-2 mb-2">
+                    <div class="alert alert-warning p-2 mb-2">
+                        <strong><i class="fas fa-exclamation-triangle"></i> Critical:</strong> ${inspectionDescription}
+                    </div>
                     <small class="text-muted d-block">Required Inspections:</small>
                     ${inspectionTypes.map(type => `
                         <div class="d-flex align-items-center mt-1">
@@ -1195,6 +1206,11 @@
                             </button>
                         </div>
                     `).join('')}
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-warning" onclick="getFireBlockingGuidance('${sectionType}')">
+                            <i class="fas fa-shield-alt"></i> Fire Blocking Requirements
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -1228,6 +1244,147 @@
                 }
                 // Here you would call the API to record the inspection result
                 // updateInspectionStatus(sectionId, inspectionType, passed ? 'passed' : 'failed', new Date(), notes);
+            }
+        }
+
+        function getFireBlockingGuidance(sectionType) {
+            // Show fire blocking requirements for the specific section type
+            const guidance = getLocalFireBlockingGuidance(sectionType);
+            
+            // Create modal to display guidance
+            const modal = `
+                <div class="modal fade" id="fireBlockingModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-shield-alt text-warning me-2"></i>
+                                    Fire Blocking Requirements - ${sectionType}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> CRITICAL SAFETY REQUIREMENT</strong><br>
+                                    Fire blocking must be completed and inspected before covering work.
+                                </div>
+                                <pre style="white-space: pre-wrap; font-family: inherit;">${guidance}</pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="scheduleInspection('${sectionType} Rough-in', null)">
+                                    <i class="fas fa-calendar-plus"></i> Schedule Inspection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('fireBlockingModal');
+            if (existingModal) existingModal.remove();
+            
+            // Add modal to page and show
+            document.body.insertAdjacentHTML('beforeend', modal);
+            const fireModal = new bootstrap.Modal(document.getElementById('fireBlockingModal'));
+            fireModal.show();
+        }
+
+        function getLocalFireBlockingGuidance(sectionType) {
+            switch(sectionType.toLowerCase()) {
+                case 'framing':
+                    return `FRAMING FIRE BLOCKING REQUIREMENTS:
+
+✓ Install fire blocking between studs at ceiling level
+✓ Block all horizontal spaces created by framing
+✓ Use 2x lumber, 1/2" gypsum board, or approved materials
+✓ CRITICAL: Must be inspected before insulation/drywall
+
+Common Materials:
+- 2-inch nominal lumber (most common)
+- 1/2-inch gypsum board
+- Mineral wool batts
+- UL-listed expanding foam
+
+Key Inspection Points:
+- Fire blocking properly installed at ceiling level
+- No gaps or openings in fire blocking
+- Materials meet code requirements
+- Proper attachment to framing`;
+
+                case 'electrical':
+                    return `ELECTRICAL ROUGH-IN FIRE BLOCKING:
+
+✓ Seal all holes drilled through top/bottom plates
+✓ Use fire-rated caulk or expanding foam for small holes
+✓ Install proper fire blocking around large penetrations
+✓ CRITICAL: Inspect before insulation installation
+
+Penetration Sealing:
+- Holes < 1": Fire-rated caulk or expanding foam
+- Holes > 1": Fire blocking materials + sealant
+- Multiple cables: Use fire-rated putty pads
+
+Key Inspection Points:
+- All plate penetrations properly sealed
+- Fire-rated materials used for sealing
+- No unsealed openings remain
+- Proper installation of fire blocking materials`;
+
+                case 'plumbing':
+                    return `PLUMBING ROUGH-IN FIRE BLOCKING:
+
+✓ Seal all floor penetrations where pipes pass through
+✓ Use fire-resistant materials around pipe chases
+✓ Install proper blocking in wall cavities with plumbing
+✓ CRITICAL: Inspect before covering pipes
+
+Floor Penetration Requirements:
+- Seal gaps around pipes with fire-rated materials
+- Use fire-blocking foam for small gaps
+- Install proper fire stopping for large openings
+- Maintain fire rating of floor assembly
+
+Key Inspection Points:
+- All floor penetrations properly sealed
+- Fire blocking maintains floor fire rating
+- Proper materials used around pipe chases
+- No gaps or openings remain unsealed`;
+
+                case 'insulation':
+                    return `INSULATION FIRE BLOCKING:
+
+✓ Verify all fire blocking in place before installation
+✓ Do not compress fire blocking materials
+✓ Maintain proper fire blocking integrity
+✓ CRITICAL: Inspect before drywall installation
+
+Installation Requirements:
+- Fire blocking must be complete before insulation
+- Insulation cannot substitute for fire blocking
+- Maintain fire blocking effectiveness
+- Proper installation around penetrations
+
+Key Inspection Points:
+- Fire blocking remains effective after insulation
+- No compromised fire blocking integrity
+- Proper installation techniques used
+- Code compliance maintained`;
+
+                default:
+                    return `GENERAL FIRE BLOCKING REQUIREMENTS:
+
+✓ Required before covering any concealed spaces
+✓ Use approved materials (lumber, gypsum, mineral wool, foam)
+✓ Seal all penetrations through fire blocking
+✓ Schedule inspection before proceeding to next phase
+
+Massachusetts Building Code Requirements:
+- Fire blocking required at ceiling and floor levels
+- Must block interconnected concealed spaces
+- Use only approved fire blocking materials
+- Proper installation and inspection required`;
             }
         }
 
