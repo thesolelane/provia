@@ -1119,6 +1119,7 @@
                             ${sectionData.notes ? `<p class="mb-0 text-muted">${sectionData.notes}</p>` : ''}
                         </div>
                         <div>
+                            ${getInspectionControls(section)}
                             <button class="btn btn-sm btn-outline-primary me-1" onclick="editSection(this)">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -1157,6 +1158,76 @@
         function removeSection(button) {
             if (confirm('Are you sure you want to remove this section?')) {
                 button.closest('.card').remove();
+            }
+        }
+
+        function getInspectionControls(section) {
+            const sectionType = section.sectionType || section;
+            const sectionsRequiringInspection = ['Framing', 'Electrical', 'Plumbing'];
+            
+            if (!sectionsRequiringInspection.includes(sectionType)) {
+                return '';
+            }
+            
+            // Determine which inspections are needed
+            let inspectionTypes = [];
+            if (sectionType === 'Framing') {
+                inspectionTypes = ['Building'];
+            } else if (sectionType === 'Electrical') {
+                inspectionTypes = ['Electrical'];
+            } else if (sectionType === 'Plumbing') {
+                inspectionTypes = ['Plumbing'];
+            }
+            
+            return `
+                <div class="inspection-status mt-2 mb-2">
+                    <small class="text-muted d-block">Required Inspections:</small>
+                    ${inspectionTypes.map(type => `
+                        <div class="d-flex align-items-center mt-1">
+                            <button class="btn btn-sm btn-outline-info me-2" onclick="scheduleInspection('${type}', ${section.id || 'null'})">
+                                <i class="fas fa-calendar-plus"></i> Schedule ${type}
+                            </button>
+                            <button class="btn btn-sm btn-outline-success me-2" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, true)">
+                                <i class="fas fa-check"></i> Pass
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, false)">
+                                <i class="fas fa-times"></i> Fail
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function scheduleInspection(inspectionType, sectionId) {
+            const inspectionDate = prompt(`Schedule ${inspectionType} inspection date (YYYY-MM-DD):`);
+            if (inspectionDate) {
+                alert(`${inspectionType} inspection scheduled for ${inspectionDate}`);
+                // Here you would call the API to schedule the inspection
+                // updateInspectionStatus(sectionId, inspectionType, 'scheduled', inspectionDate);
+            }
+        }
+
+        function recordInspectionResult(inspectionType, sectionId, passed) {
+            const resultText = passed ? 'PASSED' : 'FAILED';
+            let notes = '';
+            
+            if (!passed) {
+                notes = prompt('Please enter correction notes for the failed inspection:');
+                if (!notes) {
+                    alert('Correction notes are required for failed inspections.');
+                    return;
+                }
+            }
+            
+            const confirmation = confirm(`Record ${inspectionType} inspection as ${resultText}?`);
+            if (confirmation) {
+                alert(`${inspectionType} inspection recorded as ${resultText}`);
+                if (!passed && notes) {
+                    alert(`Correction notes: ${notes}`);
+                }
+                // Here you would call the API to record the inspection result
+                // updateInspectionStatus(sectionId, inspectionType, passed ? 'passed' : 'failed', new Date(), notes);
             }
         }
 
