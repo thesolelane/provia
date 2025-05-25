@@ -44,6 +44,27 @@ namespace JobTracker.Models
         
         public string? InspectionNotes { get; set; }
         
+        // Detailed inspection tracking
+        public bool RequiresInspection { get; set; } = false;
+        
+        public bool BuildingInspectionRequired { get; set; } = false;
+        public bool BuildingInspectionCompleted { get; set; } = false;
+        public DateTime? BuildingInspectionDate { get; set; }
+        public bool BuildingInspectionPassed { get; set; } = false;
+        public string? BuildingInspectionNotes { get; set; }
+        
+        public bool ElectricalInspectionRequired { get; set; } = false;
+        public bool ElectricalInspectionCompleted { get; set; } = false;
+        public DateTime? ElectricalInspectionDate { get; set; }
+        public bool ElectricalInspectionPassed { get; set; } = false;
+        public string? ElectricalInspectionNotes { get; set; }
+        
+        public bool PlumbingInspectionRequired { get; set; } = false;
+        public bool PlumbingInspectionCompleted { get; set; } = false;
+        public DateTime? PlumbingInspectionDate { get; set; }
+        public bool PlumbingInspectionPassed { get; set; } = false;
+        public string? PlumbingInspectionNotes { get; set; }
+        
         // Additional notes field for section
         [StringLength(1000)]
         public string? Notes { get; set; }

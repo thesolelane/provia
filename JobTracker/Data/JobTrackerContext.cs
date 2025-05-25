@@ -13,6 +13,7 @@ namespace JobTracker.Data
         public DbSet<Job> Jobs { get; set; } = null!;
         public DbSet<JobSection> JobSections { get; set; } = null!;
         public DbSet<JobImage> JobImages { get; set; } = null!;
+        public DbSet<InspectionReminder> InspectionReminders { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,13 @@ namespace JobTracker.Data
                 .HasOne(i => i.JobSection)
                 .WithMany(s => s.Images)
                 .HasForeignKey(i => i.JobSectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure InspectionReminder relationships
+            modelBuilder.Entity<InspectionReminder>()
+                .HasOne(r => r.JobSection)
+                .WithMany()
+                .HasForeignKey(r => r.JobSectionId)
                 .OnDelete(DeleteBehavior.Cascade);
                 
             // Add indexes for better performance
