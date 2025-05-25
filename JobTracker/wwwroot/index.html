@@ -587,6 +587,8 @@
             const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
             if (detailsModal) {
                 detailsModal.hide();
+                // Wait for the modal to fully close before opening edit modal
+                await new Promise(resolve => setTimeout(resolve, 300));
             }
             
             // Find the job data, or fetch it if not available
