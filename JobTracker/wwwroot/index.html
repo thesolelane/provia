@@ -1483,7 +1483,11 @@
                         }, 300);
                     }
                     
-                    showSuccessMessage('Section removed successfully!');
+                    // Show success message with archival information
+                    const archiveMessage = result.archivedAs 
+                        ? `Section archived successfully! Original: ${result.originalJobNumber} → Archive: ${result.archivedAs}`
+                        : 'Section archived successfully!';
+                    showSuccessMessage(archiveMessage);
                     
                     // Refresh sections to show updated list immediately
                     const jobId = getCurrentJobIdFromContext();
@@ -1495,7 +1499,7 @@
                     }
                 } else {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to remove section');
+                    throw new Error(errorData.message || 'Failed to archive section');
                 }
                 
             } catch (error) {
