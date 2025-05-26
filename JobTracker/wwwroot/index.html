@@ -1485,8 +1485,10 @@
                     // Send notification confirmation
                     sendInspectionNotification(inspectionType, date, notes, sectionId);
                     
-                    // Refresh the sections to show the updated inspection date
-                    loadJobSections(currentJobId);
+                    // Auto-refresh sections to show updated inspection date immediately
+                    setTimeout(() => {
+                        loadJobSections(currentJobId);
+                    }, 500);
                 } else {
                     showErrorMessage('Failed to schedule inspection. Please try again.');
                 }
@@ -1612,8 +1614,10 @@
                         }, 1000);
                     }
                     
-                    // Refresh sections to show updated status
-                    loadJobSections(currentJobId);
+                    // Auto-refresh sections to show updated status immediately
+                    setTimeout(() => {
+                        loadJobSections(currentJobId);
+                    }, 500);
                 } else {
                     showErrorMessage('Failed to record inspection result. Please try again.');
                 }
@@ -1989,6 +1993,78 @@ Job Tracker App`;
                     </div>
                 `;
             }
+        }
+
+        // Auto-save functionality for job forms
+        let autoSaveTimer;
+        let jobFormData = {};
+
+        function setupAutoSave() {
+            // Auto-save job form data every few seconds
+            const jobForm = document.getElementById('jobForm');
+            if (jobForm) {
+                const inputs = jobForm.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimer);
+                        autoSaveTimer = setTimeout(() => {
+                            saveJobFormData();
+                        }, 3000); // Auto-save 3 seconds after user stops typing
+                    });
+                });
+            }
+        }
+
+        function saveJobFormData() {
+            const jobForm = document.getElementById('jobForm');
+            if (jobForm) {
+                const formData = new FormData(jobForm);
+                jobFormData = Object.fromEntries(formData.entries());
+                localStorage.setItem('jobFormAutoSave', JSON.stringify({
+                    data: jobFormData,
+                    timestamp: new Date().toISOString()
+                }));
+                showSuccessMessage('Job data auto-saved', 2000);
+            }
+        }
+
+        function loadAutoSavedData() {
+            const saved = localStorage.getItem('jobFormAutoSave');
+            if (saved) {
+                const { data, timestamp } = JSON.parse(saved);
+                const saveTime = new Date(timestamp);
+                const now = new Date();
+                const hoursSinceSave = (now - saveTime) / (1000 * 60 * 60);
+                
+                // Only restore if saved within last 24 hours
+                if (hoursSinceSave < 24) {
+                    const confirmation = confirm(`Found unsaved job data from ${saveTime.toLocaleString()}.\n\nWould you like to restore this data?`);
+                    if (confirmation) {
+                        Object.keys(data).forEach(key => {
+                            const input = document.querySelector(`[name="${key}"]`);
+                            if (input) {
+                                input.value = data[key];
+                            }
+                        });
+                        showSuccessMessage('Auto-saved job data restored successfully!');
+                    }
+                }
+            }
+        }
+
+        function clearAutoSavedData() {
+            localStorage.removeItem('jobFormAutoSave');
+        }
+
+        // Initialize auto-save functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAutoSave();
+            loadAutoSavedData();
+        });
+
+        // Clear auto-save data when job is successfully created
+        function clearAutoSaveOnSuccess() {
+            clearAutoSavedData();
         }
     </script>
 </body>
