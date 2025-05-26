@@ -1812,7 +1812,7 @@ Massachusetts Building Code Requirements:
             if (section.inspectionDate && section.electricalInspectionCompleted && !section.electricalInspectionPassed) {
                 const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
                 inspections.push(`<div class="text-success small">
-                    <span><strong>Re-inspection Scheduled:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
+                    <span><strong>⚡ Electrical Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
                 </div>`);
             }
             
