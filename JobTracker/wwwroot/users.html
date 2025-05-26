@@ -502,6 +502,141 @@
             }
         }
 
+        let currentPasswordUserId = null;
+
+        function showPasswordOptions(userId, firstName, email) {
+            currentPasswordUserId = userId;
+            document.getElementById('passwordUserName').textContent = firstName;
+            document.getElementById('passwordUserEmail').textContent = email;
+            document.getElementById('passwordActionStatus').innerHTML = '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            modal.show();
+        }
+
+        function closePasswordModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+            if (modal) modal.hide();
+        }
+
+        async function sendVerificationEmail(userId) {
+            try {
+                const response = await fetch(`/api/passwordmanager/send-verification/${userId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Verification email sent successfully! Check the team member\'s email.');
+                    if (result.verificationCode) {
+                        alert(`Email service not configured. Manual details:\nVerification Code: ${result.verificationCode}\nTemp Password: ${result.temporaryPassword}`);
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to send verification email');
+                }
+            } catch (error) {
+                alert('Error sending verification email: ' + error.message);
+            }
+        }
+
+        async function resetUserPassword() {
+            if (!currentPasswordUserId) return;
+
+            const reason = prompt('Enter reason for password reset:');
+            if (!reason) return;
+
+            try {
+                const response = await fetch(`/api/passwordmanager/admin-reset-password/${currentPasswordUserId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('passwordActionStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>Password Reset!</strong><br>
+                            New temporary password: <strong>${result.temporaryPassword}</strong><br>
+                            <small>User must change this on next login</small>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.message || 'Failed to reset password');
+                }
+            } catch (error) {
+                document.getElementById('passwordActionStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function resendVerificationEmail() {
+            if (!currentPasswordUserId) return;
+
+            try {
+                const response = await fetch(`/api/passwordmanager/send-verification/${currentPasswordUserId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('passwordActionStatus').innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>Verification Email Sent!</strong><br>
+                            ${result.verificationCode ? `Verification Code: <strong>${result.verificationCode}</strong><br>Temp Password: <strong>${result.temporaryPassword}</strong>` : 'Check their email for instructions'}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.message || 'Failed to send verification email');
+                }
+            } catch (error) {
+                document.getElementById('passwordActionStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function blockUserAccount() {
+            if (!currentPasswordUserId) return;
+
+            const reason = prompt('Enter reason for blocking this account:');
+            if (!reason) return;
+
+            if (!confirm('Are you sure you want to block this user account? They will not be able to log in.')) return;
+
+            try {
+                const response = await fetch(`/api/passwordmanager/block-user/${currentPasswordUserId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    closePasswordModal();
+                    loadUsers(); // Refresh the list
+                    alert('User account blocked successfully');
+                } else {
+                    throw new Error(result.message || 'Failed to block user');
+                }
+            } catch (error) {
+                document.getElementById('passwordActionStatus').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
         function editUser(userId) {
             alert('Edit functionality coming soon!');
         }
