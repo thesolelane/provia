@@ -1494,9 +1494,21 @@
                         : 'Section archived successfully!';
                     showSuccessMessage(archiveMessage);
                     
-                    // Force refresh to show updated sections without archived section
+                    // Stay on current job page after archival
                     setTimeout(() => {
-                        window.location.reload();
+                        const currentUrl = window.location.href;
+                        if (currentUrl.includes('/jobs/')) {
+                            // We're already on a job page, just reload
+                            window.location.reload();
+                        } else {
+                            // Get the job ID and navigate to the proper job page
+                            const jobId = getCurrentJobIdFromContext();
+                            if (jobId) {
+                                window.location.href = `/jobs/${jobId}`;
+                            } else {
+                                window.location.reload();
+                            }
+                        }
                     }, 1000);
                 } else {
                     const errorData = await response.json();
