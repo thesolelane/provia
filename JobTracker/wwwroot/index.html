@@ -1467,21 +1467,98 @@
         }
 
         function recordInspectionResult(inspectionType, sectionId, passed) {
-            const resultText = passed ? 'PASSED' : 'FAILED';
-            let notes = '';
-            
-            if (!passed) {
-                notes = prompt('Please enter correction notes for the failed inspection:');
-                if (!notes) {
-                    alert('Correction notes are required for failed inspections.');
-                    return;
+            if (passed) {
+                // For passed inspections, simple confirmation
+                const confirmation = confirm(`Record ${inspectionType} inspection as PASSED?`);
+                if (confirmation) {
+                    submitInspectionResult(inspectionType, sectionId, true, '');
                 }
+            } else {
+                // For failed inspections, show in-app modal for detailed notes
+                showFailedInspectionModal(inspectionType, sectionId);
+            }
+        }
+
+        function showFailedInspectionModal(inspectionType, sectionId) {
+            // Create modal content for failed inspection
+            const modalContent = `
+                <div class="modal fade" id="failedInspectionModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-times-circle"></i> ${inspectionType} Inspection Failed
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Inspection Failed:</strong> Work must be corrected before proceeding to next phase.
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="correctionNotes" class="form-label">
+                                        <strong>Required Corrections:</strong>
+                                    </label>
+                                    <textarea class="form-control" id="correctionNotes" rows="4" 
+                                              placeholder="Describe what needs to be corrected..." required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="inspectorName" class="form-label">Inspector Name:</label>
+                                    <input type="text" class="form-control" id="inspectorName" 
+                                           placeholder="Enter inspector name">
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    This failed inspection will be recorded. You can reschedule once corrections are complete.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick="confirmFailedInspection('${inspectionType}', ${sectionId})">
+                                    <i class="fas fa-times"></i> Record Failed Inspection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page and show
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+            const modal = new bootstrap.Modal(document.getElementById('failedInspectionModal'));
+            modal.show();
+            
+            // Clean up modal after closing
+            document.getElementById('failedInspectionModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+        }
+
+        function confirmFailedInspection(inspectionType, sectionId) {
+            const notes = document.getElementById('correctionNotes').value;
+            const inspector = document.getElementById('inspectorName').value;
+            
+            if (!notes.trim()) {
+                alert('Correction notes are required for failed inspections.');
+                return;
             }
             
-            const confirmation = confirm(`Record ${inspectionType} inspection as ${resultText}?`);
-            if (confirmation) {
-                // Save to database via API
-                fetch(`/api/jobsections/${sectionId}/record-inspection`, {
+            const fullNotes = `FAILED INSPECTION - Corrections Required:\n${notes}\n${inspector ? `Inspector: ${inspector}` : ''}`;
+            
+            // Close modal and submit result
+            const modal = bootstrap.Modal.getInstance(document.getElementById('failedInspectionModal'));
+            modal.hide();
+            
+            submitInspectionResult(inspectionType, sectionId, false, fullNotes);
+        }
+
+        async function submitInspectionResult(inspectionType, sectionId, passed, notes) {
+            try {
+                const response = await fetch(`/api/jobsections/${sectionId}/record-inspection`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1492,19 +1569,34 @@
                         inspectionDate: new Date().toISOString(),
                         notes: notes
                     })
-                }).then(response => {
-                    if (response.ok) {
-                        showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
-                        if (!passed && notes) {
-                            showSuccessMessage(`Correction notes: ${notes}`);
-                        }
-                    } else {
-                        showErrorMessage('Failed to record inspection result. Please try again.');
-                    }
-                }).catch(error => {
-                    console.error('Error recording inspection:', error);
-                    showErrorMessage('Error recording inspection result. Please try again.');
                 });
+                
+                if (response.ok) {
+                    const resultText = passed ? 'PASSED' : 'FAILED';
+                    showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
+                    
+                    if (!passed) {
+                        // Show rescheduling option for failed inspections
+                        setTimeout(() => {
+                            showRescheduleOption(inspectionType, sectionId);
+                        }, 1000);
+                    }
+                    
+                    // Refresh sections to show updated status
+                    loadJobSections(currentJobId);
+                } else {
+                    showErrorMessage('Failed to record inspection result. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error recording inspection:', error);
+                showErrorMessage('Error recording inspection result. Please try again.');
+            }
+        }
+
+        function showRescheduleOption(inspectionType, sectionId) {
+            const reschedule = confirm(`${inspectionType} inspection failed and has been recorded.\n\nWould you like to schedule a re-inspection once corrections are made?`);
+            if (reschedule) {
+                scheduleInspection(`${inspectionType} Re-inspection`, sectionId);
             }
         }
 
