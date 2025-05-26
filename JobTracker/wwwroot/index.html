@@ -1376,12 +1376,67 @@
         }
 
         function scheduleInspection(inspectionType, sectionId) {
-            const inspectionDate = prompt(`Schedule ${inspectionType} inspection date (YYYY-MM-DD):`);
-            if (inspectionDate) {
-                alert(`${inspectionType} inspection scheduled for ${inspectionDate}`);
-                // Here you would call the API to schedule the inspection
-                // updateInspectionStatus(sectionId, inspectionType, 'scheduled', inspectionDate);
+            // Create in-app modal for date selection
+            const modal = `
+                <div class="modal fade" id="scheduleInspectionModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-calendar-plus me-2"></i>Schedule ${inspectionType} Inspection
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="inspectionDate" class="form-label">Inspection Date:</label>
+                                    <input type="date" class="form-control" id="inspectionDate" min="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inspectionNotes" class="form-label">Notes (optional):</label>
+                                    <textarea class="form-control" id="inspectionNotes" rows="2" placeholder="Any special requirements or notes for the inspector..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="confirmScheduleInspection('${inspectionType}', ${sectionId})">
+                                    <i class="fas fa-calendar-check"></i> Schedule Inspection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('scheduleInspectionModal');
+            if (existingModal) existingModal.remove();
+            
+            // Add modal and show
+            document.body.insertAdjacentHTML('beforeend', modal);
+            const inspectionModal = new bootstrap.Modal(document.getElementById('scheduleInspectionModal'));
+            inspectionModal.show();
+        }
+
+        function confirmScheduleInspection(inspectionType, sectionId) {
+            const date = document.getElementById('inspectionDate').value;
+            const notes = document.getElementById('inspectionNotes').value;
+            
+            if (!date) {
+                showErrorMessage('Please select an inspection date');
+                return;
             }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleInspectionModal'));
+            modal.hide();
+            
+            // Show success message
+            const formattedDate = new Date(date).toLocaleDateString();
+            showSuccessMessage(`${inspectionType} inspection scheduled for ${formattedDate}`);
+            
+            // Here you would call the API to schedule the inspection
+            // updateInspectionStatus(sectionId, inspectionType, 'scheduled', date, notes);
         }
 
         function recordInspectionResult(inspectionType, sectionId, passed) {
@@ -1398,9 +1453,9 @@
             
             const confirmation = confirm(`Record ${inspectionType} inspection as ${resultText}?`);
             if (confirmation) {
-                alert(`${inspectionType} inspection recorded as ${resultText}`);
+                showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
                 if (!passed && notes) {
-                    alert(`Correction notes: ${notes}`);
+                    showSuccessMessage(`Correction notes: ${notes}`);
                 }
                 // Here you would call the API to record the inspection result
                 // updateInspectionStatus(sectionId, inspectionType, passed ? 'passed' : 'failed', new Date(), notes);
