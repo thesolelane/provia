@@ -1008,6 +1008,48 @@
             return statusMap[statusNumber] || 'Unknown';
         }
 
+        function showSuccessMessage(message) {
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Insert at top of sections container
+            const sectionsContainer = document.getElementById('sectionsContainer');
+            if (sectionsContainer) {
+                sectionsContainer.insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    const alert = sectionsContainer.querySelector('.alert-success');
+                    if (alert) alert.remove();
+                }, 5000);
+            }
+        }
+
+        function showErrorMessage(message) {
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Insert at top of sections container
+            const sectionsContainer = document.getElementById('sectionsContainer');
+            if (sectionsContainer) {
+                sectionsContainer.insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Auto-remove after 8 seconds
+                setTimeout(() => {
+                    const alert = sectionsContainer.querySelector('.alert-danger');
+                    if (alert) alert.remove();
+                }, 8000);
+            }
+        }
+
         function returnToDashboard() {
             document.title = 'Job Tracker Pro - Construction Management';
             location.reload(); // Simple way to return to dashboard
@@ -1200,13 +1242,14 @@
                         notes: document.getElementById('sectionNotes').value || null
                     });
                     
-                    alert('Section saved successfully!');
+                    // Show success message in the app instead of browser popup
+                    showSuccessMessage('Section saved successfully!');
                 } else {
                     throw new Error('Failed to save section');
                 }
             } catch (error) {
                 console.error('Error saving section:', error);
-                alert('Error saving section. Please try again.');
+                showErrorMessage('Error saving section. Please try again.');
                 return;
             }
             
