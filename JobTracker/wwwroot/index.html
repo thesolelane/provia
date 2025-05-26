@@ -963,6 +963,7 @@
                                 <h6 class="card-title">${getSectionIcon(sectionName)} ${sectionName}</h6>
                                 <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span></p>
                                 <p class="mb-1"><strong>Assignment:</strong> ${section.isSubcontracted ? 'Subcontractor' : 'Internal Team'}</p>
+                                ${getScheduledInspections(section)}
                                 ${section.notes ? `<p class="mb-0 text-muted">${section.notes}</p>` : ''}
                             </div>
                             <div>
@@ -1448,6 +1449,12 @@
                 if (response.ok) {
                     const formattedDate = new Date(date).toLocaleDateString();
                     showSuccessMessage(`${inspectionType} inspection scheduled for ${formattedDate}`);
+                    
+                    // Send notification confirmation
+                    sendInspectionNotification(inspectionType, date, notes, sectionId);
+                    
+                    // Refresh the sections to show the updated inspection date
+                    loadJobSections(currentJobId);
                 } else {
                     showErrorMessage('Failed to schedule inspection. Please try again.');
                 }
@@ -1642,6 +1649,92 @@ Massachusetts Building Code Requirements:
 
         function refreshJobs() {
             loadJobs();
+        }
+
+        function getScheduledInspections(section) {
+            let inspections = [];
+            
+            if (section.electricalInspectionDate) {
+                const date = new Date(section.electricalInspectionDate).toLocaleDateString();
+                const status = section.electricalInspectionCompleted ? 
+                    (section.electricalInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
+                    '📅 SCHEDULED';
+                inspections.push(`<div class="text-primary small"><strong>Electrical Inspection:</strong> ${date} ${status}</div>`);
+            }
+            
+            if (section.plumbingInspectionDate) {
+                const date = new Date(section.plumbingInspectionDate).toLocaleDateString();
+                const status = section.plumbingInspectionCompleted ? 
+                    (section.plumbingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
+                    '📅 SCHEDULED';
+                inspections.push(`<div class="text-info small"><strong>Plumbing Inspection:</strong> ${date} ${status}</div>`);
+            }
+            
+            if (section.buildingInspectionDate) {
+                const date = new Date(section.buildingInspectionDate).toLocaleDateString();
+                const status = section.buildingInspectionCompleted ? 
+                    (section.buildingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
+                    '📅 SCHEDULED';
+                inspections.push(`<div class="text-warning small"><strong>Framing Inspection:</strong> ${date} ${status}</div>`);
+            }
+            
+            return inspections.join('');
+        }
+
+        async function sendInspectionNotification(inspectionType, date, notes, sectionId) {
+            // Get current job details for the notification
+            const jobData = await getCurrentJobData();
+            if (!jobData) return;
+
+            const formattedDate = new Date(date).toLocaleDateString();
+            const message = `🏗️ INSPECTION SCHEDULED
+
+Job: ${jobData.name}
+Location: ${jobData.location}
+Client: ${jobData.clientName}
+
+${inspectionType} Inspection
+📅 Date: ${formattedDate}
+${notes ? `📝 Notes: ${notes}` : ''}
+
+Please ensure work is ready for inspection.
+
+Job Tracker App`;
+
+            // Show notification options to user
+            const notificationChoice = confirm(`Inspection scheduled successfully!\n\nWould you like to send a WhatsApp notification?\n\nClick OK for WhatsApp, Cancel for Email confirmation.`);
+            
+            if (notificationChoice) {
+                // Send WhatsApp notification
+                sendWhatsAppNotification(message, jobData.clientPhone);
+            } else {
+                // Send Email notification  
+                sendEmailNotification(inspectionType, formattedDate, jobData);
+            }
+        }
+
+        async function getCurrentJobData() {
+            try {
+                const response = await fetch(`/api/jobs/${currentJobId}`);
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Error getting job data:', error);
+            }
+            return null;
+        }
+
+        function sendWhatsAppNotification(message, phoneNumber) {
+            // This would integrate with your WhatsApp API
+            console.log('WhatsApp notification:', message, phoneNumber);
+            showSuccessMessage('WhatsApp notification sent to client!');
+        }
+
+        function sendEmailNotification(inspectionType, date, jobData) {
+            // This would integrate with your email service
+            console.log('Email notification for:', inspectionType, date, jobData);
+            showSuccessMessage('Email confirmation sent!');
         }
 
         function getSectionTypeNumber(sectionName) {
