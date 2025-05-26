@@ -75,6 +75,12 @@ namespace JobTracker.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
+        // Soft delete tracking
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        public string? DeletedBy { get; set; }
+        public string? DeletionReason { get; set; }
+        
         // Collection of images for this section
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ICollection<JobImage> Images { get; set; } = new List<JobImage>();
