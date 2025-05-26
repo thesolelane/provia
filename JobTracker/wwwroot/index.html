@@ -914,6 +914,98 @@
             // Replace the main container content
             const container = document.querySelector('.container.main-container');
             container.innerHTML = managementHtml;
+            
+            // Load existing sections for this job
+            loadJobSections(job.id);
+        }
+
+        async function loadJobSections(jobId) {
+            try {
+                const response = await fetch(`/api/jobsections/job/${jobId}`);
+                if (response.ok) {
+                    const sections = await response.json();
+                    displayExistingSections(jobId, sections);
+                } else {
+                    console.error('Failed to load sections');
+                }
+            } catch (error) {
+                console.error('Error loading sections:', error);
+            }
+        }
+
+        function displayExistingSections(jobId, sections) {
+            const sectionsContainer = document.getElementById('sectionsContainer');
+            if (!sectionsContainer) return;
+            
+            if (sections.length === 0) {
+                sectionsContainer.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No sections added yet. Click "Add Section" to get started.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Clear the placeholder content and show actual sections
+            sectionsContainer.innerHTML = '';
+            
+            sections.forEach(section => {
+                const sectionName = getSectionNameFromType(section.sectionType);
+                const statusName = getStatusNameFromNumber(section.status);
+                
+                const sectionCard = document.createElement('div');
+                sectionCard.className = 'card mb-3';
+                sectionCard.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title">${getSectionIcon(sectionName)} ${sectionName}</h6>
+                                <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span></p>
+                                <p class="mb-1"><strong>Assignment:</strong> ${section.isSubcontracted ? 'Subcontractor' : 'Internal Team'}</p>
+                                ${section.notes ? `<p class="mb-0 text-muted">${section.notes}</p>` : ''}
+                            </div>
+                            <div>
+                                ${getInspectionControls({sectionType: sectionName, id: section.id})}
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editSection(this)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(this, ${section.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                sectionsContainer.appendChild(sectionCard);
+            });
+        }
+
+        function getSectionNameFromType(sectionType) {
+            const sectionMap = {
+                1: 'Permits',
+                2: 'Demolition', 
+                3: 'Foundation',
+                4: 'Framing',
+                5: 'Electrical',
+                6: 'Plumbing',
+                7: 'HVAC',
+                8: 'Insulation',
+                9: 'Drywall',
+                10: 'Flooring',
+                11: 'FinalInspection'
+            };
+            return sectionMap[sectionType] || 'Unknown';
+        }
+
+        function getStatusNameFromNumber(statusNumber) {
+            const statusMap = {
+                1: 'Not Started',
+                2: 'In Progress', 
+                3: 'Completed',
+                4: 'On Hold'
+            };
+            return statusMap[statusNumber] || 'Unknown';
         }
 
         function returnToDashboard() {
