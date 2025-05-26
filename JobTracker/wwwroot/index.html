@@ -1808,6 +1808,14 @@ Massachusetts Building Code Requirements:
                 </div>`);
             }
             
+            // Show rescheduled inspection if it exists
+            if (section.inspectionDate && section.electricalInspectionCompleted && !section.electricalInspectionPassed) {
+                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
+                inspections.push(`<div class="text-success small">
+                    <span><strong>Re-inspection Scheduled:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
+                </div>`);
+            }
+            
             if (section.plumbingInspectionDate) {
                 const date = new Date(section.plumbingInspectionDate).toLocaleDateString();
                 const status = section.plumbingInspectionCompleted ? 
