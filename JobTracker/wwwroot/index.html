@@ -1485,10 +1485,13 @@
                     
                     showSuccessMessage('Section removed successfully!');
                     
-                    // Refresh sections to show updated list
+                    // Refresh sections to show updated list immediately
                     const jobId = getCurrentJobIdFromContext();
                     if (jobId) {
-                        setTimeout(() => loadJobSections(jobId), 500);
+                        loadJobSections(jobId);
+                    } else {
+                        // Fallback: refresh the page to show updates
+                        setTimeout(() => window.location.reload(), 1000);
                     }
                 } else {
                     const errorData = await response.json();
@@ -2079,11 +2082,38 @@ Job Tracker App`;
         }
 
         function getCurrentJobIdFromContext() {
-            // Try to get job ID from the page context
+            // Try multiple ways to get the current job ID
+            
+            // 1. Check if we have a global variable
+            if (window.currentJobId) {
+                return window.currentJobId;
+            }
+            
+            // 2. Try to get job ID from the page context
             const jobCards = document.querySelectorAll('[data-job-id]');
             if (jobCards.length > 0) {
                 return jobCards[0].getAttribute('data-job-id');
             }
+            
+            // 3. Try to extract from URL or sections container
+            const sectionsContainer = document.getElementById('jobSections');
+            if (sectionsContainer && sectionsContainer.dataset.jobId) {
+                return sectionsContainer.dataset.jobId;
+            }
+            
+            // 4. Try to get from any section element that might have job info
+            const sectionCards = document.querySelectorAll('.section-card');
+            if (sectionCards.length > 0) {
+                // Look for a pattern in onclick attributes or data attributes
+                for (let card of sectionCards) {
+                    const onclick = card.getAttribute('onclick') || '';
+                    const match = onclick.match(/loadJobSections\((\d+)\)/);
+                    if (match) {
+                        return match[1];
+                    }
+                }
+            }
+            
             return null;
         }
 
