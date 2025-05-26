@@ -14,6 +14,7 @@ namespace JobTracker.Data
         public DbSet<JobSection> JobSections { get; set; } = null!;
         public DbSet<JobImage> JobImages { get; set; } = null!;
         public DbSet<InspectionReminder> InspectionReminders { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,13 @@ namespace JobTracker.Data
                 .WithMany()
                 .HasForeignKey(r => r.JobSectionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure User relationships
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.CreatedBy)
+                .WithMany()
+                .HasForeignKey(u => u.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
                 
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
@@ -56,6 +64,9 @@ namespace JobTracker.Data
             modelBuilder.Entity<JobSection>().HasIndex(js => js.SectionType);
             modelBuilder.Entity<JobImage>().HasIndex(i => i.IsMainImage);
             modelBuilder.Entity<JobImage>().HasIndex(i => i.JobSectionId);
+            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.PhoneNumber).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Role);
         }
 
         public override int SaveChanges()
