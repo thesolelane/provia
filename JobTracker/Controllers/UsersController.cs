@@ -12,11 +12,13 @@ namespace JobTracker.Controllers
     public class UsersController : ControllerBase
     {
         private readonly JobTrackerContext _context;
+        private readonly JobTracker.Services.IEmailService _emailService;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(JobTrackerContext context, ILogger<UsersController> logger)
+        public UsersController(JobTrackerContext context, JobTracker.Services.IEmailService emailService, ILogger<UsersController> logger)
         {
             _context = context;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -124,6 +126,10 @@ namespace JobTracker.Controllers
                     }
                 }
 
+                // Generate verification code and temporary password
+                var verificationCode = GenerateVerificationCode();
+                var temporaryPassword = GenerateTemporaryPassword();
+
                 // Create user
                 var user = new User
                 {
@@ -133,11 +139,13 @@ namespace JobTracker.Controllers
                     PhoneNumber = request.PhoneNumber,
                     Role = request.Role,
                     LanguagePreference = request.LanguagePreference ?? "en",
-                    PasswordHash = !string.IsNullOrEmpty(request.Password) ? HashPassword(request.Password) : null,
+                    PasswordHash = HashPassword(temporaryPassword),
                     CompanyId = request.CompanyId,
                     IsActive = true,
-                    IsEmailVerified = request.Role != UserRole.RegularUser, // Auto-verify admins
+                    IsEmailVerified = false, // Require verification for all users
                     IsPhoneVerified = false,
+                    EmailVerificationCode = verificationCode,
+                    EmailVerificationExpiry = DateTime.UtcNow.AddHours(24),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -145,11 +153,36 @@ namespace JobTracker.Controllers
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
+                // Send verification email automatically
+                string emailStatus = "Email service not configured";
+                if (!string.IsNullOrEmpty(user.Email))
+                {
+                    try
+                    {
+                        var emailSent = await _emailService.SendVerificationEmailAsync(
+                            user.Email,
+                            user.FirstName,
+                            verificationCode,
+                            temporaryPassword
+                        );
+                        emailStatus = emailSent ? "Verification email sent" : "Email service needs configuration";
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not send verification email to {Email}", user.Email);
+                        emailStatus = "Email service needs setup";
+                    }
+                }
+
                 return Ok(new
                 {
                     message = "User created successfully",
                     userId = user.Id,
-                    loginMethod = user.Role == UserRole.RegularUser ? "phone" : "email"
+                    loginMethod = user.Role == UserRole.RegularUser ? "phone" : "email",
+                    emailStatus,
+                    verificationRequired = true,
+                    temporaryPassword = emailStatus.Contains("not configured") ? temporaryPassword : "Check email",
+                    verificationCode = emailStatus.Contains("not configured") ? verificationCode : "Check email"
                 });
             }
             catch (Exception ex)
@@ -219,6 +252,30 @@ namespace JobTracker.Controllers
                 _logger.LogError(ex, "Error deactivating user {UserId}", id);
                 return StatusCode(500, new { message = "Failed to deactivate user" });
             }
+        }
+
+        private static string GenerateVerificationCode()
+        {
+            using var rng = RandomNumberGenerator.Create();
+            var bytes = new byte[4];
+            rng.GetBytes(bytes);
+            return Math.Abs(BitConverter.ToInt32(bytes, 0)).ToString("D8")[..6];
+        }
+
+        private static string GenerateTemporaryPassword()
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+            using var rng = RandomNumberGenerator.Create();
+            var result = new char[12];
+            var bytes = new byte[4];
+
+            for (int i = 0; i < 12; i++)
+            {
+                rng.GetBytes(bytes);
+                result[i] = chars[Math.Abs(BitConverter.ToInt32(bytes, 0)) % chars.Length];
+            }
+
+            return new string(result);
         }
 
         private static string HashPassword(string password)
