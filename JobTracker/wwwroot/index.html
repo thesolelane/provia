@@ -1494,22 +1494,24 @@
                         : 'Section archived successfully!';
                     showSuccessMessage(archiveMessage);
                     
-                    // Stay on current job page after archival
+                    // Stay on current job page after archival - prevent redirect to main page
                     setTimeout(() => {
-                        const currentUrl = window.location.href;
-                        if (currentUrl.includes('/jobs/')) {
-                            // We're already on a job page, just reload
+                        // Try multiple ways to stay on the current job page
+                        const jobId = window.currentJobId || getCurrentJobIdFromContext();
+                        const currentHash = window.location.hash;
+                        
+                        if (jobId && currentHash.includes('job-')) {
+                            // We're viewing a specific job, reload just the sections
+                            loadJobSections(jobId);
+                        } else if (currentHash) {
+                            // Stay on current view by reloading with the same hash
+                            window.location.hash = currentHash;
                             window.location.reload();
                         } else {
-                            // Get the job ID and navigate to the proper job page
-                            const jobId = getCurrentJobIdFromContext();
-                            if (jobId) {
-                                window.location.href = `/jobs/${jobId}`;
-                            } else {
-                                window.location.reload();
-                            }
+                            // Last resort: reload current page
+                            window.location.reload();
                         }
-                    }, 1000);
+                    }, 800);
                 } else {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to archive section');
