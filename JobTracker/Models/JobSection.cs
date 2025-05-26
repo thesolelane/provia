@@ -12,7 +12,7 @@ namespace JobTracker.Models
         public int JobId { get; set; }
         
         [JsonIgnore]
-        public Job Job { get; set; } = null!;
+        public Job? Job { get; set; }
 
         [Required]
         public int SectionType { get; set; }

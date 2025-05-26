@@ -42,20 +42,29 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<JobSection>> CreateJobSection(JobSection jobSection)
+        public async Task<ActionResult<JobSection>> CreateJobSection(CreateJobSectionRequest request)
         {
             try
             {
                 // Validate that the job exists
-                var job = await _context.Jobs.FindAsync(jobSection.JobId);
+                var job = await _context.Jobs.FindAsync(request.JobId);
                 if (job == null)
                 {
-                    return NotFound($"Job with ID {jobSection.JobId} not found");
+                    return NotFound($"Job with ID {request.JobId} not found");
                 }
 
-                // Set timestamps
-                jobSection.CreatedAt = DateTime.UtcNow;
-                jobSection.UpdatedAt = DateTime.UtcNow;
+                // Create new JobSection from request
+                var jobSection = new JobSection
+                {
+                    JobId = request.JobId,
+                    SectionType = request.SectionType,
+                    Status = request.Status,
+                    IsSubcontracted = request.IsSubcontracted,
+                    Notes = request.Notes ?? string.Empty,
+                    Description = request.Description ?? string.Empty,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
                 // Determine if inspection is required based on section type
                 SetInspectionRequirements(jobSection);
