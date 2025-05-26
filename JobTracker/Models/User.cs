@@ -56,6 +56,9 @@ namespace JobTracker.Models
         public DateTime? EmailVerificationExpiry { get; set; }
         public bool IsEmailVerified { get; set; } = false;
 
+        // For tracking login activity
+        public DateTime? LastLoginAt { get; set; }
+
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch
         {

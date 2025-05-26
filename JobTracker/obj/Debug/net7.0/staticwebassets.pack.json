@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets/login.html"
     },
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/users.html",
+      "PackagePath": "staticwebassets/users.html"
+    },
+    {
       "Id": "obj/Debug/net7.0/staticwebassets/msbuild.JobTracker.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
