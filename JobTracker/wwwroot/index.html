@@ -958,23 +958,42 @@
                 sectionCard.className = 'card mb-3';
                 sectionCard.innerHTML = `
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="card-title">${getSectionIcon(sectionName)} ${sectionName}</h6>
-                                <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span></p>
-                                <p class="mb-1"><strong>Assignment:</strong> ${section.isSubcontracted ? 'Subcontractor' : 'Internal Team'}</p>
-                                ${getScheduledInspections(section)}
-                                ${section.notes ? `<p class="mb-0 text-muted">${section.notes}</p>` : ''}
+                        <!-- Header Section -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <h6 class="card-title mb-0 me-3">${getSectionIcon(sectionName)} ${sectionName}</h6>
+                                <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span>
                             </div>
-                            <div>
-                                ${getInspectionControls({sectionType: sectionName, id: section.id})}
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editSection(this)">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSection(this)" title="Edit Section">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(this, ${section.id})">
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(this, ${section.id})" title="Remove Section">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Section Details -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <small class="text-muted">Assignment:</small><br>
+                                <span>${section.isSubcontracted ? '👷 Subcontractor' : '🏠 Internal Team'}</span>
+                            </div>
+                            ${section.notes ? `
+                            <div class="col-md-6">
+                                <small class="text-muted">Notes:</small><br>
+                                <span class="text-muted">${section.notes}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Inspection Status -->
+                        ${getScheduledInspections(section)}
+
+                        <!-- Inspection Controls -->
+                        <div class="border-top pt-3">
+                            ${getInspectionControls({sectionType: sectionName, id: section.id})}
                         </div>
                     </div>
                 `;
@@ -1348,31 +1367,42 @@
             }
             
             return `
-                <div class="inspection-status mt-2 mb-2">
-                    <div class="mb-2">
-                        <button class="btn btn-xs btn-warning" onclick="getFireBlockingGuidance('${sectionType}')" style="font-size: 0.7em; padding: 2px 6px;">
-                            <i class="fas fa-shield-alt"></i> Fire Blocking Requirements
+                <div class="inspection-controls">
+                    <!-- Fire Blocking Badge -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-muted">
+                            <i class="fas fa-clipboard-check"></i> Inspection Management
+                        </h6>
+                        <button class="btn btn-sm btn-warning" onclick="getFireBlockingGuidance('${sectionType}')" style="font-size: 0.75em;">
+                            <i class="fas fa-shield-alt"></i> Fire Blocking
                         </button>
                     </div>
-                    <small class="text-muted d-block">Required Inspections:</small>
+
+                    <!-- Inspection Actions -->
                     ${inspectionTypes.map(type => `
-                        <div class="d-flex align-items-center mt-1">
-                            <button class="btn btn-sm btn-outline-info me-2" onclick="scheduleInspection('${type}', ${section.id || 'null'})">
-                                <i class="fas fa-calendar-plus"></i> Schedule ${type}
-                            </button>
-                            <button class="btn btn-sm btn-outline-success me-2" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, true)">
-                                <i class="fas fa-check"></i> Pass
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, false)">
-                                <i class="fas fa-times"></i> Fail
-                            </button>
+                        <div class="inspection-type mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="text-primary">${type}</strong>
+                                <small class="text-muted">Required before next phase</small>
+                            </div>
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-outline-info btn-sm" onclick="scheduleInspection('${type}', ${section.id || 'null'})">
+                                    <i class="fas fa-calendar-plus"></i> Schedule
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, true)">
+                                    <i class="fas fa-check"></i> Pass
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, false)">
+                                    <i class="fas fa-times"></i> Fail
+                                </button>
+                            </div>
                         </div>
                     `).join('')}
-                    <div class="mt-2" style="font-size: 0.4em; line-height: 1.2;">
-                        <div style="background: transparent; border: 1px solid #dc3545; border-radius: 3px; padding: 4px;">
-                            <strong style="color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> Critical:</strong> 
-                            <span style="color: #dc3545;">${inspectionDescription}</span>
-                        </div>
+
+                    <!-- Critical Warning -->
+                    <div class="alert alert-warning py-2" style="font-size: 0.85em;">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Critical:</strong> ${inspectionDescription}
                     </div>
                 </div>
             `;
