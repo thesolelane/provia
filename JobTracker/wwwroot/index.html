@@ -1506,6 +1506,12 @@
             } catch (error) {
                 console.error('Error removing section:', error);
                 showErrorMessage('Failed to remove section: ' + error.message);
+                
+                // Even if there's an error in response handling, try to refresh
+                // since the database operation might have succeeded
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             }
         }
 
