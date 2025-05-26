@@ -52,6 +52,11 @@ namespace JobTracker.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // Company association for multi-tenant support
+        [Required]
+        public int CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
+
         // Navigation properties
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();

@@ -38,6 +38,11 @@ namespace JobTracker.Models
         public int? CreatedByUserId { get; set; }
         public User? CreatedBy { get; set; }
 
+        // Company association for multi-tenant support
+        [Required]
+        public int CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
+
         // For password hash storage (simplified for demo)
         public string? PasswordHash { get; set; }
 
