@@ -27,7 +27,7 @@ namespace JobTracker.Controllers
             try
             {
                 var sections = await _context.JobSections
-                    .Where(s => s.JobId == jobId)
+                    .Where(s => s.JobId == jobId && !s.IsDeleted)
                     .OrderBy(s => s.SectionType)
                     .ToListAsync();
 
@@ -37,6 +37,56 @@ namespace JobTracker.Controllers
             {
                 _logger.LogError(ex, "Error retrieving job sections for job {JobId}", jobId);
                 return StatusCode(500, "Error retrieving job sections");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> SoftDeleteSection(int id, [FromBody] DeleteSectionRequest request)
+        {
+            try
+            {
+                var section = await _context.JobSections.FindAsync(id);
+                if (section == null)
+                {
+                    return NotFound("Section not found");
+                }
+
+                // Get job details for archive
+                var job = await _context.Jobs.FindAsync(section.JobId);
+                if (job == null)
+                {
+                    return NotFound("Job not found");
+                }
+
+                // Archive to Recently Deleted with abbreviated job number
+                var abbreviatedJobNumber = job.JobNumber.Length > 5 ? 
+                    job.JobNumber.Substring(job.JobNumber.Length - 5) : 
+                    job.JobNumber;
+
+                // Store in archive
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO ""RecentlyDeletedSections"" 
+                    (""OriginalSectionId"", ""AbbreviatedJobNumber"", ""FullJobNumber"", ""SectionType"", 
+                     ""Description"", ""Status"", ""IsSubcontracted"", ""Notes"", ""DeletedBy"", ""DeletionReason"", 
+                     ""OriginalCreatedAt"", ""OriginalData"")
+                    VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})",
+                    section.Id, abbreviatedJobNumber, job.JobNumber, section.SectionType,
+                    section.Description, section.Status, section.IsSubcontracted, section.Notes,
+                    request.DeletedBy ?? "System", request.Reason ?? "User deleted",
+                    section.CreatedAt, System.Text.Json.JsonSerializer.Serialize(section));
+
+                // Soft delete the section
+                section.IsDeleted = true;
+                section.DeletedAt = DateTime.UtcNow;
+                section.DeletedBy = request.DeletedBy ?? "System";
+                section.DeletionReason = request.Reason ?? "User deleted";
+
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Section archived successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error deleting section: " + ex.Message);
             }
         }
 
