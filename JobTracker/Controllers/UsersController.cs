@@ -48,7 +48,7 @@ namespace JobTracker.Controllers
                 var roleStats = await _context.Users
                     .Where(u => u.CompanyId == companyId && u.IsActive)
                     .GroupBy(u => u.Role)
-                    .Select(g => new { Role = g.Key.ToString(), Count = g.Count() })
+                    .Select(g => new { Role = g.Key, Count = g.Count() })
                     .ToListAsync();
 
                 return Ok(new
@@ -57,9 +57,9 @@ namespace JobTracker.Controllers
                     stats = new
                     {
                         totalUsers = users.Count,
-                        masterAdmins = roleStats.FirstOrDefault(r => r.Role == "MasterAdmin")?.Count ?? 0,
-                        admins = roleStats.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0,
-                        regularUsers = roleStats.FirstOrDefault(r => r.Role == "RegularUser")?.Count ?? 0
+                        masterAdmins = roleStats.FirstOrDefault(r => r.Role == UserRole.MasterAdmin)?.Count ?? 0,
+                        admins = roleStats.FirstOrDefault(r => r.Role == UserRole.Admin)?.Count ?? 0,
+                        regularUsers = roleStats.FirstOrDefault(r => r.Role == UserRole.RegularUser)?.Count ?? 0
                     }
                 });
             }
@@ -90,12 +90,12 @@ namespace JobTracker.Controllers
                 var masterAdminCount = currentUsers.Count(u => u.Role == UserRole.MasterAdmin);
                 var adminCount = currentUsers.Count(u => u.Role == UserRole.Admin);
 
-                if (request.Role == UserRole.MasterAdmin && masterAdminCount >= 3)
+                if ((int)request.Role == 2 && masterAdminCount >= 3)  // MasterAdmin = 2
                 {
                     return BadRequest(new { message = "Maximum 3 Master Admins allowed per company" });
                 }
 
-                if (request.Role == UserRole.Admin && adminCount >= 10)
+                if ((int)request.Role == 1 && adminCount >= 10)  // Admin = 1
                 {
                     return BadRequest(new { message = "Maximum 10 Admins allowed per company" });
                 }
