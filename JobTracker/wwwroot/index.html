@@ -1431,12 +1431,30 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleInspectionModal'));
             modal.hide();
             
-            // Show success message
-            const formattedDate = new Date(date).toLocaleDateString();
-            showSuccessMessage(`${inspectionType} inspection scheduled for ${formattedDate}`);
-            
-            // Here you would call the API to schedule the inspection
-            // updateInspectionStatus(sectionId, inspectionType, 'scheduled', date, notes);
+            // Save to database via API
+            try {
+                const response = await fetch(`/api/jobsections/${sectionId}/schedule-inspection`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inspectionType: inspectionType,
+                        inspectionDate: date,
+                        notes: notes
+                    })
+                });
+                
+                if (response.ok) {
+                    const formattedDate = new Date(date).toLocaleDateString();
+                    showSuccessMessage(`${inspectionType} inspection scheduled for ${formattedDate}`);
+                } else {
+                    showErrorMessage('Failed to schedule inspection. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error scheduling inspection:', error);
+                showErrorMessage('Error scheduling inspection. Please try again.');
+            }
         }
 
         function recordInspectionResult(inspectionType, sectionId, passed) {
@@ -1453,12 +1471,31 @@
             
             const confirmation = confirm(`Record ${inspectionType} inspection as ${resultText}?`);
             if (confirmation) {
-                showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
-                if (!passed && notes) {
-                    showSuccessMessage(`Correction notes: ${notes}`);
-                }
-                // Here you would call the API to record the inspection result
-                // updateInspectionStatus(sectionId, inspectionType, passed ? 'passed' : 'failed', new Date(), notes);
+                // Save to database via API
+                fetch(`/api/jobsections/${sectionId}/record-inspection`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inspectionType: inspectionType,
+                        passed: passed,
+                        inspectionDate: new Date().toISOString(),
+                        notes: notes
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
+                        if (!passed && notes) {
+                            showSuccessMessage(`Correction notes: ${notes}`);
+                        }
+                    } else {
+                        showErrorMessage('Failed to record inspection result. Please try again.');
+                    }
+                }).catch(error => {
+                    console.error('Error recording inspection:', error);
+                    showErrorMessage('Error recording inspection result. Please try again.');
+                });
             }
         }
 
