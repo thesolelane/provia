@@ -1753,7 +1753,13 @@ Massachusetts Building Code Requirements:
                 const status = section.electricalInspectionCompleted ? 
                     (section.electricalInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
                     '📅 SCHEDULED';
-                inspections.push(`<div class="text-primary small"><strong>Electrical Inspection:</strong> ${date} ${status}</div>`);
+                inspections.push(`<div class="text-primary small d-flex justify-content-between align-items-center">
+                    <span><strong>Electrical Inspection:</strong> ${date} ${status}</span>
+                    ${section.electricalInspectionCompleted && !section.electricalInspectionPassed ? 
+                        `<button class="btn btn-xs btn-outline-primary ms-2" onclick="scheduleInspection('Electrical Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
+                            <i class="fas fa-redo"></i> Reschedule
+                        </button>` : ''}
+                </div>`);
             }
             
             if (section.plumbingInspectionDate) {
@@ -1761,7 +1767,13 @@ Massachusetts Building Code Requirements:
                 const status = section.plumbingInspectionCompleted ? 
                     (section.plumbingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
                     '📅 SCHEDULED';
-                inspections.push(`<div class="text-info small"><strong>Plumbing Inspection:</strong> ${date} ${status}</div>`);
+                inspections.push(`<div class="text-info small d-flex justify-content-between align-items-center">
+                    <span><strong>Plumbing Inspection:</strong> ${date} ${status}</span>
+                    ${section.plumbingInspectionCompleted && !section.plumbingInspectionPassed ? 
+                        `<button class="btn btn-xs btn-outline-info ms-2" onclick="scheduleInspection('Plumbing Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
+                            <i class="fas fa-redo"></i> Reschedule
+                        </button>` : ''}
+                </div>`);
             }
             
             if (section.buildingInspectionDate) {
@@ -1769,7 +1781,13 @@ Massachusetts Building Code Requirements:
                 const status = section.buildingInspectionCompleted ? 
                     (section.buildingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
                     '📅 SCHEDULED';
-                inspections.push(`<div class="text-warning small"><strong>Framing Inspection:</strong> ${date} ${status}</div>`);
+                inspections.push(`<div class="text-warning small d-flex justify-content-between align-items-center">
+                    <span><strong>Framing Inspection:</strong> ${date} ${status}</span>
+                    ${section.buildingInspectionCompleted && !section.buildingInspectionPassed ? 
+                        `<button class="btn btn-xs btn-outline-warning ms-2" onclick="scheduleInspection('Framing Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
+                            <i class="fas fa-redo"></i> Reschedule
+                        </button>` : ''}
+                </div>`);
             }
             
             return inspections.join('');
@@ -1809,12 +1827,31 @@ Job Tracker App`;
 
         async function getCurrentJobData() {
             try {
-                const response = await fetch(`/api/jobs/${currentJobId}`);
+                // Use the global currentJobId if available, otherwise get from URL or context
+                const jobId = window.currentJobId || getCurrentJobIdFromContext();
+                if (!jobId) {
+                    console.log('No job ID available for notifications');
+                    return null;
+                }
+                
+                const response = await fetch(`/api/jobs/${jobId}`);
                 if (response.ok) {
                     return await response.json();
+                } else {
+                    console.log('Could not fetch job data for notifications');
+                    return null;
                 }
             } catch (error) {
                 console.error('Error getting job data:', error);
+                return null;
+            }
+        }
+
+        function getCurrentJobIdFromContext() {
+            // Try to get job ID from the page context
+            const jobCards = document.querySelectorAll('[data-job-id]');
+            if (jobCards.length > 0) {
+                return jobCards[0].getAttribute('data-job-id');
             }
             return null;
         }
