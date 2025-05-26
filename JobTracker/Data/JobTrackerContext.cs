@@ -15,6 +15,7 @@ namespace JobTracker.Data
         public DbSet<JobImage> JobImages { get; set; } = null!;
         public DbSet<InspectionReminder> InspectionReminders { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Company> Companies { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +59,19 @@ namespace JobTracker.Data
                 .HasForeignKey(u => u.CreatedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
                 
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Company)
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Company-Job relationships
+            modelBuilder.Entity<Job>()
+                .HasOne(j => j.Company)
+                .WithMany(c => c.Jobs)
+                .HasForeignKey(j => j.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
             modelBuilder.Entity<JobSection>().HasIndex(js => js.Status);
@@ -67,6 +81,11 @@ namespace JobTracker.Data
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.PhoneNumber).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Role);
+            modelBuilder.Entity<Company>().HasIndex(c => c.AccountNumber).IsUnique();
+            modelBuilder.Entity<Company>().HasIndex(c => c.ContactEmail).IsUnique();
+            modelBuilder.Entity<Company>().HasIndex(c => c.IsActive);
+            modelBuilder.Entity<Job>().HasIndex(j => j.CompanyId);
+            modelBuilder.Entity<User>().HasIndex(u => u.CompanyId);
         }
 
         public override int SaveChanges()
