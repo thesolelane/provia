@@ -921,7 +921,7 @@
 
         async function loadJobSections(jobId) {
             try {
-                const response = await fetch(`/api/jobsections/job/${jobId}`);
+                const response = await fetch(`/api/jobsections/byjob/${jobId}`);
                 if (response.ok) {
                     const sections = await response.json();
                     displayExistingSections(jobId, sections);
@@ -1429,16 +1429,48 @@
         }
 
         async function deleteSectionConfirm(sectionId) {
-            if (!confirm('Are you sure you want to remove this section? This action cannot be undone.')) {
-                return;
-            }
+            // Use custom modal instead of browser confirm to avoid embedded messages
+            const confirmModal = `
+                <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Section Removal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to remove this section? This action cannot be undone.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick="executeDeleteSection(${sectionId})">Remove Section</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
             
+            // Remove existing modal if present
+            const existingModal = document.getElementById('confirmDeleteModal');
+            if (existingModal) existingModal.remove();
+            
+            // Add modal to page and show
+            document.body.insertAdjacentHTML('beforeend', confirmModal);
+            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            modal.show();
+        }
+
+        async function executeDeleteSection(sectionId) {
             try {
                 const response = await fetch(`/api/jobsections/${sectionId}`, {
                     method: 'DELETE'
                 });
                 
                 if (response.ok) {
+                    // Close confirmation modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
+                    modal.hide();
+                    
                     showSuccessMessage('Section removed successfully!');
                     
                     // Refresh sections to remove the deleted one
