@@ -51,14 +51,16 @@ namespace JobTracker.Controllers
                     return NotFound();
                 }
 
+                // Hard delete - permanently remove the section
                 _context.JobSections.Remove(section);
                 await _context.SaveChangesAsync();
-                return Ok();
+                
+                return Ok(new { success = true, message = "Section removed successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting section {SectionId}", id);
-                return BadRequest("Error deleting section");
+                return StatusCode(500, new { success = false, message = "Error removing section" });
             }
         }
 

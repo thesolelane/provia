@@ -1463,28 +1463,41 @@
         async function executeDeleteSection(sectionId) {
             try {
                 const response = await fetch(`/api/jobsections/${sectionId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
                 if (response.ok) {
+                    const result = await response.json();
+                    
                     // Close confirmation modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
-                    modal.hide();
+                    if (modal) {
+                        modal.hide();
+                        // Remove modal from DOM after hiding
+                        setTimeout(() => {
+                            const modalElement = document.getElementById('confirmDeleteModal');
+                            if (modalElement) modalElement.remove();
+                        }, 300);
+                    }
                     
                     showSuccessMessage('Section removed successfully!');
                     
-                    // Refresh sections to remove the deleted one
+                    // Refresh sections to show updated list
                     const jobId = getCurrentJobIdFromContext();
                     if (jobId) {
                         setTimeout(() => loadJobSections(jobId), 500);
                     }
                 } else {
-                    throw new Error('Failed to remove section');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to remove section');
                 }
                 
             } catch (error) {
                 console.error('Error removing section:', error);
-                showErrorMessage('Failed to remove section. Please try again.');
+                showErrorMessage('Failed to remove section: ' + error.message);
             }
         }
 
@@ -1978,6 +1991,14 @@ Massachusetts Building Code Requirements:
                 </div>`);
             }
             
+            // Show rescheduled plumbing inspection if it exists
+            if (section.inspectionDate && section.plumbingInspectionCompleted && !section.plumbingInspectionPassed) {
+                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
+                inspections.push(`<div class="text-success small">
+                    <span><strong>🔧 Plumbing Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
+                </div>`);
+            }
+            
             if (section.buildingInspectionDate) {
                 const date = new Date(section.buildingInspectionDate).toLocaleDateString();
                 const status = section.buildingInspectionCompleted ? 
@@ -1989,6 +2010,14 @@ Massachusetts Building Code Requirements:
                         `<button class="btn btn-xs btn-outline-warning ms-2" onclick="scheduleInspection('Framing Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
                             <i class="fas fa-redo"></i> Reschedule
                         </button>` : ''}
+                </div>`);
+            }
+            
+            // Show rescheduled framing inspection if it exists
+            if (section.inspectionDate && section.buildingInspectionCompleted && !section.buildingInspectionPassed) {
+                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
+                inspections.push(`<div class="text-success small">
+                    <span><strong>🏗️ Framing Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
                 </div>`);
             }
             
