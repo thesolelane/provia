@@ -259,5 +259,106 @@ namespace JobTracker.Controllers
                     break;
             }
         }
+
+        [HttpPost("{id}/schedule-inspection")]
+        public async Task<IActionResult> ScheduleInspection(int id, [FromBody] ScheduleInspectionRequest request)
+        {
+            try
+            {
+                var section = await _context.JobSections.FindAsync(id);
+                if (section == null)
+                {
+                    return NotFound("Section not found");
+                }
+
+                // Update inspection schedule based on type
+                switch (request.InspectionType.ToLower())
+                {
+                    case "electrical":
+                    case "electrical rough-in":
+                        section.ElectricalInspectionDate = request.InspectionDate;
+                        section.ElectricalInspectionRequired = true;
+                        break;
+                    case "plumbing":
+                    case "plumbing rough-in":
+                        section.PlumbingInspectionDate = request.InspectionDate;
+                        section.PlumbingInspectionRequired = true;
+                        break;
+                    case "framing":
+                    case "framing rough-in":
+                        section.BuildingInspectionDate = request.InspectionDate;
+                        section.BuildingInspectionRequired = true;
+                        break;
+                    default:
+                        section.InspectionDate = request.InspectionDate;
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(request.Notes))
+                {
+                    section.InspectionNotes = request.Notes;
+                }
+
+                section.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Inspection scheduled successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error scheduling inspection: " + ex.Message);
+            }
+        }
+
+        [HttpPost("{id}/record-inspection")]
+        public async Task<IActionResult> RecordInspectionResult(int id, [FromBody] InspectionResultRequest request)
+        {
+            try
+            {
+                var section = await _context.JobSections.FindAsync(id);
+                if (section == null)
+                {
+                    return NotFound("Section not found");
+                }
+
+                // Record inspection result based on type
+                switch (request.InspectionType.ToLower())
+                {
+                    case "electrical":
+                    case "electrical rough-in":
+                        section.ElectricalInspectionCompleted = true;
+                        section.ElectricalInspectionPassed = request.Passed;
+                        section.ElectricalInspectionDate = request.InspectionDate ?? DateTime.UtcNow;
+                        if (!string.IsNullOrEmpty(request.Notes))
+                            section.ElectricalInspectionNotes = request.Notes;
+                        break;
+                    case "plumbing":
+                    case "plumbing rough-in":
+                        section.PlumbingInspectionCompleted = true;
+                        section.PlumbingInspectionPassed = request.Passed;
+                        section.PlumbingInspectionDate = request.InspectionDate ?? DateTime.UtcNow;
+                        if (!string.IsNullOrEmpty(request.Notes))
+                            section.PlumbingInspectionNotes = request.Notes;
+                        break;
+                    case "framing":
+                    case "framing rough-in":
+                        section.BuildingInspectionCompleted = true;
+                        section.BuildingInspectionPassed = request.Passed;
+                        section.BuildingInspectionDate = request.InspectionDate ?? DateTime.UtcNow;
+                        if (!string.IsNullOrEmpty(request.Notes))
+                            section.BuildingInspectionNotes = request.Notes;
+                        break;
+                }
+
+                section.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Inspection result recorded successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error recording inspection: " + ex.Message);
+            }
+        }
     }
 }
