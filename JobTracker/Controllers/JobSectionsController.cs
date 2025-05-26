@@ -28,7 +28,6 @@ namespace JobTracker.Controllers
             {
                 var sections = await _context.JobSections
                     .Where(s => s.JobId == jobId)
-                    .Include(s => s.Images)
                     .OrderBy(s => s.SectionType)
                     .ToListAsync();
 
