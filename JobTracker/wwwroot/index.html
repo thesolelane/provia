@@ -1231,19 +1231,11 @@
                 if (response.ok) {
                     const savedSection = await response.json();
                     
-                    // Add to display with the saved section data
-                    addSectionToDisplay(jobId, {
-                        ...sectionData,
-                        id: savedSection.id,
-                        sectionType: selectedSection.value,
-                        status: document.getElementById('sectionStatus').value,
-                        assignmentType: document.getElementById('assignmentType').value,
-                        subcontractorName: document.getElementById('subcontractorName').value || null,
-                        notes: document.getElementById('sectionNotes').value || null
-                    });
-                    
-                    // Show success message in the app instead of browser popup
+                    // Show success message in the app
                     showSuccessMessage('Section saved successfully!');
+                    
+                    // Reload the sections to show the new one
+                    await loadJobSections(jobId);
                 } else {
                     throw new Error('Failed to save section');
                 }
