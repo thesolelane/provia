@@ -965,10 +965,10 @@
                                 <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span>
                             </div>
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editSection(${section.id})" title="Edit Section">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSectionModal(${section.id})" title="Edit Section">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(${section.id})" title="Remove Section">
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSectionConfirm(${section.id})" title="Remove Section">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -1330,7 +1330,7 @@
             return icons[sectionType] || '<i class="fas fa-cog"></i>';
         }
 
-        async function editSection(sectionId) {
+        async function editSectionModal(sectionId) {
             try {
                 // Get current section data
                 const response = await fetch(`/api/jobsections/${sectionId}`);
@@ -1428,7 +1428,7 @@
             }
         }
 
-        async function removeSection(sectionId) {
+        async function deleteSectionConfirm(sectionId) {
             if (!confirm('Are you sure you want to remove this section? This action cannot be undone.')) {
                 return;
             }
