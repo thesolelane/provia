@@ -41,29 +41,24 @@ namespace JobTracker.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDeleteSection(int id)
+        public async Task<IActionResult> DeleteSection(int id)
         {
             try
             {
                 var section = await _context.JobSections.FindAsync(id);
                 if (section == null)
                 {
-                    return NotFound("Section not found");
+                    return NotFound();
                 }
 
-                // Simple soft delete - just mark as deleted
-                section.IsDeleted = true;
-                section.DeletedAt = DateTime.UtcNow;
-                section.DeletedBy = "System";
-                section.DeletionReason = "User deleted";
-
+                _context.JobSections.Remove(section);
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "Section removed successfully" });
+                return Ok();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting section {SectionId}", id);
-                return StatusCode(500, "Error deleting section: " + ex.Message);
+                return BadRequest("Error deleting section");
             }
         }
 
