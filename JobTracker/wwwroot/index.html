@@ -1470,7 +1470,12 @@
                 });
                 
                 if (response.ok) {
-                    const result = await response.json();
+                    let result = {};
+                    try {
+                        result = await response.json();
+                    } catch (jsonError) {
+                        console.log('Response was successful but not JSON format');
+                    }
                     
                     // Close confirmation modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
@@ -1489,22 +1494,10 @@
                         : 'Section archived successfully!';
                     showSuccessMessage(archiveMessage);
                     
-                    // Refresh sections to show updated list immediately
-                    const jobId = getCurrentJobIdFromContext();
-                    if (jobId) {
-                        // Force refresh of the job sections view
-                        setTimeout(() => loadJobSections(jobId), 500);
-                    } else {
-                        // Stay on current page instead of redirecting to jobs list
-                        setTimeout(() => {
-                            // Try to reload just the sections container
-                            const sectionsContainer = document.getElementById('jobSections');
-                            if (sectionsContainer) {
-                                sectionsContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Refreshing sections...</div>';
-                                window.location.reload();
-                            }
-                        }, 1000);
-                    }
+                    // Force refresh to show updated sections without archived section
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to archive section');
