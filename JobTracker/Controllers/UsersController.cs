@@ -27,6 +27,8 @@ namespace JobTracker.Controllers
             {
                 var users = await _context.Users
                     .Where(u => u.CompanyId == companyId && u.IsActive)
+                    .OrderBy(u => u.Role)
+                    .ThenBy(u => u.LastName)
                     .Select(u => new
                     {
                         u.Id,
@@ -34,15 +36,13 @@ namespace JobTracker.Controllers
                         u.LastName,
                         u.Email,
                         u.PhoneNumber,
-                        Role = u.Role.ToString(),
+                        Role = ((int)u.Role).ToString(),
                         u.LanguagePreference,
                         u.IsEmailVerified,
                         u.IsPhoneVerified,
                         u.LastLoginAt,
                         u.CreatedAt
                     })
-                    .OrderBy(u => u.Role)
-                    .ThenBy(u => u.LastName)
                     .ToListAsync();
 
                 var roleStats = await _context.Users
