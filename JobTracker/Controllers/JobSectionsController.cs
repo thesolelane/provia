@@ -40,29 +40,7 @@ namespace JobTracker.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSection(int id)
-        {
-            try
-            {
-                var section = await _context.JobSections.FindAsync(id);
-                if (section == null)
-                {
-                    return NotFound();
-                }
 
-                // Hard delete - permanently remove the section
-                _context.JobSections.Remove(section);
-                await _context.SaveChangesAsync();
-                
-                return Ok(new { success = true, message = "Section removed successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting section {SectionId}", id);
-                return StatusCode(500, new { success = false, message = "Error removing section" });
-            }
-        }
 
         [HttpPost]
         public async Task<ActionResult<JobSection>> CreateJobSection(CreateJobSectionRequest request)
