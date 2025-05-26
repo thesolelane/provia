@@ -965,10 +965,10 @@
                                 <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span>
                             </div>
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editSection(this)" title="Edit Section">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSection(${section.id})" title="Edit Section">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(this, ${section.id})" title="Remove Section">
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeSection(${section.id})" title="Remove Section">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -1330,13 +1330,129 @@
             return icons[sectionType] || '<i class="fas fa-cog"></i>';
         }
 
-        function editSection(button) {
-            alert('Section editing coming soon!');
+        async function editSection(sectionId) {
+            try {
+                // Get current section data
+                const response = await fetch(`/api/jobsections/${sectionId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load section');
+                }
+                
+                const section = await response.json();
+                
+                // Create edit modal
+                const editModal = `
+                    <div class="modal fade" id="editSectionModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Section</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Section Status</label>
+                                        <select class="form-select" id="editStatus">
+                                            <option value="1" ${section.status === 1 ? 'selected' : ''}>Not Started</option>
+                                            <option value="2" ${section.status === 2 ? 'selected' : ''}>In Progress</option>
+                                            <option value="3" ${section.status === 3 ? 'selected' : ''}>Completed</option>
+                                            <option value="4" ${section.status === 4 ? 'selected' : ''}>On Hold</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes</label>
+                                        <textarea class="form-control" id="editNotes" rows="3">${section.notes || ''}</textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveEditedSection(${sectionId})">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if present
+                const existingModal = document.getElementById('editSectionModal');
+                if (existingModal) existingModal.remove();
+                
+                // Add modal to page and show
+                document.body.insertAdjacentHTML('beforeend', editModal);
+                const modal = new bootstrap.Modal(document.getElementById('editSectionModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error loading section for edit:', error);
+                showErrorMessage('Failed to load section details. Please try again.');
+            }
         }
 
-        function removeSection(button) {
-            if (confirm('Are you sure you want to remove this section?')) {
-                button.closest('.card').remove();
+        async function saveEditedSection(sectionId) {
+            try {
+                const status = parseInt(document.getElementById('editStatus').value);
+                const notes = document.getElementById('editNotes').value;
+                
+                const updateData = {
+                    status: status,
+                    notes: notes
+                };
+                
+                const response = await fetch(`/api/jobsections/${sectionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok) {
+                    showSuccessMessage('Section updated successfully!');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editSectionModal'));
+                    modal.hide();
+                    
+                    // Refresh sections to show updates
+                    const jobId = getCurrentJobIdFromContext();
+                    if (jobId) {
+                        setTimeout(() => loadJobSections(jobId), 500);
+                    }
+                } else {
+                    throw new Error('Failed to update section');
+                }
+                
+            } catch (error) {
+                console.error('Error updating section:', error);
+                showErrorMessage('Failed to update section. Please try again.');
+            }
+        }
+
+        async function removeSection(sectionId) {
+            if (!confirm('Are you sure you want to remove this section? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/jobsections/${sectionId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showSuccessMessage('Section removed successfully!');
+                    
+                    // Refresh sections to remove the deleted one
+                    const jobId = getCurrentJobIdFromContext();
+                    if (jobId) {
+                        setTimeout(() => loadJobSections(jobId), 500);
+                    }
+                } else {
+                    throw new Error('Failed to remove section');
+                }
+                
+            } catch (error) {
+                console.error('Error removing section:', error);
+                showErrorMessage('Failed to remove section. Please try again.');
             }
         }
 
