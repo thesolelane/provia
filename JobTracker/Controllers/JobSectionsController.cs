@@ -313,5 +313,47 @@ namespace JobTracker.Controllers
                 return StatusCode(500, "Error recording inspection: " + ex.Message);
             }
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteJobSection(int id)
+        {
+            try
+            {
+                var section = await _context.JobSections.Include(s => s.Job).FirstOrDefaultAsync(s => s.Id == id);
+                if (section == null)
+                {
+                    return NotFound();
+                }
+
+                // Soft delete: mark as deleted and archive with abbreviated job number
+                section.IsDeleted = true;
+                section.DeletedAt = DateTime.UtcNow;
+                section.DeletedBy = "System"; // In real app, this would be the current user
+                section.DeletionReason = "Section removed by user";
+                
+                // Create abbreviated job number (last 5 digits only) for archive
+                var originalJobNumber = section.Job?.JobNumber ?? "UNKNOWN";
+                var abbreviatedJobNumber = originalJobNumber.Length > 5 
+                    ? originalJobNumber.Substring(originalJobNumber.Length - 5) 
+                    : originalJobNumber;
+                
+                // Archive the section data with abbreviated reference
+                section.Notes = $"[ARCHIVED from {originalJobNumber} -> {abbreviatedJobNumber}] {section.Notes ?? ""}";
+                
+                // Update the section instead of hard deleting
+                _context.JobSections.Update(section);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = "Section archived successfully", 
+                    archivedAs = abbreviatedJobNumber,
+                    originalJobNumber = originalJobNumber
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error archiving section: {ex.Message}");
+            }
+        }
     }
 }
