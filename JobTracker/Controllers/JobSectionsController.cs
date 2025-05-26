@@ -41,7 +41,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDeleteSection(int id, [FromBody] DeleteSectionRequest request)
+        public async Task<IActionResult> SoftDeleteSection(int id, [FromBody] DeleteSectionRequest request = null)
         {
             try
             {
@@ -78,8 +78,8 @@ namespace JobTracker.Controllers
                 // Soft delete the section
                 section.IsDeleted = true;
                 section.DeletedAt = DateTime.UtcNow;
-                section.DeletedBy = request.DeletedBy ?? "System";
-                section.DeletionReason = request.Reason ?? "User deleted";
+                section.DeletedBy = request?.DeletedBy ?? "System";
+                section.DeletionReason = request?.Reason ?? "User deleted";
 
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "Section archived successfully" });
@@ -210,28 +210,7 @@ namespace JobTracker.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteJobSection(int id)
-        {
-            try
-            {
-                var section = await _context.JobSections.FindAsync(id);
-                if (section == null)
-                {
-                    return NotFound();
-                }
 
-                _context.JobSections.Remove(section);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting job section {SectionId}", id);
-                return StatusCode(500, "Error deleting job section");
-            }
-        }
 
         private void SetInspectionRequirements(JobSection section)
         {
