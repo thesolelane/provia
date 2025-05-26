@@ -1487,7 +1487,13 @@
                     
                     // Auto-refresh sections to show updated inspection date immediately
                     setTimeout(() => {
-                        loadJobSections(currentJobId);
+                        const jobId = getCurrentJobIdFromContext();
+                        if (jobId) {
+                            loadJobSections(jobId);
+                        } else {
+                            // Fallback: refresh the entire page to show updates
+                            window.location.reload();
+                        }
                     }, 500);
                 } else {
                     showErrorMessage('Failed to schedule inspection. Please try again.');
@@ -1616,7 +1622,13 @@
                     
                     // Auto-refresh sections to show updated status immediately
                     setTimeout(() => {
-                        loadJobSections(currentJobId);
+                        const jobId = getCurrentJobIdFromContext();
+                        if (jobId) {
+                            loadJobSections(jobId);
+                        } else {
+                            // Fallback: refresh the entire page to show updates
+                            window.location.reload();
+                        }
                     }, 500);
                 } else {
                     showErrorMessage('Failed to record inspection result. Please try again.');
