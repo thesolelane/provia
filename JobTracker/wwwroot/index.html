@@ -921,7 +921,7 @@
 
         async function loadJobSections(jobId) {
             try {
-                const response = await fetch(`/api/jobsections/byjob/${jobId}`);
+                const response = await fetch(`/api/jobsections/job/${jobId}`);
                 if (response.ok) {
                     const sections = await response.json();
                     displayExistingSections(jobId, sections);
