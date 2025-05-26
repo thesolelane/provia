@@ -41,7 +41,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDeleteSection(int id, [FromBody] DeleteSectionRequest request = null)
+        public async Task<IActionResult> SoftDeleteSection(int id)
         {
             try
             {
@@ -51,41 +51,18 @@ namespace JobTracker.Controllers
                     return NotFound("Section not found");
                 }
 
-                // Get job details for archive
-                var job = await _context.Jobs.FindAsync(section.JobId);
-                if (job == null)
-                {
-                    return NotFound("Job not found");
-                }
-
-                // Archive to Recently Deleted with abbreviated job number
-                var abbreviatedJobNumber = job.JobNumber.Length > 5 ? 
-                    job.JobNumber.Substring(job.JobNumber.Length - 5) : 
-                    job.JobNumber;
-
-                // Store in archive
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    INSERT INTO ""RecentlyDeletedSections"" 
-                    (""OriginalSectionId"", ""AbbreviatedJobNumber"", ""FullJobNumber"", ""SectionType"", 
-                     ""Description"", ""Status"", ""IsSubcontracted"", ""Notes"", ""DeletedBy"", ""DeletionReason"", 
-                     ""OriginalCreatedAt"", ""OriginalData"")
-                    VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})",
-                    section.Id, abbreviatedJobNumber, job.JobNumber, section.SectionType,
-                    section.Description, section.Status, section.IsSubcontracted, section.Notes,
-                    request.DeletedBy ?? "System", request.Reason ?? "User deleted",
-                    section.CreatedAt, System.Text.Json.JsonSerializer.Serialize(section));
-
-                // Soft delete the section
+                // Simple soft delete - just mark as deleted
                 section.IsDeleted = true;
                 section.DeletedAt = DateTime.UtcNow;
-                section.DeletedBy = request?.DeletedBy ?? "System";
-                section.DeletionReason = request?.Reason ?? "User deleted";
+                section.DeletedBy = "System";
+                section.DeletionReason = "User deleted";
 
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "Section archived successfully" });
+                return Ok(new { message = "Section removed successfully" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting section {SectionId}", id);
                 return StatusCode(500, "Error deleting section: " + ex.Message);
             }
         }
