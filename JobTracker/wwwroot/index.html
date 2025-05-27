@@ -459,7 +459,21 @@
         function checkExistingSession() {
             const token = localStorage.getItem('authToken');
             if (token) {
-                // User is already logged in, redirect to dashboard
+                // User is already logged in, redirect to appropriate dashboard
+                redirectToCorrectDashboard();
+            }
+        }
+
+        function redirectToCorrectDashboard() {
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                if (user.Role === 'FieldOperator') {
+                    window.location.href = '/field-operator-dashboard.html';
+                } else {
+                    window.location.href = '/dashboard.html';
+                }
+            } else {
                 window.location.href = '/dashboard.html';
             }
         }

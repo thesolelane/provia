@@ -293,12 +293,13 @@
         });
 
         function initializeDashboard() {
-            // Get user data from sessionStorage
-            const userData = sessionStorage.getItem('userData');
-            const companyData = sessionStorage.getItem('companyData');
+            // Get user data from localStorage (consistent with signin page)
+            const userData = localStorage.getItem('userInfo');
+            const companyData = localStorage.getItem('companyInfo');
+            const token = localStorage.getItem('authToken');
             
-            if (!userData || !companyData) {
-                window.location.href = '/signin.html';
+            if (!userData || !companyData || !token) {
+                window.location.href = '/index.html';
                 return;
             }
             
