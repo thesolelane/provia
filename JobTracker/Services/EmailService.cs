@@ -109,8 +109,8 @@ namespace JobTracker.Services
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
 
-                var fromEmail = "noreply@jobtrackerpro.com"; // Professional system email
-                var fromName = "Job Tracker Pro";
+                var fromEmail = "noreply@smartjobtracker.com"; // Professional system email
+                var fromName = "Smart Job Tracker";
 
                 var emailData = new
                 {
@@ -206,14 +206,14 @@ namespace JobTracker.Services
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>🔨 Job Tracker Pro</h1>
+            <h1>🔨 Smart Job Tracker</h1>
             <p style='margin: 0; opacity: 0.9;'>Professional Construction Management Platform</p>
         </div>
         
         <div class='content'>
             <p>Hello {firstName},</p>
             
-            <p>Welcome to <span class='brand'>Job Tracker Pro</span>! You've been added as a team member and your account is ready to be activated.</p>
+            <p>Welcome to <span class='brand'>Smart Job Tracker</span>! You've been added as a team member and your account is ready to be activated.</p>
             
             <div class='credentials'>
                 <h3>🔐 Account Activation Details</h3>
@@ -235,7 +235,7 @@ namespace JobTracker.Services
         </div>
         
         <div class='footer'>
-            <p><strong>Job Tracker Pro</strong> - Construction Management Platform</p>
+            <p><strong>Smart Job Tracker</strong> - Construction Management Platform</p>
             <p>This is an automated message from our system. Please do not reply to this email.</p>
             <p>If you didn't expect this email, please contact your company administrator.</p>
         </div>
