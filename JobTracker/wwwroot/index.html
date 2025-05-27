@@ -238,6 +238,17 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Company Selection for Multi-Account Users -->
+                            <div id="companySelection" class="company-info" style="display: none;">
+                                <div class="mb-3">
+                                    <h6 class="text-primary"><i class="fas fa-building me-2"></i>Select Company Account</h6>
+                                    <small class="text-muted">Your email is associated with multiple companies. Please select which account to access:</small>
+                                </div>
+                                <div id="companyOptions" class="d-grid gap-2">
+                                    <!-- Company buttons will be inserted here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -320,7 +331,9 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.company) {
+                    if (data.multipleAccounts) {
+                        showMultipleCompanies(data.companies);
+                    } else if (data.company) {
                         userCompany = data.company;
                         showCompanyInfo(data.company);
                     }
@@ -333,11 +346,36 @@
         function showCompanyInfo(company) {
             document.getElementById('companyName').textContent = company.companyName;
             document.getElementById('companyInfo').style.display = 'block';
+            document.getElementById('companySelection').style.display = 'none';
+        }
+
+        function showMultipleCompanies(companies) {
+            const optionsContainer = document.getElementById('companyOptions');
+            optionsContainer.innerHTML = companies.map(company => `
+                <button type="button" class="btn btn-outline-primary" onclick="selectCompany(${company.id}, '${company.companyName}')">
+                    <div class="text-start">
+                        <strong>${company.companyName}</strong><br>
+                        <small class="text-muted">Account: ${company.accountNumber}</small>
+                    </div>
+                </button>
+            `).join('');
+            
+            document.getElementById('companySelection').style.display = 'block';
+            document.getElementById('companyInfo').style.display = 'none';
+        }
+
+        function selectCompany(companyId, companyName) {
+            userCompany = { id: companyId, companyName };
+            showCompanyInfo({ companyName });
+            
+            // Update the login form to include selected company
+            document.getElementById('emailLoginForm').setAttribute('data-company-id', companyId);
         }
 
         async function handleEmailLogin() {
             const email = document.getElementById('emailInput').value;
             const password = document.getElementById('passwordInput').value;
+            const companyId = document.getElementById('emailLoginForm').getAttribute('data-company-id') || 0;
 
             showLoading(true);
             clearAlert();
@@ -346,12 +384,19 @@
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, companyId: parseInt(companyId) })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Check if company selection is required
+                    if (data.requiresCompanySelection) {
+                        showMultipleCompanies(data.companies);
+                        showAlert('info', 'Please select which company account to access.');
+                        return;
+                    }
+
                     // Store authentication info
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('userInfo', JSON.stringify(data.user));

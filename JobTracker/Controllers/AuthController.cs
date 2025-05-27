@@ -27,14 +27,20 @@ namespace JobTracker.Controllers
         {
             try
             {
-                // Find user by email to determine their company
-                var user = await _context.Users
+                // Find all companies associated with this email (max 2 allowed)
+                var users = await _context.Users
                     .Include(u => u.Company)
-                    .Where(u => u.Email == request.Email && u.IsActive)
-                    .FirstOrDefaultAsync();
+                    .Where(u => u.Email == request.Email && u.IsActive && u.Company.IsActive)
+                    .ToListAsync();
 
-                if (user?.Company != null)
+                if (!users.Any())
                 {
+                    return NotFound(new { message = "No account found with this email address" });
+                }
+
+                if (users.Count == 1)
+                {
+                    var user = users.First();
                     return Ok(new
                     {
                         company = new
@@ -42,11 +48,23 @@ namespace JobTracker.Controllers
                             user.Company.CompanyName,
                             user.Company.AccountNumber,
                             user.Company.Description
-                        }
+                        },
+                        multipleAccounts = false
                     });
                 }
 
-                return NotFound(new { message = "No account found with this email address" });
+                // Multiple accounts found - user needs to choose
+                return Ok(new
+                {
+                    multipleAccounts = true,
+                    companies = users.Select(u => new
+                    {
+                        u.Company.Id,
+                        u.Company.CompanyName,
+                        u.Company.AccountNumber,
+                        u.Company.Description
+                    }).ToArray()
+                });
             }
             catch (Exception ex)
             {
@@ -60,57 +78,78 @@ namespace JobTracker.Controllers
         {
             try
             {
-                // Find user by email
-                var user = await _context.Users
+                // Find all users with this email (max 2 companies allowed)
+                var users = await _context.Users
                     .Include(u => u.Company)
-                    .Where(u => u.Email == request.Email && u.IsActive)
-                    .FirstOrDefaultAsync();
+                    .Where(u => u.Email == request.Email && u.IsActive && u.Company.IsActive)
+                    .ToListAsync();
 
-                if (user == null)
+                if (!users.Any())
                 {
                     return BadRequest(new { message = "Invalid email or password" });
                 }
 
-                // Verify password
-                if (!VerifyPassword(request.Password, user.PasswordHash ?? ""))
+                // Verify password with any of the user accounts (same email, same password)
+                var validUser = users.FirstOrDefault(u => VerifyPassword(request.Password, u.PasswordHash ?? ""));
+                if (validUser == null)
                 {
                     return BadRequest(new { message = "Invalid email or password" });
                 }
 
-                // Check if company is active
-                if (!user.Company.IsActive)
+                // If multiple accounts exist, user must specify which company
+                if (users.Count > 1 && request.CompanyId == 0)
                 {
-                    return BadRequest(new { message = "Company account is inactive" });
+                    return Ok(new
+                    {
+                        requiresCompanySelection = true,
+                        companies = users.Select(u => new
+                        {
+                            u.Company.Id,
+                            u.Company.CompanyName,
+                            u.Company.AccountNumber,
+                            u.Company.Description
+                        }).ToArray()
+                    });
                 }
 
-                // Update last login
-                user.LastLoginAt = DateTime.UtcNow;
+                // Select the specific company user requested or the only one available
+                var selectedUser = request.CompanyId > 0 
+                    ? users.FirstOrDefault(u => u.CompanyId == request.CompanyId)
+                    : users.First();
+
+                if (selectedUser == null)
+                {
+                    return BadRequest(new { message = "Invalid company selection" });
+                }
+
+                // Update last login for the selected account
+                selectedUser.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Generate session token
-                var token = GenerateSessionToken(user);
+                // Generate session token for the selected company
+                var token = GenerateSessionToken(selectedUser);
 
                 return Ok(new
                 {
                     token,
                     user = new
                     {
-                        user.Id,
-                        user.FirstName,
-                        user.LastName,
-                        user.Email,
-                        Role = user.Role.ToString(),
-                        user.LanguagePreference,
-                        user.IsEmailVerified,
-                        user.IsPhoneVerified
+                        selectedUser.Id,
+                        selectedUser.FirstName,
+                        selectedUser.LastName,
+                        selectedUser.Email,
+                        Role = selectedUser.Role.ToString(),
+                        selectedUser.LanguagePreference,
+                        selectedUser.IsEmailVerified,
+                        selectedUser.IsPhoneVerified
                     },
                     company = new
                     {
-                        user.Company.Id,
-                        user.Company.CompanyName,
-                        user.Company.AccountNumber,
-                        user.Company.Description,
-                        user.Company.SubscriptionType
+                        selectedUser.Company.Id,
+                        selectedUser.Company.CompanyName,
+                        selectedUser.Company.AccountNumber,
+                        selectedUser.Company.Description,
+                        selectedUser.Company.SubscriptionType
                     }
                 });
             }
@@ -279,6 +318,7 @@ namespace JobTracker.Controllers
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public int CompanyId { get; set; } = 0; // Optional - for multi-company users
     }
 
     public class PhoneLoginRequest
