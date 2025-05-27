@@ -373,9 +373,9 @@
 
         function applyRoleBasedAccess() {
             const userRole = parseInt(currentUser.role);
-            const isWorker = userRole === 0;
+            const isFieldOperator = userRole === 0;
 
-            if (isWorker) {
+            if (isFieldOperator) {
                 // Hide team management from dropdown
                 const teamManagementLink = document.querySelector('a[href="/users.html"]');
                 if (teamManagementLink) {
@@ -397,7 +397,7 @@
                     }
                 });
 
-                // Update welcome message for workers
+                // Update welcome message for field operators
                 const welcomeDesc = document.querySelector('.welcome-section p');
                 if (welcomeDesc) {
                     welcomeDesc.textContent = "Check your assigned tasks and track your work hours below.";
