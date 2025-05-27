@@ -453,11 +453,18 @@
 
         async function loadDashboardData() {
             try {
-                await Promise.all([
+                const userData = getCurrentUser();
+                const loadPromises = [
                     loadStatistics(),
-                    loadRecentJobs(),
-                    loadRecentActivity()
-                ]);
+                    loadRecentJobs()
+                ];
+                
+                // Only load recent activity for Admins and Master Admins
+                if (userData && userData.role !== 'FieldOperator') {
+                    loadPromises.push(loadRecentActivity());
+                }
+                
+                await Promise.all(loadPromises);
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
                 showError('Failed to load dashboard data');
