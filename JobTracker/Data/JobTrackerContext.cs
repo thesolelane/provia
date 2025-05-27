@@ -16,6 +16,11 @@ namespace JobTracker.Data
         public DbSet<InspectionReminder> InspectionReminders { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Company> Companies { get; set; } = null!;
+        public DbSet<WorkTask> WorkTasks { get; set; } = null!;
+        public DbSet<MaterialRequest> MaterialRequests { get; set; } = null!;
+        public DbSet<ChangeRequest> ChangeRequests { get; set; } = null!;
+        public DbSet<UserJobAssignment> UserJobAssignments { get; set; } = null!;
+        public DbSet<Inspection> Inspections { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,7 +40,7 @@ namespace JobTracker.Data
             // Configure JobImage relationships
             modelBuilder.Entity<JobImage>()
                 .HasOne(i => i.Job)
-                .WithMany(j => j.Images)
+                .WithMany()
                 .HasForeignKey(i => i.JobId)
                 .OnDelete(DeleteBehavior.Cascade);
                 

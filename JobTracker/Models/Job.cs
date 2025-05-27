@@ -73,48 +73,5 @@ namespace JobTracker.Models
         Cancelled = 6
     }
     
-    public class JobSection
-    {
-        [Key]
-        public int Id { get; set; }
-        
-        [ForeignKey("Job")]
-        public int JobId { get; set; }
-        public Job Job { get; set; } = null!;
-        
-        [Required]
-        [StringLength(100)]
-        public string SectionName { get; set; } = string.Empty;
-        
-        [StringLength(500)]
-        public string? Description { get; set; }
-        
-        public SectionStatus Status { get; set; } = SectionStatus.NotStarted;
-        
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public DateTime? CompletionDate { get; set; }
-        
-        [ForeignKey("AssignedUser")]
-        public int? AssignedUserId { get; set; }
-        public User? AssignedUser { get; set; }
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        
-        // Navigation properties
-        public ICollection<Task> Tasks { get; set; } = new List<Task>();
-        public ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
-    }
-    
-    public enum SectionStatus
-    {
-        NotStarted = 0,
-        InProgress = 1,
-        Completed = 2,
-        InspectionRequired = 3,
-        InspectionPassed = 4,
-        InspectionFailed = 5,
-        OnHold = 6
-    }
+
 }

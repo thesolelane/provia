@@ -1,6 +1,7 @@
 using JobTracker.Data;
 using JobTracker.Models;
 using Microsoft.EntityFrameworkCore;
+using Task = System.Threading.Tasks.Task;
 
 namespace JobTracker.Services
 {
