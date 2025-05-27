@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "a8LGLKUKGkUzNxvHk+k4huMC6RnRLShQXhsHKaIGhEI=",
+  "Hash": "8n3PVEb5yDvfLg56y1so3PJuHMs73OHUGysEitZX2Ec=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -16,6 +16,23 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/dashboard.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "dashboard.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/dashboard.html"
+    },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/index.html",
       "SourceId": "JobTracker",
