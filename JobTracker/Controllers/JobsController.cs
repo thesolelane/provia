@@ -31,19 +31,19 @@ namespace JobTracker.Controllers
                 {
                     var sampleJob = new Job
                     {
-                        Name = "Sample Renovation Project",
+                        JobName = "Sample Renovation Project",
                         Description = "Kitchen and bathroom renovation for a residential property",
-                        Location = "123 Main Street, Boston, MA",
+                        Address = "123 Main Street",
+                        City = "Boston",
+                        State = "MA",
+                        ZipCode = "02101",
                         JobNumber = "REN-2023-001",
                         StartDate = DateTime.UtcNow.AddDays(-30),
-                        TargetCompletionDate = DateTime.UtcNow.AddDays(60),
-                        Status = "In Progress",
-                        ClientName = "John Smith",
-                        ClientEmail = "john.smith@example.com",
-                        ClientPhone = "(555) 123-4567",
-                        Budget = 75000.00m,
+                        EndDate = DateTime.UtcNow.AddDays(60),
+                        Status = JobStatus.InProgress,
+                        EstimatedCost = 75000.00m,
                         ActualCost = 25000.00m,
-                        Notes = "Client has requested high-end fixtures for all bathrooms",
+                        CompanyId = 1,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
