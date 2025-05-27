@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Operator Dashboard - Smart Job Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            padding: 20px;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            padding: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .quick-action-btn {
+            display: block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            margin-bottom: 15px;
+        }
+        
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .quick-action-btn i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .task-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .task-priority-high {
+            border-left-color: #dc3545;
+        }
+        
+        .task-priority-medium {
+            border-left-color: #ffc107;
+        }
+        
+        .task-priority-low {
+            border-left-color: #28a745;
+        }
+        
+        .clock-status {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .clocked-in {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .clocked-out {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid dashboard-container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">Welcome back, <span id="userName"></span>!</h2>
+                            <p class="text-muted mb-0">Ready to tackle today's construction tasks?</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-logout" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clock Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div id="clockStatus" class="clock-status">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <div id="clockStatusText">Checking clock status...</div>
+                    <div id="clockTime" class="small mt-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Statistics -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="myActiveJobs">0</div>
+                    <div class="stat-label">My Active Jobs</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingTasks">0</div>
+                    <div class="stat-label">Pending Tasks</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="materialOrders">0</div>
+                    <div class="stat-label">Material Orders</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="hoursThisWeek">0</div>
+                    <div class="stat-label">Hours This Week</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="quick-action-btn" onclick="showMyTasks()">
+                                    <i class="fas fa-tasks"></i>
+                                    <span>My Tasks</span>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="quick-action-btn" onclick="toggleClock()">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="clockButtonText">Clock In</span>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="quick-action-btn" onclick="showMaterialRequests()">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span>Order Materials</span>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="quick-action-btn" onclick="showChangeRequests()">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Report Issue</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Tasks -->
+        <div class="row mb-4">
+            <div class="col-12 col-lg-8">
+                <div class="dashboard-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Today's Tasks</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="todayTasksContainer">
+                            <div class="text-center py-4">
+                                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Loading your tasks for today...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Job Info -->
+            <div class="col-12 col-lg-4">
+                <div class="dashboard-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Current Job</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="currentJobContainer">
+                            <div class="text-center py-4">
+                                <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No active job assigned</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let currentCompany = null;
+        let clockedIn = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+        });
+
+        function initializeDashboard() {
+            // Get user data from sessionStorage
+            const userData = sessionStorage.getItem('userData');
+            const companyData = sessionStorage.getItem('companyData');
+            
+            if (!userData || !companyData) {
+                window.location.href = '/signin.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(userData);
+            currentCompany = JSON.parse(companyData);
+            
+            // Update welcome message
+            document.getElementById('userName').textContent = currentUser.firstName;
+            
+            // Load dashboard data
+            loadFieldOperatorData();
+        }
+
+        async function loadFieldOperatorData() {
+            try {
+                await Promise.all([
+                    loadPersonalStatistics(),
+                    loadTodaysTasks(),
+                    loadCurrentJob(),
+                    checkClockStatus()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        async function loadPersonalStatistics() {
+            try {
+                // Load personal work statistics for field operator
+                document.getElementById('myActiveJobs').textContent = '2';
+                document.getElementById('pendingTasks').textContent = '5';
+                document.getElementById('materialOrders').textContent = '1';
+                document.getElementById('hoursThisWeek').textContent = '32';
+            } catch (error) {
+                console.error('Error loading personal statistics:', error);
+            }
+        }
+
+        async function loadTodaysTasks() {
+            try {
+                const container = document.getElementById('todayTasksContainer');
+                
+                // Sample tasks for field operator
+                const tasks = [
+                    { id: 1, title: 'Install bathroom fixtures', job: 'Johnson Renovation', priority: 'high', dueTime: '10:00 AM' },
+                    { id: 2, title: 'Complete electrical rough-in', job: 'Smith Kitchen', priority: 'medium', dueTime: '2:00 PM' },
+                    { id: 3, title: 'Inspect plumbing connections', job: 'Johnson Renovation', priority: 'low', dueTime: '4:00 PM' }
+                ];
+                
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p class="text-muted">All tasks completed for today!</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = tasks.map(task => `
+                        <div class="task-item task-priority-${task.priority}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">${task.title}</h6>
+                                    <small class="text-muted">${task.job}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">${task.dueTime}</small>
+                                    <br>
+                                    <span class="badge bg-${task.priority === 'high' ? 'danger' : task.priority === 'medium' ? 'warning' : 'success'}">${task.priority}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('todayTasksContainer').innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <p class="text-muted">Error loading tasks</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadCurrentJob() {
+            try {
+                const container = document.getElementById('currentJobContainer');
+                
+                // Sample current job
+                const currentJob = {
+                    number: 'JOB-2025-001',
+                    title: 'Johnson Bathroom Renovation',
+                    address: '123 Main St, Boston, MA',
+                    phase: 'Plumbing Rough-in',
+                    progress: 65
+                };
+                
+                container.innerHTML = `
+                    <div>
+                        <h6 class="mb-2">${currentJob.title}</h6>
+                        <p class="small text-muted mb-2">${currentJob.number}</p>
+                        <p class="small text-muted mb-2"><i class="fas fa-map-marker-alt me-1"></i>${currentJob.address}</p>
+                        <p class="small mb-2"><strong>Current Phase:</strong> ${currentJob.phase}</p>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: ${currentJob.progress}%" 
+                                 aria-valuenow="${currentJob.progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <small class="text-muted">${currentJob.progress}% Complete</small>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading current job:', error);
+            }
+        }
+
+        async function checkClockStatus() {
+            try {
+                // Check if user is currently clocked in
+                clockedIn = false; // This would come from API
+                
+                updateClockStatus();
+            } catch (error) {
+                console.error('Error checking clock status:', error);
+            }
+        }
+
+        function updateClockStatus() {
+            const statusElement = document.getElementById('clockStatus');
+            const textElement = document.getElementById('clockStatusText');
+            const timeElement = document.getElementById('clockTime');
+            const buttonElement = document.getElementById('clockButtonText');
+            
+            if (clockedIn) {
+                statusElement.className = 'clock-status clocked-in';
+                textElement.textContent = 'Currently Clocked In';
+                timeElement.textContent = 'Started at 8:00 AM';
+                buttonElement.textContent = 'Clock Out';
+            } else {
+                statusElement.className = 'clock-status clocked-out';
+                textElement.textContent = 'Currently Clocked Out';
+                timeElement.textContent = 'Ready to start work';
+                buttonElement.textContent = 'Clock In';
+            }
+        }
+
+        async function toggleClock() {
+            try {
+                if (clockedIn) {
+                    // Clock out
+                    clockedIn = false;
+                    showSuccess('Successfully clocked out!');
+                } else {
+                    // Clock in
+                    clockedIn = true;
+                    showSuccess('Successfully clocked in!');
+                }
+                
+                updateClockStatus();
+            } catch (error) {
+                console.error('Error toggling clock:', error);
+                showError('Failed to update clock status');
+            }
+        }
+
+        function showMyTasks() {
+            // Navigate to tasks page or show modal
+            alert('My Tasks feature will be implemented here');
+        }
+
+        function showMaterialRequests() {
+            // Navigate to material requests page
+            alert('Material ordering feature will be implemented here');
+        }
+
+        function showChangeRequests() {
+            // Navigate to change requests page
+            alert('Issue reporting feature will be implemented here');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = '/signin.html';
+        }
+
+        function showError(message) {
+            // Simple error display - could be enhanced with toast notifications
+            alert('Error: ' + message);
+        }
+
+        function showSuccess(message) {
+            // Simple success display - could be enhanced with toast notifications
+            alert('Success: ' + message);
+        }
+    </script>
+</body>
+</html>
