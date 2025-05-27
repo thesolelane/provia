@@ -434,10 +434,15 @@
                     `;
                 }
 
-                // Completely remove the entire recent activity section for field operators
+                // Completely remove both recent activity and recent jobs sections for field operators
                 const recentActivityCard = document.querySelector('#recentActivityContainer').closest('.row');
                 if (recentActivityCard) {
                     recentActivityCard.remove();
+                }
+                
+                const recentJobsCard = document.querySelector('#recentJobsContainer').closest('.row');
+                if (recentJobsCard) {
+                    recentJobsCard.remove();
                 }
 
                 // Update statistics to be worker-focused
@@ -453,14 +458,14 @@
 
         async function loadDashboardData() {
             try {
-                const userData = getCurrentUser();
-                const loadPromises = [
-                    loadStatistics(),
-                    loadRecentJobs()
-                ];
+                const userRole = parseInt(currentUser.role);
+                const isFieldOperator = userRole === 0; // FieldOperator role = 0
                 
-                // Only load recent activity for Admins and Master Admins
-                if (userData && userData.role !== 'FieldOperator') {
+                const loadPromises = [loadStatistics()];
+                
+                // Only load recent jobs and activity for Admins and Master Admins
+                if (!isFieldOperator) {
+                    loadPromises.push(loadRecentJobs());
                     loadPromises.push(loadRecentActivity());
                 }
                 
