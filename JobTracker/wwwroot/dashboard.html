@@ -403,7 +403,7 @@
                     welcomeDesc.textContent = "Check your assigned tasks and track your work hours below.";
                 }
 
-                // Replace quick actions with worker-specific actions
+                // Replace quick actions with field operator-specific actions
                 const quickActionsContainer = document.querySelector('.card-body .row.g-3');
                 if (quickActionsContainer) {
                     quickActionsContainer.innerHTML = `
@@ -432,6 +432,12 @@
                             </a>
                         </div>
                     `;
+                }
+
+                // Hide the entire recent activity section for field operators
+                const recentActivitySection = document.querySelector('.row.mt-4');
+                if (recentActivitySection) {
+                    recentActivitySection.style.display = 'none';
                 }
 
                 // Update statistics to be worker-focused
@@ -490,18 +496,32 @@
         }
 
         async function loadRecentJobs() {
-            // Placeholder for recent jobs - will be implemented when job management is ready
             const container = document.getElementById('recentJobsContainer');
-            container.innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
-                    <h6 class="text-muted">No jobs yet</h6>
-                    <p class="text-muted small">Start by creating your first construction job to track progress and manage your team.</p>
-                    <button class="btn btn-primary btn-custom mt-2" onclick="createNewJob()">
-                        <i class="fas fa-plus me-2"></i>Create First Job
-                    </button>
-                </div>
-            `;
+            const userRole = parseInt(currentUser.role);
+            const isFieldOperator = userRole === 0;
+
+            if (isFieldOperator) {
+                // Field operators see their assigned jobs
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-hard-hat fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Your Assigned Jobs</h6>
+                        <p class="text-muted small">You'll see your assigned job sections and tasks here once they're assigned by your project manager.</p>
+                    </div>
+                `;
+            } else {
+                // Admins see job creation options
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No jobs yet</h6>
+                        <p class="text-muted small">Start by creating your first construction job to track progress and manage your team.</p>
+                        <button class="btn btn-primary btn-custom mt-2" onclick="createNewJob()">
+                            <i class="fas fa-plus me-2"></i>Create First Job
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         async function loadRecentActivity() {
