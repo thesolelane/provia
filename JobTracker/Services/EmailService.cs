@@ -106,12 +106,49 @@ namespace JobTracker.Services
         {
             try
             {
-                // This would use SendGrid service - placeholder for now
-                _logger.LogInformation("SendGrid email would be sent to {Email} with subject: {Subject}", email, subject);
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+                var fromEmail = "noreply@jobtrackerpro.com"; // Professional system email
+                var fromName = "Job Tracker Pro";
+
+                var emailData = new
+                {
+                    personalizations = new[]
+                    {
+                        new
+                        {
+                            to = new[] { new { email, name = "" } },
+                            subject
+                        }
+                    },
+                    from = new { email = fromEmail, name = fromName },
+                    content = new[]
+                    {
+                        new
+                        {
+                            type = "text/html",
+                            value = body
+                        }
+                    }
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(emailData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync("https://api.sendgrid.com/v3/mail/send", content);
                 
-                // TODO: Implement SendGrid integration when API key is provided
-                await Task.Delay(100); // Simulate email sending
-                return true;
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("SendGrid email sent successfully to {Email}", email);
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("SendGrid API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                    return false;
+                }
             }
             catch (Exception ex)
             {
@@ -158,46 +195,49 @@ namespace JobTracker.Services
     <style>
         body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}
         .container {{ max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-        .header {{ text-align: center; color: #2c3e50; margin-bottom: 30px; }}
+        .header {{ text-align: center; color: #2c3e50; margin-bottom: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; }}
         .content {{ line-height: 1.6; color: #333; }}
         .credentials {{ background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #007bff; }}
         .button {{ display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
-        .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }}
+        .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center; }}
+        .brand {{ color: #007bff; font-weight: bold; }}
     </style>
 </head>
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>🔨 Welcome to Job Tracker Pro</h1>
+            <h1>🔨 Job Tracker Pro</h1>
+            <p style='margin: 0; opacity: 0.9;'>Professional Construction Management Platform</p>
         </div>
         
         <div class='content'>
             <p>Hello {firstName},</p>
             
-            <p>You've been added as a team member to <strong>Preferred Builders USA, LLC</strong> on Job Tracker Pro!</p>
+            <p>Welcome to <span class='brand'>Job Tracker Pro</span>! You've been added as a team member and your account is ready to be activated.</p>
             
             <div class='credentials'>
-                <h3>🔐 Your Login Credentials</h3>
-                <p><strong>Verification Code:</strong> {verificationCode}</p>
-                <p><strong>Temporary Password:</strong> {temporaryPassword}</p>
+                <h3>🔐 Account Activation Details</h3>
+                <p><strong>Verification Code:</strong> <code style='background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace;'>{verificationCode}</code></p>
+                <p><strong>Temporary Password:</strong> <code style='background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace;'>{temporaryPassword}</code></p>
+                <p><small><em>This code expires in 24 hours for security</em></small></p>
             </div>
             
-            <p><strong>Next Steps:</strong></p>
+            <p><strong>Getting Started:</strong></p>
             <ol>
-                <li>Click the verification link below</li>
+                <li>Visit your company's Job Tracker dashboard</li>
+                <li>Enter your verification code</li>
                 <li>Log in with your temporary password</li>
-                <li>Create your own secure password</li>
+                <li>Create your personal secure password</li>
                 <li>Start managing construction projects!</li>
             </ol>
             
-            <a href='#' class='button'>Verify Account & Set Password</a>
-            
-            <p><strong>Important:</strong> For security reasons, please change your temporary password immediately after your first login.</p>
+            <p><strong>Security Notice:</strong> You must change your temporary password during your first login. This ensures your account stays secure.</p>
         </div>
         
         <div class='footer'>
-            <p>This email was sent by Job Tracker Pro Construction Management System.</p>
-            <p>If you didn't expect this email, please contact your system administrator.</p>
+            <p><strong>Job Tracker Pro</strong> - Construction Management Platform</p>
+            <p>This is an automated message from our system. Please do not reply to this email.</p>
+            <p>If you didn't expect this email, please contact your company administrator.</p>
         </div>
     </div>
 </body>
