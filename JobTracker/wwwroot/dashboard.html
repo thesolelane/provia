@@ -435,9 +435,9 @@
                 }
 
                 // Completely remove the entire recent activity section for field operators
-                const recentActivitySection = document.querySelector('.row.mt-4');
-                if (recentActivitySection) {
-                    recentActivitySection.remove();
+                const recentActivityCard = document.querySelector('#recentActivityContainer').closest('.row');
+                if (recentActivityCard) {
+                    recentActivityCard.remove();
                 }
 
                 // Update statistics to be worker-focused
