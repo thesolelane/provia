@@ -434,16 +434,19 @@
                     `;
                 }
 
-                // Completely remove both recent activity and recent jobs sections for field operators
-                const recentActivityCard = document.querySelector('#recentActivityContainer').closest('.row');
-                if (recentActivityCard) {
-                    recentActivityCard.remove();
-                }
-                
-                const recentJobsCard = document.querySelector('#recentJobsContainer').closest('.row');
-                if (recentJobsCard) {
-                    recentJobsCard.remove();
-                }
+                // Hide sections that field operators don't need
+                setTimeout(() => {
+                    // Remove recent activity section
+                    const recentActivityRows = document.querySelectorAll('.row.mt-4');
+                    recentActivityRows.forEach(row => {
+                        if (row.innerHTML.includes('Recent Activity')) {
+                            row.style.display = 'none';
+                        }
+                        if (row.innerHTML.includes('Recent Jobs')) {
+                            row.style.display = 'none';
+                        }
+                    });
+                }, 100);
 
                 // Update statistics to be worker-focused
                 const statCards = document.querySelectorAll('.stat-card');
