@@ -107,13 +107,25 @@ namespace JobTracker.Controllers
                     return BadRequest(new { message = $"Maximum {company.MaxUsers} users allowed for your subscription" });
                 }
 
-                // Check for duplicate email/phone
+                // Check for duplicate email/phone and enforce 2-company maximum
                 if (!string.IsNullOrEmpty(request.Email))
                 {
-                    var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.IsActive);
-                    if (emailExists)
+                    var existingUserCount = await _context.Users
+                        .Where(u => u.Email == request.Email && u.IsActive)
+                        .CountAsync();
+                    
+                    if (existingUserCount >= 2)
                     {
-                        return BadRequest(new { message = "Email address already exists" });
+                        return BadRequest(new { message = "Email address already associated with maximum allowed companies (2)" });
+                    }
+                    
+                    // Check if already exists in THIS company
+                    var emailExistsInCompany = await _context.Users
+                        .AnyAsync(u => u.Email == request.Email && u.CompanyId == request.CompanyId && u.IsActive);
+                    
+                    if (emailExistsInCompany)
+                    {
+                        return BadRequest(new { message = "Email address already exists in this company" });
                     }
                 }
 
