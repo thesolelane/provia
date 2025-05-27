@@ -254,6 +254,40 @@ namespace JobTracker.Controllers
             }
         }
 
+        [HttpPost("test-email")]
+        public async Task<IActionResult> TestEmail([FromBody] TestEmailRequest request)
+        {
+            try
+            {
+                var verificationCode = GenerateVerificationCode();
+                var temporaryPassword = GenerateTemporaryPassword();
+
+                var emailSent = await _emailService.SendVerificationEmailAsync(
+                    request.Email,
+                    request.FirstName,
+                    verificationCode,
+                    temporaryPassword
+                );
+
+                return Ok(new
+                {
+                    success = emailSent,
+                    message = emailSent ? "Test email sent successfully!" : "Failed to send email - check SendGrid configuration",
+                    email = request.Email,
+                    verificationCode,
+                    temporaryPassword
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending test email to {Email}", request.Email);
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Email service error: " + ex.Message 
+                });
+            }
+        }
+
         private static string GenerateVerificationCode()
         {
             using var rng = RandomNumberGenerator.Create();
@@ -306,5 +340,11 @@ namespace JobTracker.Controllers
         public string? PhoneNumber { get; set; }
         public string? LanguagePreference { get; set; }
         public string? Password { get; set; }
+    }
+
+    public class TestEmailRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
     }
 }
