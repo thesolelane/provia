@@ -160,7 +160,7 @@ namespace JobTracker.Controllers
                 _context.JobSections.AddRange(newSections);
                 await _context.SaveChangesAsync();
 
-                return Ok($"Added {newSections.Count} job sections to job {job.Name}");
+                return Ok($"Added {newSections.Count} job sections to job {job.JobName}");
             }
             catch (Exception ex)
             {
