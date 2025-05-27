@@ -9,6 +9,7 @@ namespace JobTracker.Services
         Task<bool> SendVerificationEmailAsync(string email, string firstName, string verificationCode, string temporaryPassword);
         Task<bool> SendPasswordResetEmailAsync(string email, string firstName, string resetCode);
         Task<bool> SendWelcomeEmailAsync(string email, string firstName, string companyName);
+        Task<bool> SendEmailAsync(string email, string subject, string body);
     }
 
     public class EmailService : IEmailService
@@ -70,7 +71,7 @@ namespace JobTracker.Services
             }
         }
 
-        private async Task<bool> SendEmailAsync(string email, string subject, string body)
+        public async Task<bool> SendEmailAsync(string email, string subject, string body)
         {
             try
             {

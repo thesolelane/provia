@@ -21,6 +21,8 @@ namespace JobTracker.Data
         public DbSet<ChangeRequest> ChangeRequests { get; set; } = null!;
         public DbSet<UserJobAssignment> UserJobAssignments { get; set; } = null!;
         public DbSet<Inspection> Inspections { get; set; } = null!;
+        public DbSet<TimeEntry> TimeEntries { get; set; } = null!;
+        public DbSet<PendingClockIn> PendingClockIns { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
