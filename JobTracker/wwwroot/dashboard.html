@@ -402,6 +402,46 @@
                 if (welcomeDesc) {
                     welcomeDesc.textContent = "Check your assigned tasks and track your work hours below.";
                 }
+
+                // Replace quick actions with worker-specific actions
+                const quickActionsContainer = document.querySelector('.card-body .row.g-3');
+                if (quickActionsContainer) {
+                    quickActionsContainer.innerHTML = `
+                        <div class="col-6">
+                            <a href="#" class="quick-action-btn" onclick="showMyTasks()">
+                                <i class="fas fa-tasks"></i>
+                                <span>My Tasks</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="#" class="quick-action-btn" onclick="showMaterialRequests()">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Order Materials</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="#" class="quick-action-btn" onclick="showTimeTracking()">
+                                <i class="fas fa-clock"></i>
+                                <span>Clock In/Out</span>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="#" class="quick-action-btn" onclick="showChangeRequests()">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Report Issue</span>
+                            </a>
+                        </div>
+                    `;
+                }
+
+                // Update statistics to be worker-focused
+                const statCards = document.querySelectorAll('.stat-card');
+                if (statCards.length >= 4) {
+                    statCards[0].querySelector('.stat-label').textContent = 'My Active Jobs';
+                    statCards[1].querySelector('.stat-label').textContent = 'Pending Tasks';
+                    statCards[2].querySelector('.stat-label').textContent = 'Material Orders';
+                    statCards[3].querySelector('.stat-label').textContent = 'Hours This Week';
+                }
             }
         }
 
@@ -431,14 +471,19 @@
                         document.getElementById('totalTeamMembers').textContent = data.stats.totalUsers;
                     }
                 } else {
-                    // Workers see limited statistics focused on their work
-                    document.getElementById('totalTeamMembers').textContent = '1'; // Just themselves
+                    // Workers see their personal work statistics
+                    document.getElementById('activeJobsCount').textContent = '0'; // My Active Jobs
+                    document.getElementById('totalTeamMembers').textContent = '0'; // Pending Tasks  
+                    document.getElementById('pendingInspections').textContent = '0'; // Material Orders
+                    document.getElementById('overdueJobs').textContent = '0'; // Hours This Week
                 }
 
-                // Set placeholder values for other statistics until we implement job management
-                document.getElementById('activeJobsCount').textContent = isWorker ? '0' : '0';
-                document.getElementById('pendingInspections').textContent = '0';
-                document.getElementById('overdueJobs').textContent = '0';
+                // Set placeholder values for admin statistics
+                if (!isWorker) {
+                    document.getElementById('activeJobsCount').textContent = '0';
+                    document.getElementById('pendingInspections').textContent = '0';
+                    document.getElementById('overdueJobs').textContent = '0';
+                }
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
@@ -528,6 +573,27 @@
 
         function createNewJob() {
             showInfo('Job creation feature coming soon! Your construction job management system is being built.');
+        }
+
+        // Worker-specific functions
+        function showMyTasks() {
+            showInfo('Loading your assigned tasks and job sections...');
+            // TODO: Implement task management interface
+        }
+
+        function showMaterialRequests() {
+            showInfo('Opening material ordering system with Home Depot and Lowe\'s integration...');
+            // TODO: Implement material request interface with store APIs
+        }
+
+        function showTimeTracking() {
+            showInfo('Opening time tracking system for clock in/out...');
+            // TODO: Implement time tracking interface
+        }
+
+        function showChangeRequests() {
+            showInfo('Opening change request form for site findings...');
+            // TODO: Implement change request interface
         }
 
         function logout() {

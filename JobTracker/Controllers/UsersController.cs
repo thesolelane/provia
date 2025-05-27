@@ -58,7 +58,7 @@ namespace JobTracker.Controllers
                 var hasAdminAccess = await CheckAdminAccess(Authorization, companyId);
                 if (!hasAdminAccess)
                 {
-                    return Forbid("Only administrators can view company user data");
+                    return StatusCode(403, new { message = "Only administrators can view company user data" });
                 }
 
                 var users = await _context.Users
