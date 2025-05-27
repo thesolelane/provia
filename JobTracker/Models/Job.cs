@@ -1,67 +1,120 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace JobTracker.Models
 {
     public class Job
     {
+        [Key]
         public int Id { get; set; }
-
+        
         [Required]
-        [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string Description { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(200)]
-        public string Location { get; set; } = string.Empty;
-
         [StringLength(50)]
         public string JobNumber { get; set; } = string.Empty;
-
+        
         [Required]
-        public DateTime StartDate { get; set; }
-
-        public DateTime? TargetCompletionDate { get; set; }
-
-        public DateTime? ActualCompletionDate { get; set; }
-
+        [StringLength(200)]
+        public string JobName { get; set; } = string.Empty;
+        
+        [StringLength(500)]
+        public string? Description { get; set; }
+        
+        [Required]
+        [StringLength(300)]
+        public string Address { get; set; } = string.Empty;
+        
+        [StringLength(100)]
+        public string City { get; set; } = string.Empty;
+        
         [StringLength(50)]
-        public string Status { get; set; } = "Pending";
-
-        [StringLength(100)]
-        public string ClientName { get; set; } = string.Empty;
-
-        [StringLength(100)]
-        public string ClientEmail { get; set; } = string.Empty;
-
+        public string State { get; set; } = string.Empty;
+        
         [StringLength(20)]
-        public string ClientPhone { get; set; } = string.Empty;
-
+        public string ZipCode { get; set; } = string.Empty;
+        
+        public JobStatus Status { get; set; } = JobStatus.Planning;
+        
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Budget { get; set; }
-
+        public decimal EstimatedCost { get; set; }
+        
         [Column(TypeName = "decimal(18,2)")]
         public decimal ActualCost { get; set; }
-
-        public string? Notes { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        // Company association for multi-tenant support
-        [Required]
+        
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
+        
+        [ForeignKey("Company")]
         public int CompanyId { get; set; }
         public Company Company { get; set; } = null!;
-
-        // Navigation properties
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
         
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public ICollection<JobImage> Images { get; set; } = new List<JobImage>();
+        [ForeignKey("ProjectManager")]
+        public int? ProjectManagerId { get; set; }
+        public User? ProjectManager { get; set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
+        public ICollection<MaterialRequest> MaterialRequests { get; set; } = new List<MaterialRequest>();
+        public ICollection<ChangeRequest> ChangeRequests { get; set; } = new List<ChangeRequest>();
+        public ICollection<UserJobAssignment> UserAssignments { get; set; } = new List<UserJobAssignment>();
+    }
+    
+    public enum JobStatus
+    {
+        Planning = 0,
+        PermitsPending = 1,
+        InProgress = 2,
+        InspectionPending = 3,
+        OnHold = 4,
+        Completed = 5,
+        Cancelled = 6
+    }
+    
+    public class JobSection
+    {
+        [Key]
+        public int Id { get; set; }
+        
+        [ForeignKey("Job")]
+        public int JobId { get; set; }
+        public Job Job { get; set; } = null!;
+        
+        [Required]
+        [StringLength(100)]
+        public string SectionName { get; set; } = string.Empty;
+        
+        [StringLength(500)]
+        public string? Description { get; set; }
+        
+        public SectionStatus Status { get; set; } = SectionStatus.NotStarted;
+        
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
+        
+        [ForeignKey("AssignedUser")]
+        public int? AssignedUserId { get; set; }
+        public User? AssignedUser { get; set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public ICollection<Task> Tasks { get; set; } = new List<Task>();
+        public ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
+    }
+    
+    public enum SectionStatus
+    {
+        NotStarted = 0,
+        InProgress = 1,
+        Completed = 2,
+        InspectionRequired = 3,
+        InspectionPassed = 4,
+        InspectionFailed = 5,
+        OnHold = 6
     }
 }
