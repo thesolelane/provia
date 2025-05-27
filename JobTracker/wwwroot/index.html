@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Tracker Pro - Construction Management Dashboard</title>
+    <title>Smart Job Tracker - Sign In</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -13,2333 +13,442 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .main-container {
-            padding: 2rem 0;
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .app-header {
+        .login-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
         }
         
-        .btn-custom {
-            border-radius: 25px;
-            padding: 0.75rem 2rem;
+        .login-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 1.5rem 1.5rem;
+        }
+        
+        .login-header .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header h1 {
+            font-size: 1.8rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header p {
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .login-body {
+            padding: 2rem 1.5rem;
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-floating input {
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
             transition: all 0.3s ease;
         }
         
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        .form-floating input:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
         }
         
-        .job-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .job-card:hover {
-            transform: translateY(-5px);
-            cursor: pointer;
-        }
-        
-        .bg-light-green {
-            background-color: #32CD32 !important;
-            color: #000 !important;
-        }
-        
-        .modal-content {
-            border-radius: 20px;
+        .btn-login {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             border: none;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 0.75rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
         }
         
-        .job-number-preview {
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .login-method-toggle {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        
+        .toggle-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toggle-link:hover {
+            color: #45a049;
+            text-decoration: underline;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .company-info {
             background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 1rem;
-            margin-top: 0.5rem;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #2c3e50;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .alert-custom {
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        .feature-highlight {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .feature-highlight h6 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .feature-highlight small {
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
-    <div class="container main-container">
-        <!-- Company Account Header -->
-        <div class="company-header mb-3">
-            <div class="alert alert-info border-0" style="background: rgba(13, 110, 253, 0.1); border-radius: 15px;">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h6 class="mb-1">
-                            <i class="fas fa-building me-2"></i>
-                            <strong>Preferred Builders USA, LLC</strong>
-                        </h6>
-                        <small class="text-muted">Account: 002025-0501-36DMRD-01420 | Professional Subscription</small>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <span class="badge bg-success px-3 py-2">
-                            <i class="fas fa-check-circle me-1"></i>Active Account
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Header -->
-        <div class="app-header">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-0">
-                        <i class="fas fa-hard-hat text-warning me-3"></i>
-                        Job Tracker Pro
-                    </h1>
-                    <p class="text-muted mb-0">Construction Project Management System</p>
-                </div>
-                <div class="col-md-4 text-end">
-                    <div class="d-flex justify-content-end align-items-center gap-2">
-                        <a href="users.html" class="btn btn-outline-primary btn-custom">
-                            <i class="fas fa-users me-2"></i>Team
-                        </a>
-                        <button class="btn btn-primary btn-custom" onclick="openCreateModal()">
-                            <i class="fas fa-plus me-2"></i>Create New Job
-                        </button>
-                        <button class="btn btn-outline-secondary btn-custom" onclick="refreshJobs()">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Jobs List -->
-        <div id="jobsContainer" class="row">
-            <div class="col-12 text-center">
-                <p class="mt-3">Loading jobs...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Job Modal -->
-    <div class="modal fade" id="createJobModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus-circle me-2"></i>Create New Job
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" onclick="closeCreateModal()"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createJobForm">
-                        <!-- Job Details Section -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label for="jobName" class="form-label">Job Name *</label>
-                                <input type="text" class="form-control" id="jobName" required>
+    <div class="login-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-4">
+                    <div class="login-card">
+                        <div class="login-header">
+                            <div class="logo">
+                                <i class="fas fa-hard-hat"></i>
                             </div>
-                            <div class="col-md-6">
-                                <label for="jobLocation" class="form-label">Job Location *</label>
-                                <input type="text" class="form-control" id="jobLocation" placeholder="123 Main Street, City, State" required onchange="generateJobNumber()">
-                            </div>
+                            <h1>Smart Job Tracker</h1>
+                            <p>Professional Construction Management</p>
                         </div>
-
-                        <!-- Auto-Generated Job Number -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <label class="form-label">Auto-Generated Job Number</label>
-                                <div id="jobNumberPreview" class="job-number-preview">
-                                    Job number will be generated automatically based on date and location
-                                </div>
-                                <small class="text-muted">Format: YYYY-MM-DD-[First3LettersOfStreet][StreetNumber]-[EstimateNumber]</small>
-                            </div>
-                        </div>
-
-                        <!-- GetHearth Integration -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label for="hearthEstimateNumber" class="form-label">GetHearth Estimate Number</label>
-                                <input type="text" class="form-control" id="hearthEstimateNumber" placeholder="Enter estimate number from GetHearth" onchange="generateJobNumber()">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="startDate" class="form-label">Start Date *</label>
-                                <input type="date" class="form-control" id="startDate" required onchange="generateJobNumber()">
-                            </div>
-                        </div>
-
-                        <!-- Project Details -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <label for="jobDescription" class="form-label">Description</label>
-                                <textarea class="form-control" id="jobDescription" rows="3" placeholder="Brief description of the work to be performed"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label for="budget" class="form-label">Budget</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="budget" step="0.01" min="0">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="targetDate" class="form-label">Target Completion</label>
-                                <input type="date" class="form-control" id="targetDate">
-                            </div>
-                        </div>
-
-                        <!-- Smart Section Questions -->
-                        <h6 class="text-primary mb-3">
-                            <i class="fas fa-lightbulb me-2"></i>Project Planning
-                        </h6>
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <p class="mb-3"><small class="text-muted">Answer these questions to get suggested sections and permits for your project:</small></p>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Project Type:</label>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="projectType" value="residential" id="residential">
-                                            <label class="form-check-label" for="residential">Residential</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="projectType" value="commercial" id="commercial">
-                                            <label class="form-check-label" for="commercial">Commercial</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Work includes:</label>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="needsDemo">
-                                            <label class="form-check-label" for="needsDemo">Demolition work</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="needsElectrical">
-                                            <label class="form-check-label" for="needsElectrical">Electrical work</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="needsPlumbing">
-                                            <label class="form-check-label" for="needsPlumbing">Plumbing work</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="needsStructural">
-                                            <label class="form-check-label" for="needsStructural">Structural changes</label>
-                                        </div>
-                                    </div>
+                        
+                        <div class="login-body">
+                            <div id="loginAlert"></div>
+                            
+                            <!-- Email Login Form -->
+                            <form id="emailLoginForm">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="emailInput" placeholder="name@company.com" required>
+                                    <label for="emailInput"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 </div>
                                 
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateSectionSuggestions()">
-                                    <i class="fas fa-magic me-1"></i>Get Smart Suggestions
+                                <div class="form-floating">
+                                    <input type="password" class="form-control" id="passwordInput" placeholder="Password" required>
+                                    <label for="passwordInput"><i class="fas fa-lock me-2"></i>Password</label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-login">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
                                 </button>
-                                <div id="sectionSuggestions" class="mt-2"></div>
+                            </form>
+                            
+                            <div class="divider">
+                                <span>or</span>
+                            </div>
+                            
+                            <!-- Phone Login Form -->
+                            <form id="phoneLoginForm" style="display: none;">
+                                <div class="form-floating">
+                                    <input type="tel" class="form-control" id="phoneInput" placeholder="(555) 123-4567" required>
+                                    <label for="phoneInput"><i class="fas fa-phone me-2"></i>Phone Number</label>
+                                </div>
+                                
+                                <div class="form-floating">
+                                    <input type="password" class="form-control" id="pinInput" placeholder="PIN" maxlength="4" required>
+                                    <label for="pinInput"><i class="fas fa-key me-2"></i>4-Digit PIN</label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-login">
+                                    <i class="fas fa-mobile-alt me-2"></i>Sign In
+                                </button>
+                            </form>
+                            
+                            <div class="login-method-toggle">
+                                <a href="#" class="toggle-link" id="toggleLoginMethod">
+                                    <i class="fas fa-mobile-alt me-1"></i>Sign in with Phone & PIN
+                                </a>
+                            </div>
+                            
+                            <!-- Company Information Display -->
+                            <div id="companyInfo" class="company-info">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted">Company</small>
+                                        <div class="fw-bold" id="companyName">-</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Client Information -->
-                        <h6 class="text-primary mb-3">
-                            <i class="fas fa-user me-2"></i>Client Information
-                        </h6>
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <label for="clientName" class="form-label">Client Name</label>
-                                <input type="text" class="form-control" id="clientName">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="clientPhone" class="form-label">Client Phone</label>
-                                <input type="tel" class="form-control" id="clientPhone">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="clientEmail" class="form-label">Client Email</label>
-                                <input type="email" class="form-control" id="clientEmail">
-                            </div>
-                        </div>
-                    </form>
+                    </div>
+                    
+                    <div class="feature-highlight">
+                        <h6><i class="fas fa-shield-alt me-2"></i>Secure Multi-Tenant Platform</h6>
+                        <small>Your company data is completely isolated and secure. Only authorized team members can access your projects and information.</small>
+                    </div>
+                    
+                    <div class="footer-text">
+                        <p><i class="fas fa-copyright me-1"></i>2025 Smart Job Tracker. Professional Construction Management Platform.</p>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-custom" onclick="createJob()">
-                        <i class="fas fa-save me-2"></i>Create Job
-                    </button>
-                </div>
-                <div id="createJobStatus"></div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Clean global variables without conflicts
-        let jobsData = [];
-        let activeModal = null;
+        let isEmailLogin = true;
+        let userCompany = null;
 
-        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            loadJobs();
-            // Initialize date field with today's date
-            const today = new Date().toISOString().split('T')[0];
-            const startDateField = document.getElementById('startDate');
-            if (startDateField) {
-                startDateField.value = today;
-            }
-            generateJobNumber();
+            setupEventListeners();
+            checkExistingSession();
         });
 
-        // Smart Job Number Generation
-        function generateJobNumber() {
-            const startDateField = document.getElementById('startDate');
-            const locationField = document.getElementById('jobLocation');
-            const estimateField = document.getElementById('hearthEstimateNumber');
-            const previewElement = document.getElementById('jobNumberPreview');
+        function setupEventListeners() {
+            // Toggle between email and phone login
+            document.getElementById('toggleLoginMethod').addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleLoginMethod();
+            });
 
-            if (!startDateField || !locationField || !previewElement) return;
+            // Email login form
+            document.getElementById('emailLoginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleEmailLogin();
+            });
 
-            const startDate = startDateField.value;
-            const location = locationField.value;
-            const estimateNumber = estimateField ? estimateField.value || '001' : '001';
+            // Phone login form
+            document.getElementById('phoneLoginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handlePhoneLogin();
+            });
 
-            if (!startDate || !location) {
-                previewElement.textContent = 'Please enter start date and location to generate job number';
-                return;
-            }
-
-            try {
-                // Parse date
-                const date = new Date(startDate);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-
-                // Parse location
-                const locationParts = location.trim().split(/[\s,]+/);
-                let streetNumber = '';
-                let streetName = '';
-
-                // Extract street number and name
-                for (let i = 0; i < locationParts.length; i++) {
-                    const part = locationParts[i];
-                    if (/^\d+/.test(part)) {
-                        streetNumber = part.match(/^\d+/)[0];
-                        streetName = locationParts[i + 1] || '';
-                        break;
-                    }
+            // Auto-detect company from email input
+            document.getElementById('emailInput').addEventListener('blur', function() {
+                const email = this.value;
+                if (email && email.includes('@')) {
+                    detectCompanyFromEmail(email);
                 }
+            });
+        }
 
-                // Get first 3 letters of street name
-                const streetCode = streetName.substring(0, 3).toUpperCase().padEnd(3, 'X');
+        function toggleLoginMethod() {
+            const emailForm = document.getElementById('emailLoginForm');
+            const phoneForm = document.getElementById('phoneLoginForm');
+            const toggleLink = document.getElementById('toggleLoginMethod');
 
-                // Generate job number
-                const jobNumber = `${year}-${month}-${day}-${streetCode}${streetNumber}-${estimateNumber}`;
-                
-                previewElement.innerHTML = `<i class="fas fa-check-circle text-success me-2"></i>${jobNumber}`;
-
-            } catch (error) {
-                previewElement.textContent = 'Invalid date or location format';
+            if (isEmailLogin) {
+                emailForm.style.display = 'none';
+                phoneForm.style.display = 'block';
+                toggleLink.innerHTML = '<i class="fas fa-envelope me-1"></i>Sign in with Email & Password';
+                isEmailLogin = false;
+            } else {
+                emailForm.style.display = 'block';
+                phoneForm.style.display = 'none';
+                toggleLink.innerHTML = '<i class="fas fa-mobile-alt me-1"></i>Sign in with Phone & PIN';
+                isEmailLogin = true;
             }
         }
 
-        function openCreateModal() {
-            const modalElement = document.getElementById('createJobModal');
-            if (modalElement) {
-                activeModal = new bootstrap.Modal(modalElement);
-                activeModal.show();
-                generateJobNumber();
-                // Update page title when creating job
-                document.title = 'Create New Job - Job Tracker Pro';
-            }
-        }
-
-        function closeCreateModal() {
-            if (activeModal) {
-                activeModal.hide();
-                activeModal = null;
-            }
-            const form = document.getElementById('createJobForm');
-            if (form) form.reset();
-            const status = document.getElementById('createJobStatus');
-            if (status) status.innerHTML = '';
-            
-            // Reset date to today
-            const today = new Date().toISOString().split('T')[0];
-            const startDateField = document.getElementById('startDate');
-            if (startDateField) {
-                startDateField.value = today;
-            }
-            
-            // Always reset form to create mode
-            resetCreateForm();
-            generateJobNumber();
-            
-            // Reset page title back to main dashboard
-            document.title = 'Job Tracker Pro - Construction Management';
-        }
-
-        async function createJob() {
-            const form = document.getElementById('createJobForm');
-            const status = document.getElementById('createJobStatus');
-            
-            if (!form || !status) return;
-            
-            // Validate required fields
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            status.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Creating job...</div>';
-
-            // Get generated job number
-            const jobNumberElement = document.getElementById('jobNumberPreview');
-            const jobNumber = jobNumberElement && jobNumberElement.textContent.includes('✓') ? 
-                jobNumberElement.textContent.replace(/.*✓\s*/, '') : 
-                `TEMP-${Date.now()}`;
-
-            const jobData = {
-                name: document.getElementById('jobName').value,
-                jobNumber: jobNumber,
-                location: document.getElementById('jobLocation').value,
-                description: document.getElementById('jobDescription').value,
-                startDate: document.getElementById('startDate').value,
-                targetCompletionDate: document.getElementById('targetDate').value || null,
-                budget: parseFloat(document.getElementById('budget').value) || 0,
-                clientName: document.getElementById('clientName').value,
-                clientPhone: document.getElementById('clientPhone').value,
-                clientEmail: document.getElementById('clientEmail').value,
-                hearthEstimateNumber: document.getElementById('hearthEstimateNumber').value
-            };
-
+        async function detectCompanyFromEmail(email) {
             try {
-                const response = await fetch('/api/jobs', {
+                const response = await fetch('/api/auth/detect-company', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(jobData)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.company) {
+                        userCompany = data.company;
+                        showCompanyInfo(data.company);
+                    }
                 }
-
-                const result = await response.json();
-                
-                status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job created successfully!</div>';
-                
-                // Update page title to show success
-                document.title = 'Job Created Successfully - Job Tracker Pro';
-                
-                setTimeout(() => {
-                    closeCreateModal();
-                    loadJobs();
-                }, 1500);
-
             } catch (error) {
-                console.error('Error creating job:', error);
-                status.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error creating job. Please try again.</div>';
+                console.log('Company detection not available yet');
             }
         }
 
-        async function loadJobs() {
-            const container = document.getElementById('jobsContainer');
-            if (!container) return;
-            
-            container.innerHTML = '<div class="col-12 text-center"><p class="mt-3">Loading jobs...</p></div>';
+        function showCompanyInfo(company) {
+            document.getElementById('companyName').textContent = company.companyName;
+            document.getElementById('companyInfo').style.display = 'block';
+        }
+
+        async function handleEmailLogin() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            showLoading(true);
+            clearAlert();
 
             try {
-                const response = await fetch('/api/jobs');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
                 const data = await response.json();
-                jobsData = data.$values || data || [];
-                renderJobs();
 
+                if (response.ok) {
+                    // Store authentication info
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userInfo', JSON.stringify(data.user));
+                    localStorage.setItem('companyInfo', JSON.stringify(data.company));
+
+                    showAlert('success', 'Sign in successful! Redirecting...');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1000);
+                } else {
+                    throw new Error(data.message || 'Sign in failed');
+                }
             } catch (error) {
-                console.error('Error loading jobs:', error);
-                container.innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Error loading jobs. Please check your connection and try again.
-                        </div>
-                    </div>
-                `;
+                showAlert('danger', error.message);
+            } finally {
+                showLoading(false);
             }
         }
 
-        function renderJobs() {
-            const container = document.getElementById('jobsContainer');
-            if (!container) return;
-            
-            if (!jobsData || jobsData.length === 0) {
-                container.innerHTML = `
-                    <div class="col-12 text-center">
-                        <div class="job-card">
-                            <i class="fas fa-hard-hat fa-3x text-muted mb-3"></i>
-                            <h4>No Jobs Found</h4>
-                            <p class="text-muted">Start by creating your first construction job!</p>
-                            <button class="btn btn-primary btn-custom" onclick="openCreateModal()">
-                                <i class="fas fa-plus me-2"></i>Create First Job
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
+        async function handlePhoneLogin() {
+            const phoneNumber = document.getElementById('phoneInput').value;
+            const pin = document.getElementById('pinInput').value;
+
+            showLoading(true);
+            clearAlert();
+
+            try {
+                const response = await fetch('/api/auth/login-phone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber, pin })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store authentication info
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userInfo', JSON.stringify(data.user));
+                    localStorage.setItem('companyInfo', JSON.stringify(data.company));
+
+                    showAlert('success', 'Sign in successful! Redirecting...');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1000);
+                } else {
+                    throw new Error(data.message || 'Sign in failed');
+                }
+            } catch (error) {
+                showAlert('danger', error.message);
+            } finally {
+                showLoading(false);
             }
-
-            let html = '';
-            jobsData.forEach(job => {
-                const statusColor = getStatusColor(job.status);
-                const budget = job.budget ? `$${job.budget.toLocaleString()}` : 'Not set';
-                
-                html += `
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="job-card" onclick="viewJobDetails(${job.id})">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="mb-0">${job.name}</h5>
-                                <span class="badge bg-${statusColor}">${job.status}</span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <small class="text-muted">Job #</small>
-                                <div class="fw-bold">${job.jobNumber}</div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
-                                <small>${job.location}</small>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <i class="fas fa-calendar text-muted me-2"></i>
-                                <small>Started: ${new Date(job.startDate).toLocaleDateString()}</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <i class="fas fa-dollar-sign text-muted me-2"></i>
-                                <small>Budget: ${budget}</small>
-                            </div>
-                            
-                            ${job.clientName ? `
-                                <div class="border-top pt-2">
-                                    <small class="text-muted">Client: ${job.clientName}</small>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
         }
 
-        function getStatusColor(status) {
-            const statusColors = {
-                'NotStarted': 'secondary',
-                'InProgress': 'light-green',
-                'OnHold': 'warning',
-                'Completed': 'primary',
-                'Cancelled': 'danger'
-            };
-            return statusColors[status] || 'secondary';
-        }
-
-        function refreshJobs() {
-            // Update page title during refresh
-            document.title = 'Refreshing Jobs - Job Tracker Pro';
-            loadJobs().then(() => {
-                // Update title with job count after loading
-                const jobCount = jobsData ? jobsData.length : 0;
-                document.title = `Job Tracker Pro - ${jobCount} Jobs`;
-            });
-        }
-
-        function viewJobDetails(jobId) {
-            // Update page title
-            document.title = 'Loading Job Details - Job Tracker Pro';
-            
-            // Find the job in our data
-            const job = jobsData.find(j => j.id === jobId);
-            if (!job) {
-                alert('Job not found');
-                return;
+        function checkExistingSession() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                // User is already logged in, redirect to dashboard
+                window.location.href = '/dashboard.html';
             }
-            
-            // Update page title with job name
-            document.title = `${job.name} - Job Details`;
-            
-            // Create and show job details modal
-            const modalHtml = `
-                <div class="modal fade" id="jobDetailsModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Job Details: ${job.name}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Job Information</h6>
-                                        <p><strong>Job Number:</strong> ${job.jobNumber}</p>
-                                        <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(job.status)}">${job.status}</span></p>
-                                        <p><strong>Location:</strong> ${job.location}</p>
-                                        <p><strong>Start Date:</strong> ${new Date(job.startDate).toLocaleDateString()}</p>
-                                        ${job.targetCompletionDate ? `<p><strong>Target Completion:</strong> ${new Date(job.targetCompletionDate).toLocaleDateString()}</p>` : ''}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Client Information</h6>
-                                        ${job.clientName ? `<p><strong>Client:</strong> ${job.clientName}</p>` : '<p>No client assigned</p>'}
-                                        ${job.clientPhone ? `<p><strong>Phone:</strong> ${job.clientPhone}</p>` : ''}
-                                        ${job.clientEmail ? `<p><strong>Email:</strong> ${job.clientEmail}</p>` : ''}
-                                        <h6>Budget</h6>
-                                        <p><strong>Budget:</strong> ${job.budget ? `$${job.budget.toLocaleString()}` : 'Not set'}</p>
-                                    </div>
-                                </div>
-                                ${job.description ? `
-                                    <div class="mt-3">
-                                        <h6>Description</h6>
-                                        <p>${job.description}</p>
-                                    </div>
-                                ` : ''}
-                                ${job.notes ? `
-                                    <div class="mt-3">
-                                        <h6>Notes</h6>
-                                        <p>${job.notes}</p>
-                                    </div>
-                                ` : ''}
-                                <div class="mt-3">
-                                    <h6>Job Sections</h6>
-                                    <div id="jobSections${job.id}">
-                                        <p class="text-muted">Loading sections...</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-success" onclick="openJobManagement(${job.id})">Manage Job & Sections</button>
-                                <button type="button" class="btn btn-primary" onclick="quickEditJob(${job.id})">Quick Edit</button>
-                            </div>
-                        </div>
-                    </div>
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.getElementById('loginAlert');
+            alertDiv.innerHTML = `
+                <div class="alert alert-${type} alert-custom alert-dismissible fade show">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
-            // Remove existing modal if any
-            const existingModal = document.getElementById('jobDetailsModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
-            modal.show();
-            
-            // Clean up when modal is closed
-            document.getElementById('jobDetailsModal').addEventListener('hidden.bs.modal', function() {
-                document.title = `Job Tracker Pro - ${jobsData.length} Jobs`;
-                this.remove();
-            });
         }
 
-        async function editJob(jobId) {
-            // Store the job ID for after modal closes
-            window.pendingEditJobId = jobId;
-            
-            // Close the details modal and wait for it to complete
-            const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
-            if (detailsModal) {
-                // Add event listener for when modal is fully hidden
-                document.getElementById('jobDetailsModal').addEventListener('hidden.bs.modal', function handleModalHidden() {
-                    // Remove the event listener to avoid multiple calls
-                    this.removeEventListener('hidden.bs.modal', handleModalHidden);
-                    // Now open the edit modal
-                    openEditModalForJob(window.pendingEditJobId);
-                });
-                detailsModal.hide();
-                return; // Exit here, let the event handler continue
-            }
-            
-            // If no details modal was open, proceed directly
-            openEditModalForJob(jobId);
+        function clearAlert() {
+            document.getElementById('loginAlert').innerHTML = '';
         }
 
-        async function openEditModalForJob(jobId) {
-            // Find the job data, or fetch it if not available
-            let job = jobsData ? jobsData.find(j => j.id === jobId) : null;
-            if (!job) {
-                try {
-                    const response = await fetch(`/api/jobs/${jobId}`);
-                    if (response.ok) {
-                        job = await response.json();
+        function showLoading(show) {
+            const submitButtons = document.querySelectorAll('.btn-login');
+            submitButtons.forEach(btn => {
+                if (show) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+                } else {
+                    btn.disabled = false;
+                    if (btn.closest('#emailLoginForm')) {
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Sign In';
                     } else {
-                        alert('Could not load job details for editing');
-                        return;
+                        btn.innerHTML = '<i class="fas fa-mobile-alt me-2"></i>Sign In';
                     }
-                } catch (error) {
-                    console.error('Error fetching job:', error);
-                    alert('Error loading job details for editing');
-                    return;
-                }
-            }
-            
-            // Update page title
-            document.title = `Editing ${job.name} - Job Tracker Pro`;
-            
-            // Populate the create form with existing job data
-            document.getElementById('jobName').value = job.name || '';
-            document.getElementById('location').value = job.location || '';
-            document.getElementById('startDate').value = job.startDate ? job.startDate.split('T')[0] : '';
-            document.getElementById('description').value = job.description || '';
-            document.getElementById('status').value = job.status || 'NotStarted';
-            document.getElementById('budget').value = job.budget || '';
-            document.getElementById('clientName').value = job.clientName || '';
-            document.getElementById('clientPhone').value = job.clientPhone || '';
-            document.getElementById('clientEmail').value = job.clientEmail || '';
-            document.getElementById('notes').value = job.notes || '';
-            
-            // Set job number as read-only since we're editing
-            document.getElementById('jobNumber').value = job.jobNumber;
-            document.getElementById('jobNumber').readOnly = true;
-            
-            // Change the form title and button
-            document.querySelector('#createJobModal .modal-title').textContent = `Edit Job: ${job.name}`;
-            document.querySelector('#createJobModal .btn-primary').textContent = 'Update Job';
-            document.querySelector('#createJobModal .btn-primary').onclick = () => updateJob(jobId);
-            
-            // Show the modal
-            const modal = new bootstrap.Modal(document.getElementById('createJobModal'));
-            modal.show();
-        }
-
-        async function updateJob(jobId) {
-            const form = document.getElementById('createJobForm');
-            const status = document.getElementById('createJobStatus');
-            
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const updatedJob = {
-                id: jobId,
-                name: document.getElementById('jobName').value,
-                location: document.getElementById('location').value,
-                startDate: document.getElementById('startDate').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('status').value,
-                budget: document.getElementById('budget').value ? parseFloat(document.getElementById('budget').value) : null,
-                clientName: document.getElementById('clientName').value,
-                clientPhone: document.getElementById('clientPhone').value,
-                clientEmail: document.getElementById('clientEmail').value,
-                notes: document.getElementById('notes').value,
-                jobNumber: document.getElementById('jobNumber').value
-            };
-
-            try {
-                const response = await fetch(`/api/jobs/${jobId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updatedJob)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                status.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Job updated successfully!</div>';
-                
-                // Update page title
-                document.title = 'Job Updated Successfully - Job Tracker Pro';
-                
-                setTimeout(() => {
-                    closeCreateModal();
-                    resetCreateForm();
-                    loadJobs();
-                }, 1500);
-
-            } catch (error) {
-                console.error('Error updating job:', error);
-                status.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error updating job. Please try again.</div>';
-            }
-        }
-
-        function resetCreateForm() {
-            // Reset form title and button for creating new jobs
-            document.querySelector('#createJobModal .modal-title').textContent = 'Create New Job';
-            document.querySelector('#createJobModal .btn-primary').textContent = 'Create Job';
-            document.querySelector('#createJobModal .btn-primary').onclick = createJob;
-            
-            // Make job number editable again
-            document.getElementById('jobNumber').readOnly = false;
-            
-            // Generate new job number for next create
-            generateJobNumber();
-        }
-
-        function quickEditJob(jobId) {
-            // Find the job data
-            const job = jobsData ? jobsData.find(j => j.id === jobId) : null;
-            if (!job) {
-                alert('Job data not available for editing');
-                return;
-            }
-            
-            // Close the details modal first
-            const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
-            if (detailsModal) {
-                detailsModal.hide();
-            }
-            
-            // Wait a moment then show edit form
-            setTimeout(() => {
-                // Update page title
-                document.title = `Quick Edit: ${job.name} - Job Tracker Pro`;
-                
-                // Populate the create form with existing job data
-                document.getElementById('jobName').value = job.name || '';
-                document.getElementById('location').value = job.location || '';
-                document.getElementById('startDate').value = job.startDate ? job.startDate.split('T')[0] : '';
-                document.getElementById('description').value = job.description || '';
-                document.getElementById('status').value = job.status || 'NotStarted';
-                document.getElementById('budget').value = job.budget || '';
-                document.getElementById('clientName').value = job.clientName || '';
-                document.getElementById('clientPhone').value = job.clientPhone || '';
-                document.getElementById('clientEmail').value = job.clientEmail || '';
-                document.getElementById('notes').value = job.notes || '';
-                
-                // Set job number as read-only
-                document.getElementById('jobNumber').value = job.jobNumber;
-                document.getElementById('jobNumber').readOnly = true;
-                
-                // Change the form title and button
-                document.querySelector('#createJobModal .modal-title').textContent = `Quick Edit: ${job.name}`;
-                document.querySelector('#createJobModal .btn-primary').textContent = 'Update Job';
-                document.querySelector('#createJobModal .btn-primary').onclick = () => updateJob(jobId);
-                
-                // Show the modal
-                const modal = new bootstrap.Modal(document.getElementById('createJobModal'));
-                modal.show();
-            }, 500);
-        }
-
-        function openJobManagement(jobId) {
-            // Close the details modal
-            const detailsModal = bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal'));
-            if (detailsModal) {
-                detailsModal.hide();
-            }
-            
-            // Update page title
-            document.title = 'Job Management - Job Tracker Pro';
-            
-            // Show the job management interface
-            showJobManagementPage(jobId);
-        }
-
-        function showJobManagementPage(jobId) {
-            const job = jobsData ? jobsData.find(j => j.id === jobId) : null;
-            if (!job) {
-                alert('Job data not available');
-                return;
-            }
-            
-            const managementHtml = `
-                <div class="job-management-page">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2>${job.name} - Job Management</h2>
-                        <button class="btn btn-secondary" onclick="returnToDashboard()">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                        </button>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Job Information</h5>
-                                </div>
-                                <div class="card-body">
-                                    <p><strong>Job #:</strong> ${job.jobNumber}</p>
-                                    <p><strong>Location:</strong> ${job.location}</p>
-                                    <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(job.status)}">${job.status}</span></p>
-                                    <p><strong>Client:</strong> ${job.clientName || 'Not assigned'}</p>
-                                    <p><strong>Budget:</strong> ${job.budget ? '$' + job.budget.toLocaleString() : 'Not set'}</p>
-                                    <button class="btn btn-primary btn-sm mt-2" onclick="quickEditJob(${job.id})">
-                                        <i class="fas fa-edit me-1"></i>Edit Job Details
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5>Job Sections & Subcontractors</h5>
-                                    <button class="btn btn-success btn-sm" onclick="addJobSection(${job.id})">
-                                        <i class="fas fa-plus me-1"></i>Add Section
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <div id="sectionsContainer">
-                                        <div class="alert alert-info">
-                                            <h6>Available Construction Sections:</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <ul class="list-unstyled">
-                                                        <li><i class="fas fa-hammer text-primary me-2"></i>Demolition</li>
-                                                        <li><i class="fas fa-cube text-primary me-2"></i>Foundation</li>
-                                                        <li><i class="fas fa-home text-primary me-2"></i>Framing</li>
-                                                        <li><i class="fas fa-bolt text-primary me-2"></i>Electrical</li>
-                                                        <li><i class="fas fa-tint text-primary me-2"></i>Plumbing</li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <ul class="list-unstyled">
-                                                        <li><i class="fas fa-snowflake text-primary me-2"></i>HVAC</li>
-                                                        <li><i class="fas fa-layer-group text-primary me-2"></i>Insulation</li>
-                                                        <li><i class="fas fa-paint-brush text-primary me-2"></i>Drywall & Paint</li>
-                                                        <li><i class="fas fa-th-large text-primary me-2"></i>Flooring</li>
-                                                        <li><i class="fas fa-check-circle text-primary me-2"></i>Final Inspection</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                            <p class="mb-0 mt-2"><strong>Click "Add Section" to select which sections apply to this job and assign subcontractors.</strong></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Replace the main container content
-            const container = document.querySelector('.container.main-container');
-            container.innerHTML = managementHtml;
-            
-            // Load existing sections for this job
-            loadJobSections(job.id);
-        }
-
-        async function loadJobSections(jobId) {
-            try {
-                const response = await fetch(`/api/jobsections/job/${jobId}`);
-                if (response.ok) {
-                    const sections = await response.json();
-                    displayExistingSections(jobId, sections);
-                } else {
-                    console.error('Failed to load sections');
-                }
-            } catch (error) {
-                console.error('Error loading sections:', error);
-            }
-        }
-
-        function displayExistingSections(jobId, sections) {
-            const sectionsContainer = document.getElementById('sectionsContainer');
-            if (!sectionsContainer) return;
-            
-            if (sections.length === 0) {
-                sectionsContainer.innerHTML = `
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        No sections added yet. Click "Add Section" to get started.
-                    </div>
-                `;
-                return;
-            }
-            
-            // Clear the placeholder content and show actual sections
-            sectionsContainer.innerHTML = '';
-            
-            sections.forEach(section => {
-                const sectionName = getSectionNameFromType(section.sectionType);
-                const statusName = getStatusNameFromNumber(section.status);
-                
-                const sectionCard = document.createElement('div');
-                sectionCard.className = 'card mb-3';
-                sectionCard.innerHTML = `
-                    <div class="card-body">
-                        <!-- Header Section -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="d-flex align-items-center">
-                                <h6 class="card-title mb-0 me-3">${getSectionIcon(sectionName)} ${sectionName}</h6>
-                                <span class="badge bg-${getStatusColor(statusName)}">${statusName}</span>
-                            </div>
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editSectionModal(${section.id})" title="Edit Section">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSectionConfirm(${section.id})" title="Remove Section">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Section Details -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <small class="text-muted">Assignment:</small><br>
-                                <span>${section.isSubcontracted ? '👷 Subcontractor' : '🏠 Internal Team'}</span>
-                            </div>
-                            ${section.notes ? `
-                            <div class="col-md-6">
-                                <small class="text-muted">Notes:</small><br>
-                                <span class="text-muted">${section.notes}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- Inspection Status -->
-                        ${getScheduledInspections(section)}
-
-                        <!-- Inspection Controls -->
-                        <div class="border-top pt-3">
-                            ${getInspectionControls({sectionType: sectionName, id: section.id})}
-                        </div>
-                    </div>
-                `;
-                sectionsContainer.appendChild(sectionCard);
-            });
-        }
-
-        function getSectionNameFromType(sectionType) {
-            const sectionMap = {
-                1: 'Permits',
-                2: 'Demolition', 
-                3: 'Foundation',
-                4: 'Framing',
-                5: 'Electrical',
-                6: 'Plumbing',
-                7: 'HVAC',
-                8: 'Insulation',
-                9: 'Drywall',
-                10: 'Flooring',
-                11: 'FinalInspection'
-            };
-            return sectionMap[sectionType] || 'Unknown';
-        }
-
-        function getStatusNameFromNumber(statusNumber) {
-            const statusMap = {
-                1: 'Not Started',
-                2: 'In Progress', 
-                3: 'Completed',
-                4: 'On Hold'
-            };
-            return statusMap[statusNumber] || 'Unknown';
-        }
-
-        function showSuccessMessage(message) {
-            const alertHtml = `
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            
-            // Insert at top of sections container
-            const sectionsContainer = document.getElementById('sectionsContainer');
-            if (sectionsContainer) {
-                sectionsContainer.insertAdjacentHTML('afterbegin', alertHtml);
-                
-                // Auto-remove after 5 seconds
-                setTimeout(() => {
-                    const alert = sectionsContainer.querySelector('.alert-success');
-                    if (alert) alert.remove();
-                }, 5000);
-            }
-        }
-
-        function showErrorMessage(message) {
-            const alertHtml = `
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            
-            // Insert at top of sections container
-            const sectionsContainer = document.getElementById('sectionsContainer');
-            if (sectionsContainer) {
-                sectionsContainer.insertAdjacentHTML('afterbegin', alertHtml);
-                
-                // Auto-remove after 8 seconds
-                setTimeout(() => {
-                    const alert = sectionsContainer.querySelector('.alert-danger');
-                    if (alert) alert.remove();
-                }, 8000);
-            }
-        }
-
-        function returnToDashboard() {
-            document.title = 'Job Tracker Pro - Construction Management';
-            location.reload(); // Simple way to return to dashboard
-        }
-
-        function addJobSection(jobId) {
-            const sectionModal = `
-                <div class="modal fade" id="addSectionModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add Construction Section</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Select Section Type:</h6>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Permits" id="permits">
-                                            <label class="form-check-label" for="permits">
-                                                <i class="fas fa-file-alt text-success me-2"></i>Permits & Approvals
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Demolition" id="demolition">
-                                            <label class="form-check-label" for="demolition">
-                                                <i class="fas fa-hammer text-warning me-2"></i>Demolition
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Foundation" id="foundation">
-                                            <label class="form-check-label" for="foundation">
-                                                <i class="fas fa-cube text-secondary me-2"></i>Foundation
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Framing" id="framing">
-                                            <label class="form-check-label" for="framing">
-                                                <i class="fas fa-home text-info me-2"></i>Framing
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Electrical" id="electrical">
-                                            <label class="form-check-label" for="electrical">
-                                                <i class="fas fa-bolt text-warning me-2"></i>Electrical
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Plumbing" id="plumbing">
-                                            <label class="form-check-label" for="plumbing">
-                                                <i class="fas fa-tint text-primary me-2"></i>Plumbing
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="HVAC" id="hvac">
-                                            <label class="form-check-label" for="hvac">
-                                                <i class="fas fa-snowflake text-info me-2"></i>HVAC
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Insulation" id="insulation">
-                                            <label class="form-check-label" for="insulation">
-                                                <i class="fas fa-layer-group text-success me-2"></i>Insulation
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Drywall" id="drywall">
-                                            <label class="form-check-label" for="drywall">
-                                                <i class="fas fa-paint-brush text-primary me-2"></i>Drywall & Paint
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="Flooring" id="flooring">
-                                            <label class="form-check-label" for="flooring">
-                                                <i class="fas fa-th-large text-dark me-2"></i>Flooring
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="sectionType" value="FinalInspection" id="final">
-                                            <label class="form-check-label" for="final">
-                                                <i class="fas fa-check-circle text-success me-2"></i>Final Inspection
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <hr>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="sectionStatus" class="form-label">Initial Status:</label>
-                                        <select class="form-select" id="sectionStatus">
-                                            <option value="Not Started">Not Started</option>
-                                            <option value="In Progress">In Progress</option>
-                                            <option value="On Hold">On Hold</option>
-                                            <option value="Completed">Completed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="assignmentType" class="form-label">Assignment:</label>
-                                        <select class="form-select" id="assignmentType">
-                                            <option value="internal">Internal Team</option>
-                                            <option value="subcontractor">Subcontractor</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-3" id="subcontractorDetails" style="display: none;">
-                                    <label for="subcontractorName" class="form-label">Subcontractor Name:</label>
-                                    <input type="text" class="form-control" id="subcontractorName" placeholder="Enter subcontractor name">
-                                    <small class="text-muted">You can add full subcontractor details later</small>
-                                </div>
-                                
-                                <div class="mt-3">
-                                    <label for="sectionNotes" class="form-label">Notes (Optional):</label>
-                                    <textarea class="form-control" id="sectionNotes" rows="2" placeholder="Any special requirements or notes..."></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="saveSectionToJob(${jobId})">Add Section</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if any
-            const existingModal = document.getElementById('addSectionModal');
-            if (existingModal) existingModal.remove();
-            
-            // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', sectionModal);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('addSectionModal'));
-            modal.show();
-            
-            // Add event listener for assignment type change
-            document.getElementById('assignmentType').addEventListener('change', function() {
-                const subDetails = document.getElementById('subcontractorDetails');
-                if (this.value === 'subcontractor') {
-                    subDetails.style.display = 'block';
-                } else {
-                    subDetails.style.display = 'none';
                 }
             });
-        }
-
-        async function saveSectionToJob(jobId) {
-            const selectedSection = document.querySelector('input[name="sectionType"]:checked');
-            if (!selectedSection) {
-                alert('Please select a section type');
-                return;
-            }
-            
-            const sectionData = {
-                jobId: parseInt(jobId),
-                sectionType: getSectionTypeNumber(selectedSection.value),
-                status: getStatusNumber(document.getElementById('sectionStatus').value),
-                isSubcontracted: document.getElementById('assignmentType').value === 'subcontractor',
-                notes: document.getElementById('sectionNotes').value || '',
-                description: `${selectedSection.value} work for job`
-            };
-            
-            try {
-                // Save to database via API
-                const response = await fetch('/api/jobsections', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(sectionData)
-                });
-                
-                if (response.ok) {
-                    const savedSection = await response.json();
-                    
-                    // Show success message in the app
-                    showSuccessMessage('Section saved successfully!');
-                    
-                    // Reload the sections to show the new one
-                    await loadJobSections(jobId);
-                } else {
-                    throw new Error('Failed to save section');
-                }
-            } catch (error) {
-                console.error('Error saving section:', error);
-                showErrorMessage('Error saving section. Please try again.');
-                return;
-            }
-            
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addSectionModal'));
-            modal.hide();
-            
-            // Remove modal from DOM
-            setTimeout(() => {
-                document.getElementById('addSectionModal').remove();
-            }, 300);
-        }
-
-        function addSectionToDisplay(jobId, sectionData) {
-            const sectionsContainer = document.getElementById('sectionsContainer');
-            
-            // Replace the info alert with sections list if this is the first section
-            const infoAlert = sectionsContainer.querySelector('.alert-info');
-            if (infoAlert) {
-                infoAlert.remove();
-            }
-            
-            // Create section card
-            const sectionCard = document.createElement('div');
-            sectionCard.className = 'card mb-3';
-            sectionCard.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-title">${getSectionIcon(sectionData.sectionType)} ${sectionData.sectionType}</h6>
-                            <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${getStatusColor(sectionData.status)}">${sectionData.status}</span></p>
-                            <p class="mb-1"><strong>Assignment:</strong> ${sectionData.assignmentType === 'subcontractor' ? 'Subcontractor' : 'Internal Team'}</p>
-                            ${sectionData.subcontractorName ? `<p class="mb-1"><strong>Subcontractor:</strong> ${sectionData.subcontractorName}</p>` : ''}
-                            ${sectionData.notes ? `<p class="mb-0 text-muted">${sectionData.notes}</p>` : ''}
-                        </div>
-                        <div>
-                            ${getInspectionControls(sectionData)}
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editSection(this)">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="removeSection(this)">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            sectionsContainer.appendChild(sectionCard);
-        }
-
-        function getSectionIcon(sectionType) {
-            const icons = {
-                'Permits': '<i class="fas fa-file-alt text-success"></i>',
-                'Demolition': '<i class="fas fa-hammer text-warning"></i>',
-                'Foundation': '<i class="fas fa-cube text-secondary"></i>',
-                'Framing': '<i class="fas fa-home text-info"></i>',
-                'Electrical': '<i class="fas fa-bolt text-warning"></i>',
-                'Plumbing': '<i class="fas fa-tint text-primary"></i>',
-                'HVAC': '<i class="fas fa-snowflake text-info"></i>',
-                'Insulation': '<i class="fas fa-layer-group text-success"></i>',
-                'Drywall': '<i class="fas fa-paint-brush text-primary"></i>',
-                'Flooring': '<i class="fas fa-th-large text-dark"></i>',
-                'FinalInspection': '<i class="fas fa-check-circle text-success"></i>'
-            };
-            return icons[sectionType] || '<i class="fas fa-cog"></i>';
-        }
-
-        async function editSectionModal(sectionId) {
-            try {
-                // Get current section data
-                const response = await fetch(`/api/jobsections/${sectionId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to load section');
-                }
-                
-                const section = await response.json();
-                
-                // Create edit modal
-                const editModal = `
-                    <div class="modal fade" id="editSectionModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Edit Section</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Section Status</label>
-                                        <select class="form-select" id="editStatus">
-                                            <option value="1" ${section.status === 1 ? 'selected' : ''}>Not Started</option>
-                                            <option value="2" ${section.status === 2 ? 'selected' : ''}>In Progress</option>
-                                            <option value="3" ${section.status === 3 ? 'selected' : ''}>Completed</option>
-                                            <option value="4" ${section.status === 4 ? 'selected' : ''}>On Hold</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Notes</label>
-                                        <textarea class="form-control" id="editNotes" rows="3">${section.notes || ''}</textarea>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" onclick="saveEditedSection(${sectionId})">Save Changes</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Remove existing modal if present
-                const existingModal = document.getElementById('editSectionModal');
-                if (existingModal) existingModal.remove();
-                
-                // Add modal to page and show
-                document.body.insertAdjacentHTML('beforeend', editModal);
-                const modal = new bootstrap.Modal(document.getElementById('editSectionModal'));
-                modal.show();
-                
-            } catch (error) {
-                console.error('Error loading section for edit:', error);
-                showErrorMessage('Failed to load section details. Please try again.');
-            }
-        }
-
-        async function saveEditedSection(sectionId) {
-            try {
-                const status = parseInt(document.getElementById('editStatus').value);
-                const notes = document.getElementById('editNotes').value;
-                
-                const updateData = {
-                    status: status,
-                    notes: notes
-                };
-                
-                const response = await fetch(`/api/jobsections/${sectionId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-                
-                if (response.ok) {
-                    showSuccessMessage('Section updated successfully!');
-                    
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editSectionModal'));
-                    modal.hide();
-                    
-                    // Refresh sections to show updates
-                    const jobId = getCurrentJobIdFromContext();
-                    if (jobId) {
-                        setTimeout(() => loadJobSections(jobId), 500);
-                    }
-                } else {
-                    throw new Error('Failed to update section');
-                }
-                
-            } catch (error) {
-                console.error('Error updating section:', error);
-                showErrorMessage('Failed to update section. Please try again.');
-            }
-        }
-
-        async function deleteSectionConfirm(sectionId) {
-            // Use custom modal instead of browser confirm to avoid embedded messages
-            const confirmModal = `
-                <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Confirm Section Removal</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Are you sure you want to remove this section? This action cannot be undone.</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-danger" onclick="executeDeleteSection(${sectionId})">Remove Section</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if present
-            const existingModal = document.getElementById('confirmDeleteModal');
-            if (existingModal) existingModal.remove();
-            
-            // Add modal to page and show
-            document.body.insertAdjacentHTML('beforeend', confirmModal);
-            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-            modal.show();
-        }
-
-        async function executeDeleteSection(sectionId) {
-            try {
-                const response = await fetch(`/api/jobsections/${sectionId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    let result = {};
-                    try {
-                        result = await response.json();
-                    } catch (jsonError) {
-                        console.log('Response was successful but not JSON format');
-                    }
-                    
-                    // Close confirmation modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
-                    if (modal) {
-                        modal.hide();
-                        // Remove modal from DOM after hiding
-                        setTimeout(() => {
-                            const modalElement = document.getElementById('confirmDeleteModal');
-                            if (modalElement) modalElement.remove();
-                        }, 300);
-                    }
-                    
-                    // Show success message with archival information
-                    const archiveMessage = result.archivedAs 
-                        ? `Section archived successfully! Original: ${result.originalJobNumber} → Archive: ${result.archivedAs}`
-                        : 'Section archived successfully!';
-                    showSuccessMessage(archiveMessage);
-                    
-                    // Stay on current job page after archival - prevent redirect to main page
-                    setTimeout(() => {
-                        // Try multiple ways to stay on the current job page
-                        const jobId = window.currentJobId || getCurrentJobIdFromContext();
-                        const currentHash = window.location.hash;
-                        
-                        if (jobId && currentHash.includes('job-')) {
-                            // We're viewing a specific job, reload just the sections
-                            loadJobSections(jobId);
-                        } else if (currentHash) {
-                            // Stay on current view by reloading with the same hash
-                            window.location.hash = currentHash;
-                            window.location.reload();
-                        } else {
-                            // Last resort: reload current page
-                            window.location.reload();
-                        }
-                    }, 800);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to archive section');
-                }
-                
-            } catch (error) {
-                console.error('Error removing section:', error);
-                showErrorMessage('Failed to remove section: ' + error.message);
-                
-                // Even if there's an error in response handling, try to refresh
-                // since the database operation might have succeeded
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            }
-        }
-
-        function getInspectionControls(section) {
-            const sectionType = section.sectionType || section;
-            const sectionsRequiringInspection = ['Framing', 'Electrical', 'Plumbing', 'Insulation'];
-            
-            if (!sectionsRequiringInspection.includes(sectionType)) {
-                return '';
-            }
-            
-            // Determine which inspections are needed
-            let inspectionTypes = [];
-            let inspectionDescription = '';
-            
-            if (sectionType === 'Framing') {
-                inspectionTypes = ['Framing Rough-in'];
-                inspectionDescription = 'Required before covering framing. Includes fire blocking verification.';
-            } else if (sectionType === 'Electrical') {
-                inspectionTypes = ['Electrical Rough-in'];
-                inspectionDescription = 'Required before insulation/drywall. Verify all rough wiring and fire blocking of penetrations.';
-            } else if (sectionType === 'Plumbing') {
-                inspectionTypes = ['Plumbing Rough-in'];
-                inspectionDescription = 'Required before covering pipes. Verify rough plumbing and fire blocking of floor penetrations.';
-            } else if (sectionType === 'Insulation') {
-                inspectionTypes = ['Insulation'];
-                inspectionDescription = 'Required before drywall installation.';
-            }
-            
-            return `
-                <div class="inspection-controls">
-                    <!-- Fire Blocking Badge -->
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0 text-muted">
-                            <i class="fas fa-clipboard-check"></i> Inspection Management
-                        </h6>
-                        <button class="btn btn-sm btn-warning" onclick="getFireBlockingGuidance('${sectionType}')" style="font-size: 0.75em;">
-                            <i class="fas fa-shield-alt"></i> Fire Blocking
-                        </button>
-                    </div>
-
-                    <!-- Inspection Actions -->
-                    ${inspectionTypes.map(type => `
-                        <div class="inspection-type mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong class="text-primary">${type}</strong>
-                                <small class="text-muted">Required before next phase</small>
-                            </div>
-                            <div class="btn-group w-100" role="group">
-                                <button class="btn btn-outline-info btn-sm" onclick="scheduleInspection('${type}', ${section.id || 'null'})">
-                                    <i class="fas fa-calendar-plus"></i> Schedule
-                                </button>
-                                <button class="btn btn-outline-success btn-sm" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, true)">
-                                    <i class="fas fa-check"></i> Pass
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="recordInspectionResult('${type}', ${section.id || 'null'}, false)">
-                                    <i class="fas fa-times"></i> Fail
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-
-                    <!-- Critical Warning -->
-                    <div class="alert alert-warning py-2" style="font-size: 0.85em;">
-                        <i class="fas fa-exclamation-triangle me-1"></i>
-                        <strong>Critical:</strong> ${inspectionDescription}
-                    </div>
-                </div>
-            `;
-        }
-
-        function scheduleInspection(inspectionType, sectionId) {
-            // Create in-app modal for date selection
-            const modal = `
-                <div class="modal fade" id="scheduleInspectionModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-calendar-plus me-2"></i>Schedule ${inspectionType} Inspection
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="inspectionDate" class="form-label">Inspection Date:</label>
-                                    <input type="date" class="form-control" id="inspectionDate" min="${new Date().toISOString().split('T')[0]}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="inspectionNotes" class="form-label">Notes (optional):</label>
-                                    <textarea class="form-control" id="inspectionNotes" rows="2" placeholder="Any special requirements or notes for the inspector..."></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="confirmScheduleInspection('${inspectionType}', ${sectionId})">
-                                    <i class="fas fa-calendar-check"></i> Schedule Inspection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if any
-            const existingModal = document.getElementById('scheduleInspectionModal');
-            if (existingModal) existingModal.remove();
-            
-            // Add modal and show
-            document.body.insertAdjacentHTML('beforeend', modal);
-            const inspectionModal = new bootstrap.Modal(document.getElementById('scheduleInspectionModal'));
-            inspectionModal.show();
-        }
-
-        async function confirmScheduleInspection(inspectionType, sectionId) {
-            const date = document.getElementById('inspectionDate').value;
-            const notes = document.getElementById('inspectionNotes').value;
-            
-            if (!date) {
-                showErrorMessage('Please select an inspection date');
-                return;
-            }
-            
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleInspectionModal'));
-            modal.hide();
-            
-            // Save to database via API
-            try {
-                const response = await fetch(`/api/jobsections/${sectionId}/schedule-inspection`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        inspectionType: inspectionType,
-                        inspectionDate: date,
-                        notes: notes
-                    })
-                });
-                
-                if (response.ok) {
-                    const formattedDate = new Date(date).toLocaleDateString();
-                    showSuccessMessage(`${inspectionType} inspection scheduled for ${formattedDate}`);
-                    
-                    // Send notification confirmation
-                    sendInspectionNotification(inspectionType, date, notes, sectionId);
-                    
-                    // Auto-refresh sections to show updated inspection date immediately
-                    setTimeout(() => {
-                        const jobId = getCurrentJobIdFromContext();
-                        if (jobId) {
-                            loadJobSections(jobId);
-                        } else {
-                            // Fallback: refresh the entire page to show updates
-                            window.location.reload();
-                        }
-                    }, 500);
-                } else {
-                    showErrorMessage('Failed to schedule inspection. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error scheduling inspection:', error);
-                showErrorMessage('Error scheduling inspection. Please try again.');
-            }
-        }
-
-        function recordInspectionResult(inspectionType, sectionId, passed) {
-            if (passed) {
-                // For passed inspections, simple confirmation
-                const confirmation = confirm(`Record ${inspectionType} inspection as PASSED?`);
-                if (confirmation) {
-                    submitInspectionResult(inspectionType, sectionId, true, '');
-                }
-            } else {
-                // For failed inspections, show in-app modal for detailed notes
-                showFailedInspectionModal(inspectionType, sectionId);
-            }
-        }
-
-        function showFailedInspectionModal(inspectionType, sectionId) {
-            // Create modal content for failed inspection
-            const modalContent = `
-                <div class="modal fade" id="failedInspectionModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-times-circle"></i> ${inspectionType} Inspection Failed
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>Inspection Failed:</strong> Work must be corrected before proceeding to next phase.
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="correctionNotes" class="form-label">
-                                        <strong>Required Corrections:</strong>
-                                    </label>
-                                    <textarea class="form-control" id="correctionNotes" rows="4" 
-                                              placeholder="Describe what needs to be corrected..." required></textarea>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="inspectorName" class="form-label">Inspector Name:</label>
-                                    <input type="text" class="form-control" id="inspectorName" 
-                                           placeholder="Enter inspector name">
-                                </div>
-                                
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    This failed inspection will be recorded. You can reschedule once corrections are complete.
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-danger" onclick="confirmFailedInspection('${inspectionType}', ${sectionId})">
-                                    <i class="fas fa-times"></i> Record Failed Inspection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Add modal to page and show
-            document.body.insertAdjacentHTML('beforeend', modalContent);
-            const modal = new bootstrap.Modal(document.getElementById('failedInspectionModal'));
-            modal.show();
-            
-            // Clean up modal after closing
-            document.getElementById('failedInspectionModal').addEventListener('hidden.bs.modal', function() {
-                this.remove();
-            });
-        }
-
-        function confirmFailedInspection(inspectionType, sectionId) {
-            const notes = document.getElementById('correctionNotes').value;
-            const inspector = document.getElementById('inspectorName').value;
-            
-            if (!notes.trim()) {
-                alert('Correction notes are required for failed inspections.');
-                return;
-            }
-            
-            const fullNotes = `FAILED INSPECTION - Corrections Required:\n${notes}\n${inspector ? `Inspector: ${inspector}` : ''}`;
-            
-            // Close modal and submit result
-            const modal = bootstrap.Modal.getInstance(document.getElementById('failedInspectionModal'));
-            modal.hide();
-            
-            submitInspectionResult(inspectionType, sectionId, false, fullNotes);
-        }
-
-        async function submitInspectionResult(inspectionType, sectionId, passed, notes) {
-            try {
-                const response = await fetch(`/api/jobsections/${sectionId}/record-inspection`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        inspectionType: inspectionType,
-                        passed: passed,
-                        inspectionDate: new Date().toISOString(),
-                        notes: notes
-                    })
-                });
-                
-                if (response.ok) {
-                    const resultText = passed ? 'PASSED' : 'FAILED';
-                    showSuccessMessage(`${inspectionType} inspection recorded as ${resultText}`);
-                    
-                    if (!passed) {
-                        // Show rescheduling option for failed inspections
-                        setTimeout(() => {
-                            showRescheduleOption(inspectionType, sectionId);
-                        }, 1000);
-                    }
-                    
-                    // Auto-refresh sections to show updated status immediately
-                    setTimeout(() => {
-                        const jobId = getCurrentJobIdFromContext();
-                        if (jobId) {
-                            loadJobSections(jobId);
-                        } else {
-                            // Fallback: refresh the entire page to show updates
-                            window.location.reload();
-                        }
-                    }, 500);
-                } else {
-                    showErrorMessage('Failed to record inspection result. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error recording inspection:', error);
-                showErrorMessage('Error recording inspection result. Please try again.');
-            }
-        }
-
-        function showRescheduleOption(inspectionType, sectionId) {
-            const reschedule = confirm(`${inspectionType} inspection failed and has been recorded.\n\nWould you like to schedule a re-inspection once corrections are made?`);
-            if (reschedule) {
-                scheduleInspection(`${inspectionType} Re-inspection`, sectionId);
-            }
-        }
-
-        function getFireBlockingGuidance(sectionType) {
-            // Show fire blocking requirements for the specific section type
-            const guidance = getLocalFireBlockingGuidance(sectionType);
-            
-            // Create modal to display guidance
-            const modal = `
-                <div class="modal fade" id="fireBlockingModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-shield-alt text-warning me-2"></i>
-                                    Fire Blocking Requirements - ${sectionType}
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="alert alert-warning">
-                                    <strong><i class="fas fa-exclamation-triangle"></i> CRITICAL SAFETY REQUIREMENT</strong><br>
-                                    Fire blocking must be completed and inspected before covering work.
-                                </div>
-                                <pre style="white-space: pre-wrap; font-family: inherit;">${guidance}</pre>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary" onclick="scheduleInspection('${sectionType} Rough-in', null)">
-                                    <i class="fas fa-calendar-plus"></i> Schedule Inspection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if any
-            const existingModal = document.getElementById('fireBlockingModal');
-            if (existingModal) existingModal.remove();
-            
-            // Add modal to page and show
-            document.body.insertAdjacentHTML('beforeend', modal);
-            const fireModal = new bootstrap.Modal(document.getElementById('fireBlockingModal'));
-            fireModal.show();
-        }
-
-        function getLocalFireBlockingGuidance(sectionType) {
-            switch(sectionType.toLowerCase()) {
-                case 'framing':
-                    return `FRAMING FIRE BLOCKING REQUIREMENTS:
-
-✓ Install fire blocking between studs at ceiling level
-✓ Block all horizontal spaces created by framing
-✓ Use 2x lumber, 1/2" gypsum board, or approved materials
-✓ CRITICAL: Must be inspected before insulation/drywall
-
-Common Materials:
-- 2-inch nominal lumber (most common)
-- 1/2-inch gypsum board
-- Mineral wool batts
-- UL-listed expanding foam
-
-Key Inspection Points:
-- Fire blocking properly installed at ceiling level
-- No gaps or openings in fire blocking
-- Materials meet code requirements
-- Proper attachment to framing`;
-
-                case 'electrical':
-                    return `ELECTRICAL ROUGH-IN FIRE BLOCKING:
-
-✓ Seal all holes drilled through top/bottom plates
-✓ Use fire-rated caulk or expanding foam for small holes
-✓ Install proper fire blocking around large penetrations
-✓ CRITICAL: Inspect before insulation installation
-
-Penetration Sealing:
-- Holes < 1": Fire-rated caulk or expanding foam
-- Holes > 1": Fire blocking materials + sealant
-- Multiple cables: Use fire-rated putty pads
-
-Key Inspection Points:
-- All plate penetrations properly sealed
-- Fire-rated materials used for sealing
-- No unsealed openings remain
-- Proper installation of fire blocking materials`;
-
-                case 'plumbing':
-                    return `PLUMBING ROUGH-IN FIRE BLOCKING:
-
-✓ Seal all floor penetrations where pipes pass through
-✓ Use fire-resistant materials around pipe chases
-✓ Install proper blocking in wall cavities with plumbing
-✓ CRITICAL: Inspect before covering pipes
-
-Floor Penetration Requirements:
-- Seal gaps around pipes with fire-rated materials
-- Use fire-blocking foam for small gaps
-- Install proper fire stopping for large openings
-- Maintain fire rating of floor assembly
-
-Key Inspection Points:
-- All floor penetrations properly sealed
-- Fire blocking maintains floor fire rating
-- Proper materials used around pipe chases
-- No gaps or openings remain unsealed`;
-
-                case 'insulation':
-                    return `INSULATION FIRE BLOCKING:
-
-✓ Verify all fire blocking in place before installation
-✓ Do not compress fire blocking materials
-✓ Maintain proper fire blocking integrity
-✓ CRITICAL: Inspect before drywall installation
-
-Installation Requirements:
-- Fire blocking must be complete before insulation
-- Insulation cannot substitute for fire blocking
-- Maintain fire blocking effectiveness
-- Proper installation around penetrations
-
-Key Inspection Points:
-- Fire blocking remains effective after insulation
-- No compromised fire blocking integrity
-- Proper installation techniques used
-- Code compliance maintained`;
-
-                default:
-                    return `GENERAL FIRE BLOCKING REQUIREMENTS:
-
-✓ Required before covering any concealed spaces
-✓ Use approved materials (lumber, gypsum, mineral wool, foam)
-✓ Seal all penetrations through fire blocking
-✓ Schedule inspection before proceeding to next phase
-
-Massachusetts Building Code Requirements:
-- Fire blocking required at ceiling and floor levels
-- Must block interconnected concealed spaces
-- Use only approved fire blocking materials
-- Proper installation and inspection required`;
-            }
-        }
-
-        function refreshJobs() {
-            loadJobs();
-        }
-
-        function getScheduledInspections(section) {
-            let inspections = [];
-            
-            if (section.electricalInspectionDate) {
-                const date = new Date(section.electricalInspectionDate).toLocaleDateString();
-                const status = section.electricalInspectionCompleted ? 
-                    (section.electricalInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
-                    '📅 SCHEDULED';
-                inspections.push(`<div class="text-primary small d-flex justify-content-between align-items-center">
-                    <span><strong>Electrical Inspection:</strong> ${date} ${status}</span>
-                    ${section.electricalInspectionCompleted && !section.electricalInspectionPassed ? 
-                        `<button class="btn btn-xs btn-outline-primary ms-2" onclick="scheduleInspection('Electrical Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
-                            <i class="fas fa-redo"></i> Reschedule
-                        </button>` : ''}
-                </div>`);
-            }
-            
-            // Show rescheduled inspection if it exists
-            if (section.inspectionDate && section.electricalInspectionCompleted && !section.electricalInspectionPassed) {
-                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
-                inspections.push(`<div class="text-success small">
-                    <span><strong>⚡ Electrical Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
-                </div>`);
-            }
-            
-            if (section.plumbingInspectionDate) {
-                const date = new Date(section.plumbingInspectionDate).toLocaleDateString();
-                const status = section.plumbingInspectionCompleted ? 
-                    (section.plumbingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
-                    '📅 SCHEDULED';
-                inspections.push(`<div class="text-info small d-flex justify-content-between align-items-center">
-                    <span><strong>Plumbing Inspection:</strong> ${date} ${status}</span>
-                    ${section.plumbingInspectionCompleted && !section.plumbingInspectionPassed ? 
-                        `<button class="btn btn-xs btn-outline-info ms-2" onclick="scheduleInspection('Plumbing Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
-                            <i class="fas fa-redo"></i> Reschedule
-                        </button>` : ''}
-                </div>`);
-            }
-            
-            // Show rescheduled plumbing inspection if it exists
-            if (section.inspectionDate && section.plumbingInspectionCompleted && !section.plumbingInspectionPassed) {
-                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
-                inspections.push(`<div class="text-success small">
-                    <span><strong>🔧 Plumbing Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
-                </div>`);
-            }
-            
-            if (section.buildingInspectionDate) {
-                const date = new Date(section.buildingInspectionDate).toLocaleDateString();
-                const status = section.buildingInspectionCompleted ? 
-                    (section.buildingInspectionPassed ? '✅ PASSED' : '❌ FAILED') : 
-                    '📅 SCHEDULED';
-                inspections.push(`<div class="text-warning small d-flex justify-content-between align-items-center">
-                    <span><strong>Framing Inspection:</strong> ${date} ${status}</span>
-                    ${section.buildingInspectionCompleted && !section.buildingInspectionPassed ? 
-                        `<button class="btn btn-xs btn-outline-warning ms-2" onclick="scheduleInspection('Framing Re-inspection', ${section.id})" style="font-size: 0.7em; padding: 1px 4px;">
-                            <i class="fas fa-redo"></i> Reschedule
-                        </button>` : ''}
-                </div>`);
-            }
-            
-            // Show rescheduled framing inspection if it exists
-            if (section.inspectionDate && section.buildingInspectionCompleted && !section.buildingInspectionPassed) {
-                const rescheduleDate = new Date(section.inspectionDate).toLocaleDateString();
-                inspections.push(`<div class="text-success small">
-                    <span><strong>🏗️ Framing Re-inspection:</strong> ${rescheduleDate} 🔄 RESCHEDULED</span>
-                </div>`);
-            }
-            
-            return inspections.join('');
-        }
-
-        async function sendInspectionNotification(inspectionType, date, notes, sectionId) {
-            // Get current job details for the notification
-            const jobData = await getCurrentJobData();
-            if (!jobData) return;
-
-            const formattedDate = new Date(date).toLocaleDateString();
-            const message = `🏗️ INSPECTION SCHEDULED
-
-Job: ${jobData.name}
-Location: ${jobData.location}
-Client: ${jobData.clientName}
-
-${inspectionType} Inspection
-📅 Date: ${formattedDate}
-${notes ? `📝 Notes: ${notes}` : ''}
-
-Please ensure work is ready for inspection.
-
-Job Tracker App`;
-
-            // Show notification options to user
-            const notificationChoice = confirm(`Inspection scheduled successfully!\n\nWould you like to send a WhatsApp notification?\n\nClick OK for WhatsApp, Cancel for Email confirmation.`);
-            
-            if (notificationChoice) {
-                // Send WhatsApp notification
-                sendWhatsAppNotification(message, jobData.clientPhone);
-            } else {
-                // Send Email notification  
-                sendEmailNotification(inspectionType, formattedDate, jobData);
-            }
-        }
-
-        async function getCurrentJobData() {
-            try {
-                // Use the global currentJobId if available, otherwise get from URL or context
-                const jobId = window.currentJobId || getCurrentJobIdFromContext();
-                if (!jobId) {
-                    console.log('No job ID available for notifications');
-                    return null;
-                }
-                
-                const response = await fetch(`/api/jobs/${jobId}`);
-                if (response.ok) {
-                    return await response.json();
-                } else {
-                    console.log('Could not fetch job data for notifications');
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error getting job data:', error);
-                return null;
-            }
-        }
-
-        function getCurrentJobIdFromContext() {
-            // Try multiple ways to get the current job ID
-            
-            // 1. Check if we have a global variable
-            if (window.currentJobId) {
-                return window.currentJobId;
-            }
-            
-            // 2. Try to get job ID from the page context
-            const jobCards = document.querySelectorAll('[data-job-id]');
-            if (jobCards.length > 0) {
-                return jobCards[0].getAttribute('data-job-id');
-            }
-            
-            // 3. Try to extract from URL or sections container
-            const sectionsContainer = document.getElementById('jobSections');
-            if (sectionsContainer && sectionsContainer.dataset.jobId) {
-                return sectionsContainer.dataset.jobId;
-            }
-            
-            // 4. Try to get from any section element that might have job info
-            const sectionCards = document.querySelectorAll('.section-card');
-            if (sectionCards.length > 0) {
-                // Look for a pattern in onclick attributes or data attributes
-                for (let card of sectionCards) {
-                    const onclick = card.getAttribute('onclick') || '';
-                    const match = onclick.match(/loadJobSections\((\d+)\)/);
-                    if (match) {
-                        return match[1];
-                    }
-                }
-            }
-            
-            return null;
-        }
-
-        function sendWhatsAppNotification(message, phoneNumber) {
-            // This would integrate with your WhatsApp API
-            console.log('WhatsApp notification:', message, phoneNumber);
-            showSuccessMessage('WhatsApp notification sent to client!');
-        }
-
-        function sendEmailNotification(inspectionType, date, jobData) {
-            // This would integrate with your email service
-            console.log('Email notification for:', inspectionType, date, jobData);
-            showSuccessMessage('Email confirmation sent!');
-        }
-
-        function getSectionTypeNumber(sectionName) {
-            const sectionMap = {
-                'Permits': 1,
-                'Demolition': 2,
-                'Foundation': 3,
-                'Framing': 4,
-                'Electrical': 5,
-                'Plumbing': 6,
-                'HVAC': 7,
-                'Insulation': 8,
-                'Drywall': 9,
-                'Flooring': 10,
-                'FinalInspection': 11
-            };
-            return sectionMap[sectionName] || 1;
-        }
-
-        function getStatusNumber(statusName) {
-            const statusMap = {
-                'Not Started': 1,
-                'In Progress': 2,
-                'Completed': 3,
-                'On Hold': 4
-            };
-            return statusMap[statusName] || 1;
-        }
-
-        function generateSectionSuggestions() {
-            const projectType = document.querySelector('input[name="projectType"]:checked');
-            const needsDemo = document.getElementById('needsDemo').checked;
-            const needsElectrical = document.getElementById('needsElectrical').checked;
-            const needsPlumbing = document.getElementById('needsPlumbing').checked;
-            const needsStructural = document.getElementById('needsStructural').checked;
-            
-            let suggestions = [];
-            let permits = [];
-            
-            // Always suggest permits first
-            permits.push('Permits & Approvals');
-            
-            // Based on project type
-            if (projectType) {
-                if (projectType.value === 'residential') {
-                    suggestions.push('Foundation', 'Framing', 'Insulation', 'Drywall', 'Flooring', 'Final Inspection');
-                } else if (projectType.value === 'commercial') {
-                    suggestions.push('Foundation', 'Framing', 'HVAC', 'Final Inspection');
-                }
-            }
-            
-            // Based on specific work types
-            if (needsDemo) {
-                suggestions.unshift('Demolition'); // Add at beginning
-            }
-            if (needsElectrical) {
-                suggestions.push('Electrical');
-            }
-            if (needsPlumbing) {
-                suggestions.push('Plumbing');
-            }
-            if (needsStructural) {
-                if (!suggestions.includes('Foundation')) suggestions.push('Foundation');
-                if (!suggestions.includes('Framing')) suggestions.push('Framing');
-            }
-            
-            // Combine permits and sections
-            const allSuggestions = [...permits, ...suggestions];
-            
-            // Remove duplicates
-            const uniqueSuggestions = [...new Set(allSuggestions)];
-            
-            // Display suggestions
-            const suggestionsDiv = document.getElementById('sectionSuggestions');
-            if (uniqueSuggestions.length > 0) {
-                suggestionsDiv.innerHTML = `
-                    <div class="alert alert-success">
-                        <h6><i class="fas fa-lightbulb me-2"></i>Suggested Sections for Your Project:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            ${uniqueSuggestions.map(section => 
-                                `<span class="badge bg-primary">${getSectionIcon(section)} ${section}</span>`
-                            ).join('')}
-                        </div>
-                        <small class="d-block mt-2">You can add these sections after creating the job in the "Manage Job & Sections" page.</small>
-                    </div>
-                `;
-            } else {
-                suggestionsDiv.innerHTML = `
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>Please select your project type and work requirements to get smart suggestions.
-                    </div>
-                `;
-            }
-        }
-
-        // Auto-save functionality for job forms
-        let autoSaveTimer;
-        let jobFormData = {};
-
-        function setupAutoSave() {
-            // Auto-save job form data every few seconds
-            const jobForm = document.getElementById('jobForm');
-            if (jobForm) {
-                const inputs = jobForm.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        clearTimeout(autoSaveTimer);
-                        autoSaveTimer = setTimeout(() => {
-                            saveJobFormData();
-                        }, 3000); // Auto-save 3 seconds after user stops typing
-                    });
-                });
-            }
-        }
-
-        function saveJobFormData() {
-            const jobForm = document.getElementById('jobForm');
-            if (jobForm) {
-                const formData = new FormData(jobForm);
-                jobFormData = Object.fromEntries(formData.entries());
-                localStorage.setItem('jobFormAutoSave', JSON.stringify({
-                    data: jobFormData,
-                    timestamp: new Date().toISOString()
-                }));
-                showSuccessMessage('Job data auto-saved', 2000);
-            }
-        }
-
-        function loadAutoSavedData() {
-            const saved = localStorage.getItem('jobFormAutoSave');
-            if (saved) {
-                const { data, timestamp } = JSON.parse(saved);
-                const saveTime = new Date(timestamp);
-                const now = new Date();
-                const hoursSinceSave = (now - saveTime) / (1000 * 60 * 60);
-                
-                // Only restore if saved within last 24 hours
-                if (hoursSinceSave < 24) {
-                    const confirmation = confirm(`Found unsaved job data from ${saveTime.toLocaleString()}.\n\nWould you like to restore this data?`);
-                    if (confirmation) {
-                        Object.keys(data).forEach(key => {
-                            const input = document.querySelector(`[name="${key}"]`);
-                            if (input) {
-                                input.value = data[key];
-                            }
-                        });
-                        showSuccessMessage('Auto-saved job data restored successfully!');
-                    }
-                }
-            }
-        }
-
-        function clearAutoSavedData() {
-            localStorage.removeItem('jobFormAutoSave');
-        }
-
-        // Initialize auto-save functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            setupAutoSave();
-            loadAutoSavedData();
-        });
-
-        // Clear auto-save data when job is successfully created
-        function clearAutoSaveOnSuccess() {
-            clearAutoSavedData();
         }
     </script>
 </body>

@@ -13,11 +13,46 @@ namespace JobTracker.Controllers
     {
         private readonly JobTrackerContext _context;
         private readonly ILogger<AuthController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(JobTrackerContext context, ILogger<AuthController> logger)
+        public AuthController(JobTrackerContext context, ILogger<AuthController> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
+        }
+
+        [HttpPost("detect-company")]
+        public async Task<IActionResult> DetectCompany([FromBody] DetectCompanyRequest request)
+        {
+            try
+            {
+                // Find user by email to determine their company
+                var user = await _context.Users
+                    .Include(u => u.Company)
+                    .Where(u => u.Email == request.Email && u.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (user?.Company != null)
+                {
+                    return Ok(new
+                    {
+                        company = new
+                        {
+                            user.Company.CompanyName,
+                            user.Company.AccountNumber,
+                            user.Company.Description
+                        }
+                    });
+                }
+
+                return NotFound(new { message = "No account found with this email address" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error detecting company for email {Email}", request.Email);
+                return StatusCode(500, new { message = "Error detecting company" });
+            }
         }
 
         [HttpPost("login")]
@@ -25,214 +60,235 @@ namespace JobTracker.Controllers
         {
             try
             {
-                User? user = null;
+                // Find user by email
+                var user = await _context.Users
+                    .Include(u => u.Company)
+                    .Where(u => u.Email == request.Email && u.IsActive)
+                    .FirstOrDefaultAsync();
 
-                // Login with email (Admin users)
-                if (!string.IsNullOrEmpty(request.Email))
+                if (user == null)
                 {
-                    user = await _context.Users
-                        .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
-                    
-                    if (user == null || user.Role == UserRole.RegularUser)
-                    {
-                        return Unauthorized(new { message = "Invalid email credentials or insufficient permissions" });
-                    }
-                }
-                // Login with phone number (Regular users)
-                else if (!string.IsNullOrEmpty(request.PhoneNumber))
-                {
-                    user = await _context.Users
-                        .FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber && u.IsActive);
-                    
-                    if (user == null)
-                    {
-                        return Unauthorized(new { message = "Invalid phone number credentials" });
-                    }
-                }
-                else
-                {
-                    return BadRequest(new { message = "Email or phone number is required" });
+                    return BadRequest(new { message = "Invalid email or password" });
                 }
 
-                // Verify password (simplified - in production use proper hashing)
-                if (!VerifyPassword(request.Password, user.PasswordHash))
+                // Verify password
+                if (!VerifyPassword(request.Password, user.PasswordHash ?? ""))
                 {
-                    return Unauthorized(new { message = "Invalid password" });
+                    return BadRequest(new { message = "Invalid email or password" });
                 }
 
-                // Update language preference if provided
-                if (!string.IsNullOrEmpty(request.LanguagePreference))
+                // Check if company is active
+                if (!user.Company.IsActive)
                 {
-                    user.LanguagePreference = request.LanguagePreference;
-                    user.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    return BadRequest(new { message = "Company account is inactive" });
                 }
 
-                var response = new
-                {
-                    userId = user.Id,
-                    name = user.GetDisplayName(),
-                    role = user.Role.ToString(),
-                    roleDisplay = user.GetRoleDisplayName(),
-                    email = user.Email,
-                    phoneNumber = user.PhoneNumber,
-                    language = user.LanguagePreference,
-                    permissions = GetUserPermissions(user.Role)
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Login error");
-                return StatusCode(500, new { message = "Login failed" });
-            }
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-        {
-            try
-            {
-                // Validate that either email or phone is provided
-                if (string.IsNullOrEmpty(request.Email) && string.IsNullOrEmpty(request.PhoneNumber))
-                {
-                    return BadRequest(new { message = "Either email or phone number is required" });
-                }
-
-                // Admin users must have email, regular users must have phone
-                if (request.RequestedRole != UserRole.RegularUser && string.IsNullOrEmpty(request.Email))
-                {
-                    return BadRequest(new { message = "Admin users must provide an email address" });
-                }
-
-                if (request.RequestedRole == UserRole.RegularUser && string.IsNullOrEmpty(request.PhoneNumber))
-                {
-                    return BadRequest(new { message = "Regular users must provide a phone number" });
-                }
-
-                // Check if user already exists
-                var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => 
-                        (u.Email == request.Email && !string.IsNullOrEmpty(request.Email)) ||
-                        (u.PhoneNumber == request.PhoneNumber && !string.IsNullOrEmpty(request.PhoneNumber)));
-
-                if (existingUser != null)
-                {
-                    return BadRequest(new { message = "User already exists with this email or phone number" });
-                }
-
-                // Check role limits
-                var roleValidation = await ValidateRoleLimits(request.RequestedRole);
-                if (!roleValidation.IsValid)
-                {
-                    return BadRequest(new { message = roleValidation.Message });
-                }
-
-                var user = new User
-                {
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    Role = request.RequestedRole,
-                    LanguagePreference = request.LanguagePreference,
-                    PasswordHash = HashPassword(request.Password),
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                _context.Users.Add(user);
+                // Update last login
+                user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                return Ok(new 
-                { 
-                    message = "User registered successfully",
-                    userId = user.Id,
-                    role = user.GetRoleDisplayName()
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Registration error");
-                return StatusCode(500, new { message = "Registration failed" });
-            }
-        }
-
-        [HttpGet("role-limits")]
-        public async Task<IActionResult> GetRoleLimits()
-        {
-            try
-            {
-                var masterAdminCount = await _context.Users.CountAsync(u => u.Role == UserRole.MasterAdmin && u.IsActive);
-                var adminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Admin && u.IsActive);
+                // Generate session token
+                var token = GenerateSessionToken(user);
 
                 return Ok(new
                 {
-                    masterAdmins = new { current = masterAdminCount, max = 3 },
-                    admins = new { current = adminCount, max = 10 },
-                    regularUsers = new { current = -1, max = -1 } // No limit
+                    token,
+                    user = new
+                    {
+                        user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        Role = user.Role.ToString(),
+                        user.LanguagePreference,
+                        user.IsEmailVerified,
+                        user.IsPhoneVerified
+                    },
+                    company = new
+                    {
+                        user.Company.Id,
+                        user.Company.CompanyName,
+                        user.Company.AccountNumber,
+                        user.Company.Description,
+                        user.Company.SubscriptionType
+                    }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting role limits");
-                return StatusCode(500, new { message = "Failed to get role limits" });
+                _logger.LogError(ex, "Error during email login for {Email}", request.Email);
+                return StatusCode(500, new { message = "Login error occurred" });
             }
         }
 
-        private async Task<(bool IsValid, string Message)> ValidateRoleLimits(UserRole requestedRole)
+        [HttpPost("login-phone")]
+        public async Task<IActionResult> LoginPhone([FromBody] PhoneLoginRequest request)
         {
-            switch (requestedRole)
+            try
             {
-                case UserRole.MasterAdmin:
-                    var masterAdminCount = await _context.Users.CountAsync(u => u.Role == UserRole.MasterAdmin && u.IsActive);
-                    if (masterAdminCount >= 3)
-                    {
-                        return (false, "Maximum of 3 Master Admins allowed");
-                    }
-                    break;
+                // Find user by phone number
+                var user = await _context.Users
+                    .Include(u => u.Company)
+                    .Where(u => u.PhoneNumber == request.PhoneNumber && u.IsActive)
+                    .FirstOrDefaultAsync();
 
-                case UserRole.Admin:
-                    var adminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Admin && u.IsActive);
-                    if (adminCount >= 10)
-                    {
-                        return (false, "Maximum of 10 Admins allowed (excluding Master Admins)");
-                    }
-                    break;
+                if (user == null)
+                {
+                    return BadRequest(new { message = "Invalid phone number or PIN" });
+                }
 
-                case UserRole.RegularUser:
-                    // No limit for regular users
-                    break;
+                // Verify PIN (stored as password hash)
+                if (!VerifyPassword(request.Pin, user.PasswordHash ?? ""))
+                {
+                    return BadRequest(new { message = "Invalid phone number or PIN" });
+                }
+
+                // Check if company is active
+                if (!user.Company.IsActive)
+                {
+                    return BadRequest(new { message = "Company account is inactive" });
+                }
+
+                // Update last login
+                user.LastLoginAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                // Generate session token
+                var token = GenerateSessionToken(user);
+
+                return Ok(new
+                {
+                    token,
+                    user = new
+                    {
+                        user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.PhoneNumber,
+                        Role = user.Role.ToString(),
+                        user.LanguagePreference,
+                        user.IsEmailVerified,
+                        user.IsPhoneVerified
+                    },
+                    company = new
+                    {
+                        user.Company.Id,
+                        user.Company.CompanyName,
+                        user.Company.AccountNumber,
+                        user.Company.Description,
+                        user.Company.SubscriptionType
+                    }
+                });
             }
-
-            return (true, string.Empty);
-        }
-
-        private static string[] GetUserPermissions(UserRole role)
-        {
-            return role switch
+            catch (Exception ex)
             {
-                UserRole.MasterAdmin => new[] { "manage_users", "create_jobs", "manage_sections", "view_all", "system_admin" },
-                UserRole.Admin => new[] { "create_jobs", "manage_sections", "view_all" },
-                UserRole.RegularUser => new[] { "view_assigned", "update_progress" },
-                _ => Array.Empty<string>()
-            };
+                _logger.LogError(ex, "Error during phone login for {PhoneNumber}", request.PhoneNumber);
+                return StatusCode(500, new { message = "Login error occurred" });
+            }
         }
 
-        private static string HashPassword(string password)
+        [HttpPost("logout")]
+        public IActionResult Logout()
         {
-            // Simplified hashing - in production use BCrypt or similar
+            // Since we're using JWT tokens, logout is handled client-side by removing the token
+            return Ok(new { message = "Logged out successfully" });
+        }
+
+        [HttpPost("verify-token")]
+        public async Task<IActionResult> VerifyToken([FromBody] VerifyTokenRequest request)
+        {
+            try
+            {
+                // Simple token validation for now
+                var tokenBytes = Convert.FromBase64String(request.Token);
+                var tokenPayload = Encoding.UTF8.GetString(tokenBytes);
+                var parts = tokenPayload.Split(':');
+                
+                if (parts.Length < 4)
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var userId = int.Parse(parts[0]);
+
+                // Get current user info
+                var user = await _context.Users
+                    .Include(u => u.Company)
+                    .Where(u => u.Id == userId && u.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    return Unauthorized(new { message = "User not found or inactive" });
+                }
+
+                return Ok(new
+                {
+                    valid = true,
+                    user = new
+                    {
+                        user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.PhoneNumber,
+                        Role = user.Role.ToString(),
+                        user.LanguagePreference,
+                        user.IsEmailVerified,
+                        user.IsPhoneVerified
+                    },
+                    company = new
+                    {
+                        user.Company.Id,
+                        user.Company.CompanyName,
+                        user.Company.AccountNumber,
+                        user.Company.Description,
+                        user.Company.SubscriptionType
+                    }
+                });
+            }
+            catch
+            {
+                return Unauthorized(new { message = "Invalid token" });
+            }
+        }
+
+        private bool VerifyPassword(string password, string hash)
+        {
             using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "JobTracker_Salt"));
-            return Convert.ToBase64String(hashedBytes);
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "JobTracker_User_Salt"));
+            var computedHash = Convert.ToBase64String(hashedBytes);
+            return computedHash == hash;
         }
 
-        private static bool VerifyPassword(string password, string? hash)
+        private string GenerateSessionToken(User user)
         {
-            if (string.IsNullOrEmpty(hash)) return false;
-            return HashPassword(password) == hash;
+            // Simple session token for now - can be upgraded to JWT later
+            var payload = $"{user.Id}:{user.CompanyId}:{user.Role}:{DateTime.UtcNow.Ticks}";
+            var bytes = Encoding.UTF8.GetBytes(payload);
+            return Convert.ToBase64String(bytes);
         }
+    }
+
+    public class DetectCompanyRequest
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class PhoneLoginRequest
+    {
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Pin { get; set; } = string.Empty;
+    }
+
+    public class VerifyTokenRequest
+    {
+        public string Token { get; set; } = string.Empty;
     }
 }
