@@ -44,6 +44,10 @@ namespace JobTracker.Models
         public DateTime? EndDate { get; set; }
         public DateTime? CompletionDate { get; set; }
         
+        // GPS coordinates for geo-fencing
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        
         [ForeignKey("Company")]
         public int CompanyId { get; set; }
         public Company Company { get; set; } = null!;
