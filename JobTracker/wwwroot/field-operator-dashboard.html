@@ -287,6 +287,8 @@
         let currentUser = null;
         let currentCompany = null;
         let clockedIn = false;
+        let pendingClockIn = null;
+        let verificationTimer = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
@@ -436,8 +438,16 @@
             if (clockedIn) {
                 statusElement.className = 'clock-status clocked-in';
                 textElement.textContent = 'Currently Clocked In';
-                timeElement.textContent = 'Started at 8:00 AM';
+                timeElement.textContent = 'Working on assigned job';
                 buttonElement.textContent = 'Clock Out';
+            } else if (pendingClockIn) {
+                statusElement.className = 'clock-status' ;
+                statusElement.style.background = '#fff3cd';
+                statusElement.style.color = '#856404';
+                statusElement.style.border = '1px solid #ffeaa7';
+                textElement.textContent = 'Clock-in Pending Verification';
+                timeElement.textContent = `At ${pendingClockIn.jobSite}`;
+                buttonElement.textContent = 'Verify Location';
             } else {
                 statusElement.className = 'clock-status clocked-out';
                 textElement.textContent = 'Currently Clocked Out';
@@ -449,19 +459,182 @@
         async function toggleClock() {
             try {
                 if (clockedIn) {
-                    // Clock out
-                    clockedIn = false;
-                    showSuccess('Successfully clocked out!');
+                    await handleClockOut();
+                } else if (pendingClockIn) {
+                    await finalizePendingClockIn();
                 } else {
-                    // Clock in
-                    clockedIn = true;
-                    showSuccess('Successfully clocked in!');
+                    await handleClockIn();
                 }
-                
-                updateClockStatus();
             } catch (error) {
                 console.error('Error toggling clock:', error);
                 showError('Failed to update clock status');
+            }
+        }
+
+        async function handleClockIn() {
+            if (!navigator.geolocation) {
+                showError('Location services are not supported by this browser');
+                return;
+            }
+
+            showSuccess('Getting your location...');
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        const response = await fetch('/api/timetracking/clock-in/initiate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            },
+                            body: JSON.stringify({
+                                userId: currentUser.id,
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            pendingClockIn = {
+                                id: result.pendingClockInId,
+                                jobSite: result.jobSite,
+                                startTime: new Date()
+                            };
+                            
+                            showSuccess(`Clock-in initiated at ${result.jobSite}. Please stay at the job site for verification.`);
+                            startVerificationCountdown();
+                            updateClockStatus();
+                        } else {
+                            showError(result.message || 'Clock-in failed');
+                        }
+                    } catch (error) {
+                        console.error('Clock-in error:', error);
+                        showError('Failed to initiate clock-in');
+                    }
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    showError('Unable to get your location. Please enable location services.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        async function finalizePendingClockIn() {
+            if (!pendingClockIn) return;
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        const response = await fetch('/api/timetracking/clock-in/finalize', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            },
+                            body: JSON.stringify({
+                                pendingClockInId: pendingClockIn.id,
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            clockedIn = true;
+                            pendingClockIn = null;
+                            clearVerificationTimer();
+                            showSuccess('Successfully clocked in!');
+                        } else {
+                            pendingClockIn = null;
+                            showError(result.message || 'Clock-in verification failed');
+                        }
+                        
+                        updateClockStatus();
+                    } catch (error) {
+                        console.error('Clock-in finalization error:', error);
+                        showError('Failed to finalize clock-in');
+                    }
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    showError('Unable to verify your location');
+                }
+            );
+        }
+
+        async function handleClockOut() {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        const response = await fetch('/api/timetracking/clock-out', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            },
+                            body: JSON.stringify({
+                                userId: currentUser.id,
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            clockedIn = false;
+                            showSuccess(`Successfully clocked out! Worked ${result.totalHours.toFixed(2)} hours.`);
+                            if (!result.locationVerified) {
+                                showError('Note: Clock-out location could not be verified');
+                            }
+                        } else {
+                            showError(result.message || 'Clock-out failed');
+                        }
+                        
+                        updateClockStatus();
+                    } catch (error) {
+                        console.error('Clock-out error:', error);
+                        showError('Failed to clock out');
+                    }
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    showError('Unable to get your location for clock-out');
+                }
+            );
+        }
+
+        function startVerificationCountdown() {
+            let secondsLeft = 540; // 9 minutes
+            
+            verificationTimer = setInterval(() => {
+                secondsLeft--;
+                const minutesLeft = Math.floor(secondsLeft / 60);
+                const seconds = secondsLeft % 60;
+                
+                document.getElementById('clockTime').textContent = 
+                    `Verification in ${minutesLeft}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(verificationTimer);
+                    finalizePendingClockIn();
+                }
+            }, 1000);
+        }
+
+        function clearVerificationTimer() {
+            if (verificationTimer) {
+                clearInterval(verificationTimer);
+                verificationTimer = null;
             }
         }
 

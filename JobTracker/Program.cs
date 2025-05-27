@@ -23,6 +23,7 @@ builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<InspectionTrackingService>();
 builder.Services.AddScoped<JobTracker.Services.AI.AIAssistantService>();
 builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Services.EmailService>();
+builder.Services.AddScoped<JobTracker.Services.GeoFencingService>();
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
