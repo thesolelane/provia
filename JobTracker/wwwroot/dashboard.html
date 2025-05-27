@@ -525,7 +525,15 @@
         }
 
         async function loadRecentActivity() {
-            // Show recent team member additions as activity
+            const userRole = parseInt(currentUser.role);
+            const isFieldOperator = userRole === 0;
+
+            // Field operators don't need to see recent activity
+            if (isFieldOperator) {
+                return; // Skip loading recent activity for field operators
+            }
+
+            // Show recent team member additions as activity for admins only
             const container = document.getElementById('recentActivityContainer');
             
             try {
