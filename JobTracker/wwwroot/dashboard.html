@@ -434,10 +434,10 @@
                     `;
                 }
 
-                // Hide the entire recent activity section for field operators
+                // Completely remove the entire recent activity section for field operators
                 const recentActivitySection = document.querySelector('.row.mt-4');
                 if (recentActivitySection) {
-                    recentActivitySection.style.display = 'none';
+                    recentActivitySection.remove();
                 }
 
                 // Update statistics to be worker-focused
