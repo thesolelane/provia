@@ -366,6 +366,43 @@
             document.getElementById('welcomeUserName').textContent = currentUser.firstName;
             document.getElementById('companyName').textContent = currentCompany.companyName;
             document.getElementById('accountNumber').textContent = `Account: ${currentCompany.accountNumber}`;
+
+            // Apply role-based access control
+            applyRoleBasedAccess();
+        }
+
+        function applyRoleBasedAccess() {
+            const userRole = parseInt(currentUser.role);
+            const isWorker = userRole === 0;
+
+            if (isWorker) {
+                // Hide team management from dropdown
+                const teamManagementLink = document.querySelector('a[href="/users.html"]');
+                if (teamManagementLink) {
+                    teamManagementLink.parentElement.style.display = 'none';
+                }
+
+                // Hide "New Job" button in header
+                const newJobBtn = document.querySelector('button[onclick*="createNewJob"]');
+                if (newJobBtn) {
+                    newJobBtn.style.display = 'none';
+                }
+
+                // Hide admin quick actions
+                const quickActionBtns = document.querySelectorAll('.quick-action-btn');
+                quickActionBtns.forEach(btn => {
+                    const text = btn.textContent.trim();
+                    if (text.includes('New Job') || btn.getAttribute('href') === '/users.html') {
+                        btn.style.display = 'none';
+                    }
+                });
+
+                // Update welcome message for workers
+                const welcomeDesc = document.querySelector('.welcome-section p');
+                if (welcomeDesc) {
+                    welcomeDesc.textContent = "Check your assigned tasks and track your work hours below.";
+                }
+            }
         }
 
         async function loadDashboardData() {
@@ -382,16 +419,24 @@
         }
 
         async function loadStatistics() {
+            const userRole = parseInt(currentUser.role);
+            const isWorker = userRole === 0;
+
             try {
-                // For now, we'll use the existing team count from user management
-                const response = await fetch(`/api/users/company/${currentCompany.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('totalTeamMembers').textContent = data.stats.totalUsers;
+                if (!isWorker) {
+                    // Only admins can see company-wide statistics
+                    const response = await fetch(`/api/users/company/${currentCompany.id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('totalTeamMembers').textContent = data.stats.totalUsers;
+                    }
+                } else {
+                    // Workers see limited statistics focused on their work
+                    document.getElementById('totalTeamMembers').textContent = '1'; // Just themselves
                 }
 
                 // Set placeholder values for other statistics until we implement job management
-                document.getElementById('activeJobsCount').textContent = '0';
+                document.getElementById('activeJobsCount').textContent = isWorker ? '0' : '0';
                 document.getElementById('pendingInspections').textContent = '0';
                 document.getElementById('overdueJobs').textContent = '0';
             } catch (error) {

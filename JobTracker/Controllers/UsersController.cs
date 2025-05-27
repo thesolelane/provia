@@ -22,11 +22,45 @@ namespace JobTracker.Controllers
             _logger = logger;
         }
 
+        private async Task<bool> CheckAdminAccess(string? authHeader, int companyId)
+        {
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                return false;
+
+            try
+            {
+                var token = authHeader.Substring("Bearer ".Length);
+                var tokenBytes = Convert.FromBase64String(token);
+                var tokenPayload = Encoding.UTF8.GetString(tokenBytes);
+                var parts = tokenPayload.Split(':');
+                
+                if (parts.Length < 3) return false;
+                
+                var userId = int.Parse(parts[0]);
+                var tokenCompanyId = int.Parse(parts[1]);
+                var role = int.Parse(parts[2]);
+                
+                // Check if user belongs to the requested company and has admin role
+                return tokenCompanyId == companyId && role >= 1; // Admin or MasterAdmin
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         [HttpGet("company/{companyId}")]
-        public async Task<IActionResult> GetCompanyUsers(int companyId)
+        public async Task<IActionResult> GetCompanyUsers(int companyId, [FromHeader] string? Authorization)
         {
             try
             {
+                // Check if user has admin permissions
+                var hasAdminAccess = await CheckAdminAccess(Authorization, companyId);
+                if (!hasAdminAccess)
+                {
+                    return Forbid("Only administrators can view company user data");
+                }
+
                 var users = await _context.Users
                     .Where(u => u.CompanyId == companyId && u.IsActive)
                     .OrderBy(u => u.Role)
