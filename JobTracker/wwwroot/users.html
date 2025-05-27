@@ -468,7 +468,25 @@
                 if (response.ok) {
                     closeCreateUserModal();
                     loadUsers(); // Refresh the list
-                    alert('Team member added successfully!');
+                    
+                    // Show success message in the app
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    successMessage.style.cssText = 'top: 20px; right: 20px; z-index: 1060; max-width: 400px;';
+                    successMessage.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Success!</strong> ${result.message || 'Team member added successfully!'}<br>
+                        <small>${result.emailStatus || 'Verification email sent'}</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        if (successMessage.parentNode) {
+                            successMessage.remove();
+                        }
+                    }, 5000);
                 } else {
                     throw new Error(result.message || 'Failed to create user');
                 }
