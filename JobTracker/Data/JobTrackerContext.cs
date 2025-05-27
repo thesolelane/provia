@@ -23,6 +23,8 @@ namespace JobTracker.Data
         public DbSet<Inspection> Inspections { get; set; } = null!;
         public DbSet<TimeEntry> TimeEntries { get; set; } = null!;
         public DbSet<PendingClockIn> PendingClockIns { get; set; } = null!;
+        public DbSet<MaterialStore> MaterialStores { get; set; } = null!;
+        public DbSet<MaterialRun> MaterialRuns { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
