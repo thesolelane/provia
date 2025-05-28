@@ -348,7 +348,7 @@
             const userInfo = localStorage.getItem('userInfo');
             if (userInfo) {
                 const user = JSON.parse(userInfo);
-                if (user.role === 2 || user.role === 'RegularUser') {
+                if (user.role === 'FieldOperator') {
                     window.location.replace('/field-operator-dashboard.html');
                     return;
                 }
@@ -371,8 +371,8 @@
             currentUser = JSON.parse(userInfo);
             currentCompany = JSON.parse(companyInfo);
 
-            // Redirect Field Operators to their dedicated dashboard (role 2)
-            if (currentUser.role === 2 || currentUser.role === 'RegularUser') {
+            // Redirect Field Operators to their dedicated dashboard
+            if (currentUser.role === 'FieldOperator') {
                 window.location.href = '/field-operator-dashboard.html';
                 return;
             }

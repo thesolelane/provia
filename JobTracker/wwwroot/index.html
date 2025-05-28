@@ -468,8 +468,7 @@
             const userInfo = localStorage.getItem('userInfo');
             if (userInfo) {
                 const user = JSON.parse(userInfo);
-                // Role 2 is Field Operator
-                if (user.role === 2 || user.Role === 'FieldOperator') {
+                if (user.role === 'FieldOperator') {
                     window.location.href = '/field-operator-dashboard.html';
                 } else {
                     window.location.href = '/dashboard.html';
