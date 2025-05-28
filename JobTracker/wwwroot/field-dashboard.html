@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Operator - Smart Job Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2E8B57 0%, #228B22 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .main-content {
+            padding: 30px 0;
+        }
+        
+        .worker-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #2E8B57 0%, #228B22 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 139, 87, 0.3);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(46, 139, 87, 0.4);
+        }
+        
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .job-site-card {
+            border-left: 4px solid #2E8B57;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .job-site-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-progress { background: #d1ecf1; color: #0c5460; }
+        .status-completed { background: #d4edda; color: #155724; }
+        
+        .clock-status {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .clocked-in { background: #d4edda; color: #155724; }
+        .clocked-out { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="mb-0">
+                        <i class="fas fa-hard-hat text-success me-2"></i>
+                        Field Operator Dashboard
+                    </h4>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="clock-status clocked-out me-3" id="clockStatus">Clocked Out</span>
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-2"></i>
+                            <span id="workerName">Field Worker</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="signOut()"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Welcome Section -->
+        <div class="worker-card">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="mb-2">Welcome back, <span id="welcomeName">Field Worker</span>!</h3>
+                        <p class="text-muted mb-0">Ready to start your work day? Choose an option below to get started.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <h5 class="text-muted mb-1" id="companyName">Company Name</h5>
+                        <small class="text-muted" id="currentTime"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="action-btn w-100 h-100" onclick="showClockModal()">
+                    <div class="action-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h6 class="mb-0">Clock In/Out</h6>
+                    <small>Track your work hours</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-btn w-100 h-100" onclick="scrollToJobSites()">
+                    <div class="action-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h6 class="mb-0">View Job Sites</h6>
+                    <small>See current locations</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-btn w-100 h-100" onclick="showMaterialModal()">
+                    <div class="action-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h6 class="mb-0">Material Run</h6>
+                    <small>Track supply trips</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-btn w-100 h-100" onclick="reportIssue()">
+                    <div class="action-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h6 class="mb-0">Report Issue</h6>
+                    <small>Submit problems</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Job Sites -->
+        <div class="worker-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-construction me-2"></i>Current Job Sites</h5>
+            </div>
+            <div class="card-body">
+                <div id="jobSitesList">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-success mb-3"></i>
+                        <p class="text-muted">Loading job sites...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clock In/Out Modal -->
+    <div class="modal fade" id="clockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Time Clock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="clockContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Getting your location...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Run Modal -->
+    <div class="modal fade" id="materialModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Start Material Run</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Select Job Site</label>
+                            <select class="form-select" id="materialJobSelect">
+                                <option value="">Choose job site...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Store Type</label>
+                            <select class="form-select" id="storeTypeSelect">
+                                <option value="">Choose store...</option>
+                                <option value="Home Depot">Home Depot</option>
+                                <option value="Lowes">Lowe's</option>
+                                <option value="Lumber Yard">Lumber Yard</option>
+                                <option value="Hardware Store">Hardware Store</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Materials Needed</label>
+                        <textarea class="form-control" rows="3" id="materialsText" placeholder="List what materials you need to pick up..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="startMaterialRun()">Start Run</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Sections Modal -->
+    <div class="modal fade" id="sectionsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectionsTitle">Job Sections</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="sectionsContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Loading sections...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let currentCompany = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = localStorage.getItem('userInfo');
+            const companyInfo = localStorage.getItem('companyInfo');
+
+            if (!token || !userInfo || !companyInfo) {
+                window.location.href = '/';
+                return;
+            }
+
+            currentUser = JSON.parse(userInfo);
+            currentCompany = JSON.parse(companyInfo);
+
+            // Only allow Field Operators
+            if (currentUser.role !== 'FieldOperator') {
+                window.location.href = '/dashboard.html';
+                return;
+            }
+
+            // Update UI
+            document.getElementById('workerName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('welcomeName').textContent = currentUser.firstName;
+            document.getElementById('companyName').textContent = currentCompany.companyName;
+
+            // Load data
+            loadJobSites();
+            checkClockStatus();
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString();
+        }
+
+        function loadJobSites() {
+            fetch('/api/jobs', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('jobSitesList');
+                const activeJobs = data.filter(job => job.status !== 'Completed' && job.status !== 'Cancelled');
+                
+                if (activeJobs.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No active job sites at this time.</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = activeJobs.map(job => `
+                        <div class="card job-site-card mb-3" onclick="showJobSections(${job.id}, '${job.name}', '${job.location}')">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title mb-1">
+                                            <i class="fas fa-map-marker-alt text-success me-2"></i>
+                                            ${job.location}
+                                        </h6>
+                                        <p class="card-text mb-1"><strong>Project:</strong> ${job.name}</p>
+                                        <p class="card-text mb-0"><strong>Client:</strong> ${job.clientName || 'N/A'}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="status-badge status-${job.status.toLowerCase().replace(' ', '-')}">${job.status}</span>
+                                        <br><small class="text-muted mt-1">${job.jobNumber}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading job sites:', error);
+                document.getElementById('jobSitesList').innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <p class="text-muted">Unable to load job sites. Please try again.</p>
+                    </div>
+                `;
+            });
+        }
+
+        function checkClockStatus() {
+            fetch('/api/timetracking/current', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('clockStatus');
+                if (data && data.clockInTime && !data.clockOutTime) {
+                    statusElement.textContent = 'Clocked In';
+                    statusElement.className = 'clock-status clocked-in me-3';
+                } else {
+                    statusElement.textContent = 'Clocked Out';
+                    statusElement.className = 'clock-status clocked-out me-3';
+                }
+            })
+            .catch(error => console.error('Clock status error:', error));
+        }
+
+        function showClockModal() {
+            const modal = new bootstrap.Modal(document.getElementById('clockModal'));
+            modal.show();
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => showClockOptions(position.coords.latitude, position.coords.longitude),
+                    error => {
+                        document.getElementById('clockContent').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Location access is required for clock in/out.
+                            </div>
+                        `;
+                    }
+                );
+            }
+        }
+
+        function showClockOptions(lat, lng) {
+            document.getElementById('clockContent').innerHTML = `
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
+                        <p class="text-success">Location verified</p>
+                    </div>
+                    <button class="btn btn-success btn-lg me-2" onclick="clockIn(${lat}, ${lng})">
+                        <i class="fas fa-play me-2"></i>Clock In
+                    </button>
+                    <button class="btn btn-danger btn-lg" onclick="clockOut(${lat}, ${lng})">
+                        <i class="fas fa-stop me-2"></i>Clock Out
+                    </button>
+                </div>
+            `;
+        }
+
+        function clockIn(lat, lng) {
+            fetch('/api/timetracking/clock-in', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lng })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
+                    checkClockStatus();
+                    alert('Successfully clocked in!');
+                } else {
+                    alert('Clock in failed: ' + (data.message || 'Please try again'));
+                }
+            })
+            .catch(error => alert('Clock in failed. Please try again.'));
+        }
+
+        function clockOut(lat, lng) {
+            fetch('/api/timetracking/clock-out', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lng })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
+                    checkClockStatus();
+                    alert('Successfully clocked out!');
+                } else {
+                    alert('Clock out failed: ' + (data.message || 'Please try again'));
+                }
+            })
+            .catch(error => alert('Clock out failed. Please try again.'));
+        }
+
+        function scrollToJobSites() {
+            document.querySelector('.worker-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showMaterialModal() {
+            const modal = new bootstrap.Modal(document.getElementById('materialModal'));
+            modal.show();
+            loadJobsForMaterial();
+        }
+
+        function loadJobsForMaterial() {
+            fetch('/api/jobs', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('materialJobSelect');
+                select.innerHTML = '<option value="">Choose job site...</option>';
+                data.forEach(job => {
+                    if (job.status !== 'Completed' && job.status !== 'Cancelled') {
+                        select.innerHTML += `<option value="${job.id}">${job.location} - ${job.name}</option>`;
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading jobs:', error));
+        }
+
+        function startMaterialRun() {
+            const jobId = document.getElementById('materialJobSelect').value;
+            const storeType = document.getElementById('storeTypeSelect').value;
+            const materials = document.getElementById('materialsText').value;
+
+            if (!jobId || !storeType || !materials) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            alert('Material run started! (Feature in development)');
+            bootstrap.Modal.getInstance(document.getElementById('materialModal')).hide();
+        }
+
+        function showJobSections(jobId, jobName, location) {
+            document.getElementById('sectionsTitle').textContent = `${jobName} - ${location}`;
+            const modal = new bootstrap.Modal(document.getElementById('sectionsModal'));
+            modal.show();
+            
+            fetch(`/api/jobs/${jobId}/sections`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const content = document.getElementById('sectionsContent');
+                if (data.length === 0) {
+                    content.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No sections created for this job site yet.</p>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = data.map(section => `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">${section.name}</h6>
+                                        <p class="mb-0 text-muted">${section.description || 'No description'}</p>
+                                    </div>
+                                    <span class="badge bg-secondary">${section.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading sections:', error);
+                document.getElementById('sectionsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Unable to load sections. Please try again.
+                    </div>
+                `;
+            });
+        }
+
+        function reportIssue() {
+            alert('Issue reporting feature coming soon!');
+        }
+
+        function signOut() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('companyInfo');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
