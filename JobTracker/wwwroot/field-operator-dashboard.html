@@ -333,8 +333,8 @@
             currentUser = JSON.parse(userInfo);
             currentCompany = JSON.parse(companyInfo);
 
-            // Ensure this is only for Field Operators (role 2)
-            if (currentUser.role !== 2 && currentUser.role !== 'RegularUser') {
+            // Ensure this is only for Field Operators
+            if (currentUser.role !== 'FieldOperator') {
                 window.location.href = '/dashboard.html';
                 return;
             }
