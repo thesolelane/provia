@@ -361,8 +361,8 @@
             currentUser = JSON.parse(userInfo);
             currentCompany = JSON.parse(companyInfo);
 
-            // Redirect Field Operators to their dedicated dashboard
-            if (currentUser.role === 'FieldOperator') {
+            // Redirect Field Operators to their dedicated dashboard (role 2)
+            if (currentUser.role === 2 || currentUser.role === 'RegularUser') {
                 window.location.href = '/field-operator-dashboard.html';
                 return;
             }
