@@ -361,7 +361,13 @@
             currentUser = JSON.parse(userInfo);
             currentCompany = JSON.parse(companyInfo);
 
-            // Update user interface
+            // Redirect Field Operators to their dedicated dashboard
+            if (currentUser.role === 'FieldOperator') {
+                window.location.href = '/field-operator-dashboard.html';
+                return;
+            }
+
+            // Update user interface for Admins and Master Admins only
             document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
             document.getElementById('welcomeUserName').textContent = currentUser.firstName;
             document.getElementById('companyName').textContent = currentCompany.companyName;
