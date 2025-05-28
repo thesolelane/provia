@@ -349,7 +349,7 @@
             if (userInfo) {
                 const user = JSON.parse(userInfo);
                 if (user.role === 'FieldOperator') {
-                    window.location.replace('/field-operator-dashboard.html');
+                    window.location.replace('/field-dashboard.html');
                     return;
                 }
             }
@@ -373,7 +373,7 @@
 
             // Redirect Field Operators to their dedicated dashboard
             if (currentUser.role === 'FieldOperator') {
-                window.location.href = '/field-operator-dashboard.html';
+                window.location.href = '/field-dashboard.html';
                 return;
             }
 
