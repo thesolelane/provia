@@ -13,25 +13,32 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .dashboard-container {
-            padding: 20px;
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .dashboard-card {
+        .navbar-brand {
+            font-weight: bold;
+            color: #667eea !important;
+        }
+        
+        .dashboard-container {
+            padding: 20px;
+            margin-top: 80px;
+        }
+        
+        .welcome-card {
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border: none;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding: 30px;
         }
         
-        .card-header {
-            border-radius: 15px 15px 0 0 !important;
-            border: none;
-            padding: 20px;
-        }
-        
-        .stat-card {
+        .action-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
@@ -40,243 +47,242 @@
             border: none;
             transition: transform 0.3s ease;
             margin-bottom: 20px;
+            cursor: pointer;
         }
         
-        .stat-card:hover {
+        .action-card:hover {
             transform: translateY(-5px);
         }
         
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
+        .action-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
             color: #667eea;
+        }
+        
+        .action-title {
+            font-size: 1.2rem;
+            font-weight: bold;
             margin-bottom: 10px;
         }
         
-        .stat-label {
+        .action-description {
             color: #6c757d;
             font-size: 0.9rem;
-            font-weight: 500;
         }
         
-        .quick-action-btn {
-            display: block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.3s ease;
-            border: none;
-            margin-bottom: 15px;
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
         
-        .quick-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-            color: white;
-        }
-        
-        .quick-action-btn i {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .welcome-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .btn-logout {
-            background: #dc3545;
-            border: none;
-            border-radius: 25px;
-            padding: 10px 25px;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-logout:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-        }
-        
-        .task-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .task-priority-high {
-            border-left-color: #dc3545;
-        }
-        
-        .task-priority-medium {
-            border-left-color: #ffc107;
-        }
-        
-        .task-priority-low {
-            border-left-color: #28a745;
-        }
-        
-        .clock-status {
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .clocked-in {
+        .status-clocked-in {
             background: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
         
-        .clocked-out {
+        .status-clocked-out {
             background: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
         }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-hard-hat me-2"></i>
+                Smart Job Tracker
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <span class="badge status-clocked-out me-3" id="clockStatus">Clocked Out</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>
+                        <span id="userName">Loading...</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
     <div class="container-fluid dashboard-container">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="welcome-section">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="mb-1">Welcome back, <span id="userName"></span>!</h2>
-                            <p class="text-muted mb-0">Ready to tackle today's construction tasks?</p>
-                        </div>
-                        <div>
-                            <button class="btn btn-logout" onclick="logout()">
-                                <i class="fas fa-sign-out-alt me-2"></i>Sign Out
-                            </button>
-                        </div>
+        <!-- Welcome Section -->
+        <div class="welcome-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">Welcome, <span id="welcomeUserName">Field Operator</span>!</h2>
+                    <p class="mb-0 text-muted">Ready to start your workday? Check your assigned tasks and manage your time below.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-muted">
+                        <small id="companyName">Company</small><br>
+                        <small id="currentDateTime"></small>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Clock Status -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div id="clockStatus" class="clock-status">
-                    <i class="fas fa-clock fa-2x mb-2"></i>
-                    <div id="clockStatusText">Checking clock status...</div>
-                    <div id="clockTime" class="small mt-1"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Personal Statistics -->
-        <div class="row mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="myActiveJobs">0</div>
-                    <div class="stat-label">My Active Jobs</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="pendingTasks">0</div>
-                    <div class="stat-label">Pending Tasks</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="materialOrders">0</div>
-                    <div class="stat-label">Material Orders</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="hoursThisWeek">0</div>
-                    <div class="stat-label">Hours This Week</div>
                 </div>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="dashboard-card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="action-card" onclick="showClockInOut()">
+                    <div class="action-icon">
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-6 col-md-3">
-                                <a href="#" class="quick-action-btn" onclick="showMyTasks()">
-                                    <i class="fas fa-tasks"></i>
-                                    <span>My Tasks</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <a href="#" class="quick-action-btn" onclick="toggleClock()">
-                                    <i class="fas fa-clock"></i>
-                                    <span id="clockButtonText">Clock In</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <a href="#" class="quick-action-btn" onclick="showMaterialRequests()">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <span>Order Materials</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <a href="#" class="quick-action-btn" onclick="showChangeRequests()">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Report Issue</span>
-                                </a>
-                            </div>
+                    <div class="action-title">Clock In/Out</div>
+                    <div class="action-description">Track your work hours with GPS verification</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-card" onclick="showMyTasks()">
+                    <div class="action-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="action-title">My Tasks</div>
+                    <div class="action-description">View your assigned job sections</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-card" onclick="showMaterialRuns()">
+                    <div class="action-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="action-title">Material Runs</div>
+                    <div class="action-description">Track trips to supply stores</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-card" onclick="showReportIssue()">
+                    <div class="action-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="action-title">Report Issue</div>
+                    <div class="action-description">Submit problems or change requests</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="welcome-card">
+                    <h4 class="mb-3"><i class="fas fa-calendar-day me-2"></i>Today's Schedule</h4>
+                    <div id="todayTasks">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Loading your assigned tasks...
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Today's Tasks -->
-        <div class="row mb-4">
-            <div class="col-12 col-lg-8">
-                <div class="dashboard-card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Today's Tasks</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="todayTasksContainer">
-                            <div class="text-center py-4">
-                                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Loading your tasks for today...</p>
-                            </div>
+    <!-- Clock In/Out Modal -->
+    <div class="modal fade" id="clockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Clock In/Out</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="clockContent">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                            <p>Verifying your location...</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Current Job Info -->
-            <div class="col-12 col-lg-4">
-                <div class="dashboard-card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Current Job</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="currentJobContainer">
-                            <div class="text-center py-4">
-                                <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No active job assigned</p>
-                            </div>
+        </div>
+    </div>
+
+    <!-- Material Run Modal -->
+    <div class="modal fade" id="materialRunModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Start Material Run</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="materialRunContent">
+                        <div class="mb-3">
+                            <label class="form-label">Select Job</label>
+                            <select class="form-select" id="materialRunJob">
+                                <option value="">Select a job...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Store Type</label>
+                            <select class="form-select" id="materialStoreType">
+                                <option value="">Select store type...</option>
+                                <option value="Home Depot">Home Depot</option>
+                                <option value="Lowes">Lowe's</option>
+                                <option value="Lumber Yard">Lumber Yard</option>
+                                <option value="Specialty">Specialty Store</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Specific Store</label>
+                            <select class="form-select" id="materialStore">
+                                <option value="">Select a store...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Materials Needed</label>
+                            <textarea class="form-control" id="materialsList" rows="3" placeholder="List the materials you need to pick up..."></textarea>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="startMaterialRun()">Start Material Run</button>
                 </div>
             </div>
         </div>
@@ -286,567 +292,350 @@
     <script>
         let currentUser = null;
         let currentCompany = null;
-        let clockedIn = false;
-        let pendingClockIn = null;
-        let verificationTimer = null;
+        let currentTimeEntry = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            initializeDashboard();
+            checkAuthentication();
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
         });
 
-        function initializeDashboard() {
-            // Get user data from localStorage (consistent with signin page)
-            const userData = localStorage.getItem('userInfo');
-            const companyData = localStorage.getItem('companyInfo');
+        function checkAuthentication() {
             const token = localStorage.getItem('authToken');
-            
-            if (!userData || !companyData || !token) {
-                window.location.href = '/index.html';
+            const userInfo = localStorage.getItem('userInfo');
+            const companyInfo = localStorage.getItem('companyInfo');
+
+            if (!token || !userInfo || !companyInfo) {
+                window.location.href = '/';
                 return;
             }
-            
-            currentUser = JSON.parse(userData);
-            currentCompany = JSON.parse(companyData);
-            
-            // Update welcome message
-            document.getElementById('userName').textContent = currentUser.firstName;
-            
-            // Load dashboard data
-            loadFieldOperatorData();
-        }
 
-        async function loadFieldOperatorData() {
-            try {
-                await Promise.all([
-                    loadPersonalStatistics(),
-                    loadTodaysTasks(),
-                    loadCurrentJob(),
-                    checkClockStatus()
-                ]);
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                showError('Failed to load dashboard data');
+            currentUser = JSON.parse(userInfo);
+            currentCompany = JSON.parse(companyInfo);
+
+            // Ensure this is only for Field Operators (role 2)
+            if (currentUser.role !== 2 && currentUser.role !== 'RegularUser') {
+                window.location.href = '/dashboard.html';
+                return;
             }
+
+            // Update UI
+            document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('welcomeUserName').textContent = currentUser.firstName;
+            document.getElementById('companyName').textContent = currentCompany.companyName;
+
+            // Load data
+            loadTodayTasks();
+            checkClockStatus();
         }
 
-        async function loadPersonalStatistics() {
-            try {
-                // Load personal work statistics for field operator
-                document.getElementById('myActiveJobs').textContent = '2';
-                document.getElementById('pendingTasks').textContent = '5';
-                document.getElementById('materialOrders').textContent = '1';
-                document.getElementById('hoursThisWeek').textContent = '32';
-            } catch (error) {
-                console.error('Error loading personal statistics:', error);
-            }
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
         }
 
-        async function loadTodaysTasks() {
-            try {
-                const container = document.getElementById('todayTasksContainer');
-                
-                // Sample tasks for field operator
-                const tasks = [
-                    { id: 1, title: 'Install bathroom fixtures', job: 'Johnson Renovation', priority: 'high', dueTime: '10:00 AM' },
-                    { id: 2, title: 'Complete electrical rough-in', job: 'Smith Kitchen', priority: 'medium', dueTime: '2:00 PM' },
-                    { id: 3, title: 'Inspect plumbing connections', job: 'Johnson Renovation', priority: 'low', dueTime: '4:00 PM' }
-                ];
-                
-                if (tasks.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                            <p class="text-muted">All tasks completed for today!</p>
+        function loadTodayTasks() {
+            // Load assigned tasks for today
+            fetch('/api/sections/my-assignments', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tasksContainer = document.getElementById('todayTasks');
+                if (data.length === 0) {
+                    tasksContainer.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No tasks assigned for today. Check with your supervisor.
                         </div>
                     `;
                 } else {
-                    container.innerHTML = tasks.map(task => `
-                        <div class="task-item task-priority-${task.priority}">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1">${task.title}</h6>
-                                    <small class="text-muted">${task.job}</small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted">${task.dueTime}</small>
-                                    <br>
-                                    <span class="badge bg-${task.priority === 'high' ? 'danger' : task.priority === 'medium' ? 'warning' : 'success'}">${task.priority}</span>
-                                </div>
+                    tasksContainer.innerHTML = data.map(task => `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h6 class="card-title">${task.jobNumber} - ${task.sectionName}</h6>
+                                <p class="card-text">${task.description || 'No description'}</p>
+                                <small class="text-muted">Status: ${task.status}</small>
                             </div>
                         </div>
                     `).join('');
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error loading tasks:', error);
-                document.getElementById('todayTasksContainer').innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                        <p class="text-muted">Error loading tasks</p>
+                document.getElementById('todayTasks').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Unable to load tasks. Please try again later.
                     </div>
                 `;
-            }
+            });
         }
 
-        async function loadCurrentJob() {
-            try {
-                const container = document.getElementById('currentJobContainer');
-                
-                // Sample current job
-                const currentJob = {
-                    number: 'JOB-2025-001',
-                    title: 'Johnson Bathroom Renovation',
-                    address: '123 Main St, Boston, MA',
-                    phase: 'Plumbing Rough-in',
-                    progress: 65
-                };
-                
-                container.innerHTML = `
-                    <div>
-                        <h6 class="mb-2">${currentJob.title}</h6>
-                        <p class="small text-muted mb-2">${currentJob.number}</p>
-                        <p class="small text-muted mb-2"><i class="fas fa-map-marker-alt me-1"></i>${currentJob.address}</p>
-                        <p class="small mb-2"><strong>Current Phase:</strong> ${currentJob.phase}</p>
-                        <div class="progress mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: ${currentJob.progress}%" 
-                                 aria-valuenow="${currentJob.progress}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <small class="text-muted">${currentJob.progress}% Complete</small>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading current job:', error);
-            }
-        }
-
-        async function checkClockStatus() {
-            try {
-                // Check if user is currently clocked in
-                clockedIn = false; // This would come from API
-                
-                updateClockStatus();
-            } catch (error) {
-                console.error('Error checking clock status:', error);
-            }
-        }
-
-        function updateClockStatus() {
-            const statusElement = document.getElementById('clockStatus');
-            const textElement = document.getElementById('clockStatusText');
-            const timeElement = document.getElementById('clockTime');
-            const buttonElement = document.getElementById('clockButtonText');
-            
-            if (clockedIn) {
-                statusElement.className = 'clock-status clocked-in';
-                textElement.textContent = 'Currently Clocked In';
-                timeElement.textContent = 'Working on assigned job';
-                buttonElement.textContent = 'Clock Out';
-            } else if (pendingClockIn) {
-                statusElement.className = 'clock-status' ;
-                statusElement.style.background = '#fff3cd';
-                statusElement.style.color = '#856404';
-                statusElement.style.border = '1px solid #ffeaa7';
-                textElement.textContent = 'Clock-in Pending Verification';
-                timeElement.textContent = `At ${pendingClockIn.jobSite}`;
-                buttonElement.textContent = 'Verify Location';
-            } else {
-                statusElement.className = 'clock-status clocked-out';
-                textElement.textContent = 'Currently Clocked Out';
-                timeElement.textContent = 'Ready to start work';
-                buttonElement.textContent = 'Clock In';
-            }
-        }
-
-        async function toggleClock() {
-            try {
-                if (clockedIn) {
-                    await handleClockOut();
-                } else if (pendingClockIn) {
-                    await finalizePendingClockIn();
+        function checkClockStatus() {
+            fetch('/api/timetracking/current', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusBadge = document.getElementById('clockStatus');
+                if (data && data.clockInTime && !data.clockOutTime) {
+                    statusBadge.textContent = 'Clocked In';
+                    statusBadge.className = 'badge status-clocked-in me-3';
+                    currentTimeEntry = data;
                 } else {
-                    await handleClockIn();
+                    statusBadge.textContent = 'Clocked Out';
+                    statusBadge.className = 'badge status-clocked-out me-3';
+                    currentTimeEntry = null;
                 }
-            } catch (error) {
-                console.error('Error toggling clock:', error);
-                showError('Failed to update clock status');
-            }
+            })
+            .catch(error => {
+                console.error('Error checking clock status:', error);
+            });
         }
 
-        async function handleClockIn() {
-            if (!navigator.geolocation) {
-                showError('Location services are not supported by this browser');
-                return;
-            }
-
-            showSuccess('Getting your location...');
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    try {
-                        const response = await fetch('/api/timetracking/clock-in/initiate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({
-                                userId: currentUser.id,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            pendingClockIn = {
-                                id: result.pendingClockInId,
-                                jobSite: result.jobSite,
-                                startTime: new Date()
-                            };
-                            
-                            showSuccess(`Clock-in initiated at ${result.jobSite}. Please stay at the job site for verification.`);
-                            startVerificationCountdown();
-                            updateClockStatus();
-                        } else {
-                            showError(result.message || 'Clock-in failed');
-                        }
-                    } catch (error) {
-                        console.error('Clock-in error:', error);
-                        showError('Failed to initiate clock-in');
-                    }
-                },
-                (error) => {
-                    console.error('Location error:', error);
-                    showError('Unable to get your location. Please enable location services.');
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
-                }
-            );
-        }
-
-        async function finalizePendingClockIn() {
-            if (!pendingClockIn) return;
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    try {
-                        const response = await fetch('/api/timetracking/clock-in/finalize', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({
-                                pendingClockInId: pendingClockIn.id,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            clockedIn = true;
-                            pendingClockIn = null;
-                            clearVerificationTimer();
-                            showSuccess('Successfully clocked in!');
-                        } else {
-                            pendingClockIn = null;
-                            showError(result.message || 'Clock-in verification failed');
-                        }
-                        
-                        updateClockStatus();
-                    } catch (error) {
-                        console.error('Clock-in finalization error:', error);
-                        showError('Failed to finalize clock-in');
-                    }
-                },
-                (error) => {
-                    console.error('Location error:', error);
-                    showError('Unable to verify your location');
-                }
-            );
-        }
-
-        async function handleClockOut() {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    try {
-                        const response = await fetch('/api/timetracking/clock-out', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({
-                                userId: currentUser.id,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            clockedIn = false;
-                            showSuccess(`Successfully clocked out! Worked ${result.totalHours.toFixed(2)} hours.`);
-                            if (!result.locationVerified) {
-                                showError('Note: Clock-out location could not be verified');
-                            }
-                        } else {
-                            showError(result.message || 'Clock-out failed');
-                        }
-                        
-                        updateClockStatus();
-                    } catch (error) {
-                        console.error('Clock-out error:', error);
-                        showError('Failed to clock out');
-                    }
-                },
-                (error) => {
-                    console.error('Location error:', error);
-                    showError('Unable to get your location for clock-out');
-                }
-            );
-        }
-
-        function startVerificationCountdown() {
-            let secondsLeft = 540; // 9 minutes
+        function showClockInOut() {
+            const modal = new bootstrap.Modal(document.getElementById('clockModal'));
+            modal.show();
             
-            verificationTimer = setInterval(() => {
-                secondsLeft--;
-                const minutesLeft = Math.floor(secondsLeft / 60);
-                const seconds = secondsLeft % 60;
-                
-                document.getElementById('clockTime').textContent = 
-                    `Verification in ${minutesLeft}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (secondsLeft <= 0) {
-                    clearInterval(verificationTimer);
-                    finalizePendingClockIn();
-                }
-            }, 1000);
+            // Get current location and show clock options
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        showClockOptions(position.coords.latitude, position.coords.longitude);
+                    },
+                    function(error) {
+                        document.getElementById('clockContent').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Location access is required for clock in/out. Please enable location services.
+                            </div>
+                        `;
+                    }
+                );
+            } else {
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Geolocation is not supported by this browser.
+                    </div>
+                `;
+            }
         }
 
-        function clearVerificationTimer() {
-            if (verificationTimer) {
-                clearInterval(verificationTimer);
-                verificationTimer = null;
-            }
+        function showClockOptions(latitude, longitude) {
+            const isCurrentlyClockedIn = currentTimeEntry !== null;
+            
+            document.getElementById('clockContent').innerHTML = `
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
+                        <p class="text-success">Location verified</p>
+                        <small class="text-muted">Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}</small>
+                    </div>
+                    
+                    ${!isCurrentlyClockedIn ? `
+                        <button class="btn btn-success btn-lg w-100 mb-2" onclick="clockIn(${latitude}, ${longitude})">
+                            <i class="fas fa-clock me-2"></i>Clock In
+                        </button>
+                    ` : `
+                        <div class="alert alert-info mb-3">
+                            Currently clocked in since ${new Date(currentTimeEntry.clockInTime).toLocaleTimeString()}
+                        </div>
+                        <button class="btn btn-danger btn-lg w-100 mb-2" onclick="clockOut(${latitude}, ${longitude})">
+                            <i class="fas fa-clock me-2"></i>Clock Out
+                        </button>
+                    `}
+                </div>
+            `;
+        }
+
+        function clockIn(latitude, longitude) {
+            fetch('/api/timetracking/clock-in', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('clockContent').innerHTML = `
+                        <div class="alert alert-success text-center">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <h5>Successfully Clocked In!</h5>
+                            <p>Time: ${new Date().toLocaleTimeString()}</p>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
+                        checkClockStatus();
+                    }, 2000);
+                } else {
+                    document.getElementById('clockContent').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.message || 'Clock in failed. Please try again.'}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Clock in error:', error);
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Clock in failed. Please try again.
+                    </div>
+                `;
+            });
+        }
+
+        function clockOut(latitude, longitude) {
+            fetch('/api/timetracking/clock-out', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('clockContent').innerHTML = `
+                        <div class="alert alert-success text-center">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <h5>Successfully Clocked Out!</h5>
+                            <p>Time: ${new Date().toLocaleTimeString()}</p>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
+                        checkClockStatus();
+                    }, 2000);
+                } else {
+                    document.getElementById('clockContent').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.message || 'Clock out failed. Please try again.'}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Clock out error:', error);
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Clock out failed. Please try again.
+                    </div>
+                `;
+            });
         }
 
         function showMyTasks() {
-            // Navigate to tasks page or show modal
-            alert('My Tasks feature will be implemented here');
+            // Reload and scroll to tasks section
+            loadTodayTasks();
+            document.querySelector('.welcome-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function showMaterialRequests() {
-            showMaterialRunModal();
-        }
-
-        function showMaterialRunModal() {
-            const modalHtml = `
-                <div class="modal fade" id="materialRunModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Start Material Run</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="materialRunForm">
-                                    <div class="mb-3">
-                                        <label for="jobSelect" class="form-label">Select Job</label>
-                                        <select class="form-select" id="jobSelect" required>
-                                            <option value="">Choose a job...</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="storeSelect" class="form-label">Select Store</label>
-                                        <select class="form-select" id="storeSelect" required>
-                                            <option value="">Choose a store...</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="storeType" class="form-label">Store Type Filter</label>
-                                        <select class="form-select" id="storeType" onchange="filterStores()">
-                                            <option value="">All Stores</option>
-                                            <option value="Home Improvement">Home Improvement</option>
-                                            <option value="Lumber">Lumber Yard</option>
-                                            <option value="Hardware">Hardware Store</option>
-                                            <option value="Electrical">Electrical Supply</option>
-                                            <option value="Plumbing">Plumbing Supply</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="purpose" class="form-label">Materials Needed</label>
-                                        <textarea class="form-control" id="purpose" rows="3" placeholder="Describe what materials you're picking up..." required></textarea>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="startMaterialRun()">Start Material Run</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Remove existing modal if present
-            const existingModal = document.getElementById('materialRunModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Load data and show modal
-            loadJobsForMaterialRun();
-            loadMaterialStores();
-            
+        function showMaterialRuns() {
             const modal = new bootstrap.Modal(document.getElementById('materialRunModal'));
             modal.show();
+            loadMaterialRunData();
         }
 
-        async function loadJobsForMaterialRun() {
-            try {
-                // For demo, add sample jobs - this would come from API
-                const jobSelect = document.getElementById('jobSelect');
-                jobSelect.innerHTML = `
-                    <option value="">Choose a job...</option>
-                    <option value="1">Johnson Bathroom Renovation - 123 Main St</option>
-                    <option value="2">Smith Kitchen Remodel - 456 Oak Ave</option>
-                    <option value="3">Brown Addition - 789 Pine St</option>
-                `;
-            } catch (error) {
-                console.error('Error loading jobs:', error);
-            }
-        }
-
-        async function loadMaterialStores() {
-            try {
-                const response = await fetch('/api/materialrun/stores', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    }
-                });
-
-                if (response.ok) {
-                    const stores = await response.json();
-                    updateStoreDropdown(stores);
-                } else {
-                    showError('Failed to load material stores');
+        function loadMaterialRunData() {
+            // Load jobs for selection
+            fetch('/api/jobs/my-jobs', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                 }
-            } catch (error) {
-                console.error('Error loading stores:', error);
-                // Fallback to demo data
-                const demoStores = [
-                    { id: 1, storeName: 'Home Depot - Fitchburg', storeType: 'Home Improvement', address: '344 John Fitch Hwy', distanceFromOffice: 1.2 },
-                    { id: 2, storeName: "Lowe's - Fitchburg", storeType: 'Home Improvement', address: '353 John Fitch Hwy', distanceFromOffice: 1.3 },
-                    { id: 3, storeName: 'Wachusett Lumber Co', storeType: 'Lumber', address: '45 Boutelle St', distanceFromOffice: 2.1 }
-                ];
-                updateStoreDropdown(demoStores);
-            }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const jobSelect = document.getElementById('materialRunJob');
+                jobSelect.innerHTML = '<option value="">Select a job...</option>';
+                data.forEach(job => {
+                    jobSelect.innerHTML += `<option value="${job.id}">${job.jobNumber} - ${job.customerName}</option>`;
+                });
+            })
+            .catch(error => console.error('Error loading jobs:', error));
         }
 
-        function updateStoreDropdown(stores) {
-            const storeSelect = document.getElementById('storeSelect');
-            storeSelect.innerHTML = '<option value="">Choose a store...</option>' +
-                stores.map(store => 
-                    `<option value="${store.id}">${store.storeName} - ${store.distanceFromOffice.toFixed(1)} miles</option>`
-                ).join('');
-        }
+        function startMaterialRun() {
+            const jobId = document.getElementById('materialRunJob').value;
+            const storeType = document.getElementById('materialStoreType').value;
+            const storeId = document.getElementById('materialStore').value;
+            const materials = document.getElementById('materialsList').value;
 
-        function filterStores() {
-            const storeType = document.getElementById('storeType').value;
-            loadMaterialStores(storeType);
-        }
-
-        async function startMaterialRun() {
-            const jobId = document.getElementById('jobSelect').value;
-            const storeId = document.getElementById('storeSelect').value;
-            const purpose = document.getElementById('purpose').value;
-
-            if (!jobId || !storeId || !purpose.trim()) {
-                showError('Please fill in all fields');
+            if (!jobId || !storeType || !materials) {
+                alert('Please fill in all required fields.');
                 return;
             }
 
-            if (!navigator.geolocation) {
-                showError('Location services are not supported');
-                return;
-            }
-
-            showSuccess('Getting your location for material run...');
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    try {
-                        const response = await fetch('/api/materialrun/start', {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Start material run with GPS location
+                        fetch('/api/material-runs/start', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                             },
                             body: JSON.stringify({
-                                userId: currentUser.id,
-                                jobId: parseInt(jobId),
-                                materialStoreId: parseInt(storeId),
-                                purpose: purpose,
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude
+                                jobId: jobId,
+                                storeType: storeType,
+                                storeId: storeId,
+                                materialsNeeded: materials,
+                                startLatitude: position.coords.latitude,
+                                startLongitude: position.coords.longitude
                             })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                bootstrap.Modal.getInstance(document.getElementById('materialRunModal')).hide();
+                                alert('Material run started successfully!');
+                            } else {
+                                alert('Failed to start material run: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Material run error:', error);
+                            alert('Failed to start material run. Please try again.');
                         });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            showSuccess(`Material run started! Estimated travel time: ${result.estimatedTravelTime?.toFixed(0)} minutes`);
-                            
-                            // Close modal
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('materialRunModal'));
-                            modal.hide();
-                            
-                            // Refresh dashboard to show active material run
-                            loadFieldOperatorData();
-                        } else {
-                            showError(result.message || 'Failed to start material run');
-                        }
-                    } catch (error) {
-                        console.error('Material run error:', error);
-                        showError('Failed to start material run');
+                    },
+                    function(error) {
+                        alert('Location access is required to start a material run.');
                     }
-                },
-                (error) => {
-                    console.error('Location error:', error);
-                    showError('Unable to get your location');
-                }
-            );
+                );
+            }
         }
 
-        function showChangeRequests() {
-            // Navigate to change requests page
-            alert('Issue reporting feature will be implemented here');
+        function showReportIssue() {
+            alert('Issue reporting feature coming soon!');
         }
 
         function logout() {
-            sessionStorage.clear();
-            window.location.href = '/signin.html';
-        }
-
-        function showError(message) {
-            // Simple error display - could be enhanced with toast notifications
-            alert('Error: ' + message);
-        }
-
-        function showSuccess(message) {
-            // Simple success display - could be enhanced with toast notifications
-            alert('Success: ' + message);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('companyInfo');
+            window.location.href = '/';
         }
     </script>
 </body>
