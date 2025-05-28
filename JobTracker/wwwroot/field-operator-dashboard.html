@@ -206,15 +206,35 @@
             </div>
         </div>
 
-        <!-- Today's Schedule -->
+        <!-- Current Job Sites -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="welcome-card">
-                    <h4 class="mb-3"><i class="fas fa-calendar-day me-2"></i>Today's Schedule</h4>
-                    <div id="todayTasks">
+                    <h4 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Current Job Sites</h4>
+                    <div id="jobSitesList">
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            Loading your assigned tasks...
+                            Loading job sites...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Sections Modal -->
+        <div class="modal fade" id="jobSectionsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="jobSectionsTitle">Job Sections</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="jobSectionsContent">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                <p>Loading job sections...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -325,7 +345,7 @@
             document.getElementById('companyName').textContent = currentCompany.companyName;
 
             // Load data
-            loadTodayTasks();
+            loadJobSites();
             checkClockStatus();
         }
 
@@ -334,44 +354,138 @@
             document.getElementById('currentDateTime').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
         }
 
-        function loadTodayTasks() {
-            // Load assigned tasks for today
-            fetch('/api/sections/my-assignments', {
+        function loadJobSites() {
+            // Load current job sites
+            fetch('/api/jobs', {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                 }
             })
             .then(response => response.json())
             .then(data => {
-                const tasksContainer = document.getElementById('todayTasks');
-                if (data.length === 0) {
-                    tasksContainer.innerHTML = `
+                const jobSitesContainer = document.getElementById('jobSitesList');
+                const activeJobs = data.filter(job => job.status !== 'Completed' && job.status !== 'Cancelled');
+                
+                if (activeJobs.length === 0) {
+                    jobSitesContainer.innerHTML = `
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            No tasks assigned for today. Check with your supervisor.
+                            No active job sites at this time.
                         </div>
                     `;
                 } else {
-                    tasksContainer.innerHTML = data.map(task => `
-                        <div class="card mb-2">
+                    jobSitesContainer.innerHTML = activeJobs.map(job => `
+                        <div class="card mb-3 job-site-card" onclick="showJobSections(${job.id}, '${job.name}', '${job.location}')" style="cursor: pointer;">
                             <div class="card-body">
-                                <h6 class="card-title">${task.jobNumber} - ${task.sectionName}</h6>
-                                <p class="card-text">${task.description || 'No description'}</p>
-                                <small class="text-muted">Status: ${task.status}</small>
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title mb-1">
+                                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                                            ${job.location}
+                                        </h6>
+                                        <p class="card-text mb-1">
+                                            <strong>Job:</strong> ${job.name} (${job.jobNumber})
+                                        </p>
+                                        <p class="card-text mb-0">
+                                            <strong>Client:</strong> ${job.clientName || 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge ${getStatusBadgeClass(job.status)} mb-2">${job.status}</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            ${new Date(job.startDate).toLocaleDateString()}
+                                        </small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `).join('');
                 }
             })
             .catch(error => {
-                console.error('Error loading tasks:', error);
-                document.getElementById('todayTasks').innerHTML = `
+                console.error('Error loading job sites:', error);
+                document.getElementById('jobSitesList').innerHTML = `
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Unable to load tasks. Please try again later.
+                        Unable to load job sites. Please try again later.
                     </div>
                 `;
             });
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'In Progress': return 'bg-success';
+                case 'Pending': return 'bg-warning';
+                case 'On Hold': return 'bg-secondary';
+                case 'Planning': return 'bg-info';
+                default: return 'bg-primary';
+            }
+        }
+
+        function showJobSections(jobId, jobName, location) {
+            document.getElementById('jobSectionsTitle').textContent = `${jobName} - ${location}`;
+            const modal = new bootstrap.Modal(document.getElementById('jobSectionsModal'));
+            modal.show();
+            
+            // Load job sections
+            fetch(`/api/jobs/${jobId}/sections`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const sectionsContent = document.getElementById('jobSectionsContent');
+                
+                if (data.length === 0) {
+                    sectionsContent.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No sections have been created for this job site yet.
+                        </div>
+                    `;
+                } else {
+                    sectionsContent.innerHTML = data.map(section => `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title mb-1">${section.name}</h6>
+                                        <p class="card-text mb-0 text-muted">${section.description || 'No description'}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge ${getSectionStatusBadgeClass(section.status)}">${section.status}</span>
+                                        ${section.assignedEmployeeName ? `<br><small class="text-muted">Assigned: ${section.assignedEmployeeName}</small>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading job sections:', error);
+                document.getElementById('jobSectionsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Unable to load job sections. Please try again later.
+                    </div>
+                `;
+            });
+        }
+
+        function getSectionStatusBadgeClass(status) {
+            switch(status) {
+                case 'Completed': return 'bg-success';
+                case 'In Progress': return 'bg-primary';
+                case 'Pending': return 'bg-warning';
+                case 'On Hold': return 'bg-secondary';
+                case 'Not Started': return 'bg-light text-dark';
+                default: return 'bg-secondary';
+            }
         }
 
         function checkClockStatus() {
@@ -547,8 +661,7 @@
         }
 
         function showMyTasks() {
-            // Reload and scroll to tasks section
-            loadTodayTasks();
+            // Scroll to job sites section
             document.querySelector('.welcome-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
         }
 
