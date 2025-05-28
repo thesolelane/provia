@@ -446,6 +446,12 @@
                             row.style.display = 'none';
                         }
                     });
+                    
+                    // Hide Team Management from dropdown menu
+                    const teamManagementLink = document.querySelector('a[href="/users.html"]');
+                    if (teamManagementLink && teamManagementLink.closest('li')) {
+                        teamManagementLink.closest('li').style.display = 'none';
+                    }
                 }, 100);
 
                 // Update statistics to be worker-focused
