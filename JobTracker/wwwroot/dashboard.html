@@ -344,6 +344,16 @@
         let currentCompany = null;
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Immediate redirect check for Field Operators
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                if (user.role === 2 || user.role === 'RegularUser') {
+                    window.location.replace('/field-operator-dashboard.html');
+                    return;
+                }
+            }
+            
             checkAuthentication();
             loadDashboardData();
         });
