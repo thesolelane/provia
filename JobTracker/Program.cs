@@ -28,6 +28,14 @@ builder.Services.AddScoped<JobTracker.Services.MaterialStoreService>();
 builder.Services.AddScoped<JobTracker.Services.MaterialRunService>();
 builder.Services.AddScoped<JobTracker.Services.JobLocationService>();
 builder.Services.AddHttpClient();
+
+// Add Authentication
+builder.Services.AddAuthentication("Bearer")
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
+        "Bearer", options => { });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -74,6 +82,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Add authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Serve static files for the React app
 app.UseStaticFiles();
