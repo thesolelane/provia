@@ -1063,9 +1063,13 @@
                     document.getElementById('emailAddress').value = user.email || '';
                     document.getElementById('phoneNumber').value = user.phoneNumber || '';
                     document.getElementById('locationConsent').checked = user.locationTrackingConsent || false;
+                    document.getElementById('languagePreference').value = user.languagePreference || 'en';
+                } else {
+                    showInAppMessage('Error', 'Unable to load user settings. Please try again.', 'danger');
                 }
             } catch (error) {
                 console.error('Error loading user settings:', error);
+                showInAppMessage('Error', 'Unable to load user settings. Please try again.', 'danger');
             }
         }
 
@@ -1083,6 +1087,7 @@
             try {
                 const phoneNumber = document.getElementById('phoneNumber').value;
                 const locationConsent = document.getElementById('locationConsent').checked;
+                const languagePreference = document.getElementById('languagePreference').value;
 
                 const response = await fetch('/api/auth/update-profile', {
                     method: 'PUT',
@@ -1092,15 +1097,23 @@
                     },
                     body: JSON.stringify({
                         phoneNumber: phoneNumber,
-                        locationTrackingConsent: locationConsent
+                        locationTrackingConsent: locationConsent,
+                        languagePreference: languagePreference
                     })
                 });
 
                 if (response.ok) {
                     showInAppMessage('Settings', 'Settings updated successfully!', 'success');
                     bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+                    
+                    // Update the stored user info to reflect the language change
+                    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                    userInfo.languagePreference = languagePreference;
+                    userInfo.locationTrackingConsent = locationConsent;
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
                 } else {
-                    showInAppMessage('Settings', 'Failed to update settings. Please try again.', 'danger');
+                    const errorData = await response.json();
+                    showInAppMessage('Settings', errorData.message || 'Failed to update settings. Please try again.', 'danger');
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
@@ -1148,6 +1161,24 @@
                     <div class="mb-3">
                         <label class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="emailAddress" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Language Preference</label>
+                        <select class="form-select" id="languagePreference">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="fr">French</option>
+                            <option value="it">Italian</option>
+                            <option value="de">German</option>
+                            <option value="pl">Polish</option>
+                            <option value="ru">Russian</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ko">Korean</option>
+                            <option value="ja">Japanese</option>
+                            <option value="ar">Arabic</option>
+                        </select>
+                        <small class="text-muted">Choose your preferred language for the application interface</small>
                     </div>
                 </div>
                 <div class="modal-footer">

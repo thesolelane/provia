@@ -300,6 +300,11 @@ namespace JobTracker.Controllers
                     user.PhoneNumber = request.PhoneNumber;
                 }
 
+                if (!string.IsNullOrEmpty(request.LanguagePreference))
+                {
+                    user.LanguagePreference = request.LanguagePreference;
+                }
+
                 user.LocationTrackingConsent = request.LocationTrackingConsent;
                 user.UpdatedAt = DateTime.UtcNow;
 
