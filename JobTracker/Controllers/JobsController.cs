@@ -128,7 +128,7 @@ namespace JobTracker.Controllers
                         },
                         new JobSection
                         {
-                            JobId = sampleJob.Id,
+                            JobId = firstJobId,
                             SectionType = 3, // Electrical
                             Description = "Upgrade electrical panel and add new lighting fixtures",
                             Status = 1, // In Progress
@@ -143,7 +143,7 @@ namespace JobTracker.Controllers
                         },
                         new JobSection
                         {
-                            JobId = sampleJob.Id,
+                            JobId = firstJobId,
                             SectionType = 4, // Plumbing
                             Description = "Install new plumbing for kitchen sink and dishwasher",
                             Status = 0, // Not Started
