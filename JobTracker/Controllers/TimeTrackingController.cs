@@ -13,12 +13,14 @@ namespace JobTracker.Controllers
         private readonly GeoFencingService _geoFencingService;
         private readonly JobTrackerContext _context;
         private readonly ILogger<TimeTrackingController> _logger;
+        private readonly IEmailService _emailService;
 
-        public TimeTrackingController(GeoFencingService geoFencingService, JobTrackerContext context, ILogger<TimeTrackingController> logger)
+        public TimeTrackingController(GeoFencingService geoFencingService, JobTrackerContext context, ILogger<TimeTrackingController> logger, IEmailService emailService)
         {
             _geoFencingService = geoFencingService;
             _context = context;
             _logger = logger;
+            _emailService = emailService;
         }
 
         [HttpPost("clock-in/initiate")]
