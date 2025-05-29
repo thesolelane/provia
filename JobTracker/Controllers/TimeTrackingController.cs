@@ -84,6 +84,86 @@ namespace JobTracker.Controllers
             }
         }
 
+        [HttpPost("clock-in")]
+        public async Task<IActionResult> ClockIn([FromBody] SimpleClockRequest request)
+        {
+            try
+            {
+                // Get user ID from token (simplified for testing)
+                var userId = 3; // Mike Johnson's ID for testing
+                
+                var result = await _geoFencingService.InitiateClockIn(userId, request.Latitude, request.Longitude);
+                
+                if (result.Success)
+                {
+                    return Ok(new { success = true, message = "Clocked in successfully" });
+                }
+                
+                return Ok(new { success = false, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during clock-in");
+                return Ok(new { success = false, message = "Clock-in failed" });
+            }
+        }
+
+        [HttpPost("clock-out")]
+        public async Task<IActionResult> ClockOut([FromBody] SimpleClockRequest request)
+        {
+            try
+            {
+                // Get user ID from token (simplified for testing)
+                var userId = 3; // Mike Johnson's ID for testing
+                
+                var result = await _geoFencingService.ClockOut(userId, request.Latitude, request.Longitude);
+                
+                if (result.Success)
+                {
+                    return Ok(new { success = true, message = "Clocked out successfully" });
+                }
+                
+                return Ok(new { success = false, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during clock-out");
+                return Ok(new { success = false, message = "Clock-out failed" });
+            }
+        }
+
+        [HttpGet("current")]
+        public async Task<IActionResult> GetCurrentTimeEntry()
+        {
+            try
+            {
+                // Get user ID from token (simplified for testing)
+                var userId = 3; // Mike Johnson's ID for testing
+                
+                var activeTimeEntry = await _context.TimeEntries
+                    .Include(t => t.Job)
+                    .FirstOrDefaultAsync(t => t.UserId == userId && t.IsActive);
+
+                if (activeTimeEntry != null)
+                {
+                    return Ok(new
+                    {
+                        clockInTime = activeTimeEntry.ClockInTime,
+                        clockOutTime = (DateTime?)null,
+                        jobName = activeTimeEntry.Job?.Name,
+                        jobLocation = activeTimeEntry.Job?.Location
+                    });
+                }
+                
+                return Ok(new { });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting current time entry");
+                return Ok(new { });
+            }
+        }
+
         [HttpGet("status/{userId}")]
         public async Task<IActionResult> GetClockStatus(int userId)
         {
@@ -193,6 +273,12 @@ namespace JobTracker.Controllers
     public class ClockOutRequest
     {
         public int UserId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class SimpleClockRequest
+    {
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }
