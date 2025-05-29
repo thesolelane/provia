@@ -112,5 +112,6 @@ namespace JobTracker.Models
     {
         public string? PhoneNumber { get; set; }
         public bool LocationTrackingConsent { get; set; }
+        public string? LanguagePreference { get; set; }
     }
 }
