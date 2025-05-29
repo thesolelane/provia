@@ -228,7 +228,7 @@ namespace JobTracker.Services
                 .Where(a => a.UserId == userId && a.IsActive)
                 .Include(a => a.Job)
                 .Select(a => a.Job)
-                .Where(j => j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled)
+                .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
                 .ToListAsync();
         }
 
