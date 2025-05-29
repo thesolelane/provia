@@ -108,7 +108,7 @@ namespace JobTracker.Controllers
                         Job = new
                         {
                             activeTimeEntry.Job.JobNumber,
-                            activeTimeEntry.Job.JobName,
+                            activeTimeEntry.Job.Name,
                             activeTimeEntry.Job.Location
                         }
                     } : null,
@@ -120,8 +120,8 @@ namespace JobTracker.Controllers
                         Job = new
                         {
                             pendingClockIn.Job.JobNumber,
-                            pendingClockIn.Job.JobName,
-                            pendingClockIn.Job.Address
+                            pendingClockIn.Job.Name,
+                            pendingClockIn.Job.Location
                         }
                     } : null
                 });
@@ -160,8 +160,8 @@ namespace JobTracker.Controllers
                         Job = new
                         {
                             t.Job.JobNumber,
-                            t.Job.JobName,
-                            t.Job.Address
+                            t.Job.Name,
+                            t.Job.Location
                         }
                     })
                     .ToListAsync();

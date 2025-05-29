@@ -14,7 +14,7 @@ namespace JobTracker.Models
         
         [Required]
         [StringLength(200)]
-        public string JobName { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         
         [StringLength(500)]
         public string? Description { get; set; }
@@ -23,26 +23,33 @@ namespace JobTracker.Models
         [StringLength(300)]
         public string Location { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(100)]
-        public string City { get; set; } = string.Empty;
+        public string ClientName { get; set; } = string.Empty;
         
-        [StringLength(50)]
-        public string State { get; set; } = string.Empty;
+        [Required]
+        [StringLength(200)]
+        public string ClientEmail { get; set; } = string.Empty;
         
+        [Required]
         [StringLength(20)]
-        public string ZipCode { get; set; } = string.Empty;
+        public string ClientPhone { get; set; } = string.Empty;
         
-        public JobStatus Status { get; set; } = JobStatus.Planning;
+        [Required]
+        [StringLength(50)]
+        public string Status { get; set; } = "Planning";
         
         [Column(TypeName = "decimal(18,2)")]
-        public decimal EstimatedCost { get; set; }
+        public decimal Budget { get; set; }
         
         [Column(TypeName = "decimal(18,2)")]
         public decimal ActualCost { get; set; }
         
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public DateTime? CompletionDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? TargetCompletionDate { get; set; }
+        public DateTime? ActualCompletionDate { get; set; }
+        
+        public string? Notes { get; set; }
         
         // GPS coordinates for geo-fencing
         public double? Latitude { get; set; }

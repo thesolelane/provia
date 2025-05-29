@@ -66,7 +66,7 @@ namespace JobTracker.Services
                     Success = true, 
                     Message = "Clock-in initiated. Please stay at the job site for verification.",
                     PendingClockInId = pendingClockIn.Id,
-                    JobSite = nearbyJob.Address
+                    JobSite = nearbyJob.Location
                 };
             }
             catch (Exception ex)
@@ -284,7 +284,7 @@ namespace JobTracker.Services
                     <p>Your clock-in attempt for job <strong>{job.JobNumber}</strong> was not successful due to location verification failure.</p>
                     <p><strong>Details:</strong></p>
                     <ul>
-                        <li>Job Site: {job.Address}</li>
+                        <li>Job Site: {job.Location}</li>
                         <li>Distance moved during verification: {distance:F0} feet</li>
                         <li>Maximum allowed distance: {ALLOWED_DISTANCE_FEET} feet</li>
                         <li>Time: {DateTime.Now:MMM dd, yyyy h:mm tt}</li>
