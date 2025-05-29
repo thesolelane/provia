@@ -37,9 +37,29 @@ namespace JobTracker.Models
         // Indicates if location was verified during clock-in/out
         public bool LocationVerified { get; set; } = false;
 
+        // Two-stage verification system
+        public bool IsPendingVerification { get; set; } = false;
+        public DateTime? VerificationDeadline { get; set; }
+        public bool VerificationFailed { get; set; } = false;
+        public DateTime? AutoLogoutTime { get; set; }
+
         public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class ClockInRequest
+    {
+        public int JobId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public bool IsLocationVerified { get; set; }
+    }
+
+    public class VerifyLocationRequest
+    {
+        public int TimeEntryId { get; set; }
+        public int JobId { get; set; }
     }
 }

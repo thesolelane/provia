@@ -93,6 +93,138 @@ namespace JobTracker.Controllers
             }
         }
 
+        [HttpPost("clock-in")]
+        public async Task<IActionResult> ClockIn([FromBody] ClockInRequest request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("userId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                // Check if user is already clocked in
+                var existingEntry = await _context.TimeEntries
+                    .FirstOrDefaultAsync(t => t.UserId == userId && t.ClockOutTime == null && t.IsActive);
+
+                if (existingEntry != null)
+                {
+                    return BadRequest(new { message = "You are already clocked in" });
+                }
+
+                // Create immediate clock-in entry with pending verification
+                var timeEntry = new TimeEntry
+                {
+                    UserId = userId,
+                    JobId = request.JobId,
+                    ClockInTime = DateTime.UtcNow,
+                    ClockInLatitude = request.Latitude,
+                    ClockInLongitude = request.Longitude,
+                    LocationVerified = request.IsLocationVerified,
+                    IsPendingVerification = true,
+                    VerificationDeadline = DateTime.UtcNow.AddMinutes(8),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.TimeEntries.Add(timeEntry);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Clock-in successful! Location verification in progress.", 
+                    timeEntryId = timeEntry.Id 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during clock-in");
+                return StatusCode(500, new { message = "Clock-in failed" });
+            }
+        }
+
+        [HttpPost("verify-location")]
+        public async Task<IActionResult> VerifyLocation([FromBody] VerifyLocationRequest request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("userId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                var timeEntry = await _context.TimeEntries
+                    .Include(t => t.Job)
+                    .Include(t => t.User)
+                    .FirstOrDefaultAsync(t => t.Id == request.TimeEntryId && t.UserId == userId);
+
+                if (timeEntry == null)
+                {
+                    return NotFound(new { message = "Time entry not found" });
+                }
+
+                // Check if verification deadline has passed
+                if (DateTime.UtcNow > timeEntry.VerificationDeadline)
+                {
+                    // Verification failed - auto logout
+                    timeEntry.VerificationFailed = true;
+                    timeEntry.AutoLogoutTime = DateTime.UtcNow;
+                    timeEntry.ClockOutTime = DateTime.UtcNow;
+                    timeEntry.IsPendingVerification = false;
+                    timeEntry.Notes = "Auto logged out - location verification failed";
+
+                    await _context.SaveChangesAsync();
+
+                    // Send notification (email/SMS will be implemented with Twilio)
+                    await SendVerificationFailedNotification(timeEntry.User, timeEntry.Job);
+
+                    return Ok(new { verified = false, message = "Verification failed - auto logged out" });
+                }
+
+                // TODO: Implement actual location re-verification here
+                // For now, assume verification is successful
+                timeEntry.IsPendingVerification = false;
+                timeEntry.LocationVerified = true;
+                timeEntry.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { verified = true, message = "Location verified successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during location verification");
+                return StatusCode(500, new { message = "Verification failed" });
+            }
+        }
+
+        private async Task SendVerificationFailedNotification(User user, Job job)
+        {
+            try
+            {
+                // Email notification
+                if (!string.IsNullOrEmpty(user.Email))
+                {
+                    var subject = "Clock-in Verification Failed";
+                    var body = $"Hello {user.FirstName},\n\nYour clock-in at {job.Name} could not be verified and you have been automatically logged out. Please contact your supervisor if you believe this is an error.\n\nTime: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    
+                    await _emailService.SendEmailAsync(user.Email, subject, body);
+                }
+
+                // SMS notification (will be implemented with Twilio)
+                if (!string.IsNullOrEmpty(user.PhoneNumber))
+                {
+                    // TODO: Implement SMS with Twilio when API keys are provided
+                    _logger.LogInformation("SMS notification needed for user {UserId} at {PhoneNumber}", user.Id, user.PhoneNumber);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending verification failed notification");
+            }
+        }
+
         [HttpPost("clock-out")]
         public async Task<IActionResult> ClockOut([FromBody] ClockOutRequest request)
         {
