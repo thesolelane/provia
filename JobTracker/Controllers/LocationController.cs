@@ -48,15 +48,22 @@ namespace JobTracker.Controllers
                     var responseContent = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<GoogleGeolocationResponse>(responseContent);
                     
-                    return Ok(new
+                    if (result?.Location != null)
                     {
-                        location = new
+                        return Ok(new
                         {
-                            lat = result.Location.Lat,
-                            lng = result.Location.Lng,
-                            accuracy = result.Accuracy
-                        }
-                    });
+                            location = new
+                            {
+                                lat = result.Location.Lat,
+                                lng = result.Location.Lng,
+                                accuracy = result.Accuracy
+                            }
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = "Invalid location data received from Google API" });
+                    }
                 }
                 else
                 {
