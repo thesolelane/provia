@@ -1038,6 +1038,120 @@
             localStorage.removeItem('companyInfo');
             window.location.href = '/';
         }
+
+        // Settings functions
+        function openSettings() {
+            loadUserSettings();
+            const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+            settingsModal.show();
+        }
+
+        async function loadUserSettings() {
+            try {
+                const response = await fetch('/api/auth/user-profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('emailAddress').value = user.email || '';
+                    document.getElementById('phoneNumber').value = user.phoneNumber || '';
+                    document.getElementById('locationConsent').checked = user.locationTrackingConsent || false;
+                }
+            } catch (error) {
+                console.error('Error loading user settings:', error);
+            }
+        }
+
+        async function updateLocationConsent() {
+            const consent = document.getElementById('locationConsent').checked;
+            
+            if (consent) {
+                showInAppMessage('Location Services', 'GPS tracking enabled for work hours. This helps with clock-in verification and job site management.', 'success');
+            } else {
+                showInAppMessage('Location Services', 'GPS tracking disabled. Note: You may need manual approval for clock-in if location cannot be verified.', 'warning');
+            }
+        }
+
+        async function saveSettings() {
+            try {
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const locationConsent = document.getElementById('locationConsent').checked;
+
+                const response = await fetch('/api/auth/update-profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        locationTrackingConsent: locationConsent
+                    })
+                });
+
+                if (response.ok) {
+                    showInAppMessage('Settings', 'Settings updated successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+                } else {
+                    showInAppMessage('Settings', 'Failed to update settings. Please try again.', 'danger');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showInAppMessage('Settings', 'Error saving settings. Please try again.', 'danger');
+            }
+        }
+
+        // Check location consent before GPS operations
+        function checkLocationConsent() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            if (!userInfo.locationTrackingConsent) {
+                showInAppMessage('Location Required', 'Please enable location tracking in Settings to use GPS features.', 'warning');
+                return false;
+            }
+            return true;
+        }
     </script>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h6><i class="fas fa-map-marker-alt me-2"></i>Location Services</h6>
+                        <div class="alert alert-info">
+                            <small><strong>Privacy Notice:</strong> GPS tracking is only active during work hours when you are logged in. Location data is used solely for work-related activities including clock-in verification, job site management, and material runs. Your location data is never shared with third parties and is only accessible to your company administrators for operational purposes.</small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="locationConsent" onchange="updateLocationConsent()">
+                            <label class="form-check-label" for="locationConsent">
+                                I understand and consent to GPS tracking during work hours as required for job operations
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phoneNumber" placeholder="(978) 320-1714">
+                        <small class="text-muted">Required for job notifications and WhatsApp integration</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="emailAddress" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
