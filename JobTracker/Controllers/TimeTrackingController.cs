@@ -84,27 +84,28 @@ namespace JobTracker.Controllers
             }
         }
 
-        [HttpPost("clock-in")]
-        public async Task<IActionResult> ClockIn([FromBody] SimpleClockRequest request)
+        [HttpPost("clock-in/initiate")]
+        public async Task<IActionResult> InitiateClockIn([FromBody] InitiateClockInRequest request)
         {
             try
             {
                 // Get user ID from token (simplified for testing)
                 var userId = 3; // Mike Johnson's ID for testing
+                request.UserId = userId;
                 
-                var result = await _geoFencingService.InitiateClockIn(userId, request.Latitude, request.Longitude);
+                var result = await _geoFencingService.InitiateClockIn(request.UserId, request.Latitude, request.Longitude);
                 
                 if (result.Success)
                 {
-                    return Ok(new { success = true, message = "Clocked in successfully" });
+                    return Ok(new { success = true, pendingClockInId = result.PendingClockInId, message = "Clock-in initiated" });
                 }
                 
                 return Ok(new { success = false, message = result.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during clock-in");
-                return Ok(new { success = false, message = "Clock-in failed" });
+                _logger.LogError(ex, "Error initiating clock-in");
+                return Ok(new { success = false, message = "Clock-in initiation failed" });
             }
         }
 
