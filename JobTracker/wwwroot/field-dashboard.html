@@ -274,6 +274,89 @@
         let currentUser = null;
         let currentCompany = null;
 
+        // Google Geolocation API integration for high-accuracy positioning
+        async function getHighAccuracyLocation() {
+            try {
+                // First try Google Geolocation API for better accuracy
+                const googleLocation = await getGoogleGeolocation();
+                if (googleLocation) {
+                    return {
+                        latitude: googleLocation.lat,
+                        longitude: googleLocation.lng,
+                        accuracy: googleLocation.accuracy,
+                        method: 'Google Geolocation API'
+                    };
+                }
+            } catch (error) {
+                console.log('Google Geolocation failed, falling back to browser GPS:', error);
+            }
+
+            // Fallback to enhanced browser GPS
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 30000
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            method: 'Browser GPS'
+                        });
+                    },
+                    error => reject(error),
+                    options
+                );
+            });
+        }
+
+        async function getGoogleGeolocation() {
+            try {
+                const response = await fetch('/api/location/google-geolocation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify({
+                        considerIp: true,
+                        wifiAccessPoints: await getWifiAccessPoints(),
+                        cellTowers: await getCellTowers()
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.location;
+                }
+                return null;
+            } catch (error) {
+                console.log('Google Geolocation API error:', error);
+                return null;
+            }
+        }
+
+        async function getWifiAccessPoints() {
+            // In a real implementation, this would scan for WiFi networks
+            // For now, return empty array as browser doesn't have WiFi scanning API
+            return [];
+        }
+
+        async function getCellTowers() {
+            // In a real implementation, this would get cell tower information
+            // For now, return empty array as browser doesn't have cellular API
+            return [];
+        }
+
         // In-app notification system
         function showInAppMessage(title, message, type = 'info') {
             // Remove any existing notification
@@ -477,20 +560,13 @@
                     </div>
                 `;
                 
-                // Use high accuracy GPS settings
-                const gpsOptions = {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 30000
-                };
-                
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const accuracy = position.coords.accuracy;
-                        console.log(`GPS Accuracy: ${accuracy} meters`);
-                        verifyLocationAndShowOptions(position.coords.latitude, position.coords.longitude, accuracy);
-                    },
-                    error => {
+                // Try Google Geolocation API first for better accuracy
+                getHighAccuracyLocation()
+                    .then(result => {
+                        console.log(`Location method: ${result.method}, Accuracy: ${result.accuracy} meters`);
+                        verifyLocationAndShowOptions(result.latitude, result.longitude, result.accuracy);
+                    })
+                    .catch(error => {
                         let errorMessage = "Location access is required for clock in/out.";
                         switch(error.code) {
                             case error.PERMISSION_DENIED:
