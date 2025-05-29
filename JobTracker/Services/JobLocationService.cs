@@ -29,7 +29,7 @@ namespace JobTracker.Services
                 }
 
                 // For now, store the address and mark for manual GPS entry
-                job.Address = address;
+                job.Location = address;
                 job.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();

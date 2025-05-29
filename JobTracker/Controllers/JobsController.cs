@@ -26,37 +26,95 @@ namespace JobTracker.Controllers
             {
                 var jobs = await _context.Jobs.ToListAsync();
                 
-                // If no jobs exist, create a sample job
+                // If no jobs exist, create sample jobs
                 if (jobs.Count == 0)
                 {
-                    var sampleJob = new Job
+                    var sampleJobs = new List<Job>
                     {
-                        JobName = "Sample Renovation Project",
-                        Description = "Kitchen and bathroom renovation for a residential property",
-                        Address = "123 Main Street",
-                        City = "Boston",
-                        State = "MA",
-                        ZipCode = "02101",
-                        JobNumber = "REN-2023-001",
-                        StartDate = DateTime.UtcNow.AddDays(-30),
-                        EndDate = DateTime.UtcNow.AddDays(60),
-                        Status = JobStatus.InProgress,
-                        EstimatedCost = 75000.00m,
-                        ActualCost = 25000.00m,
-                        CompanyId = 1,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        new Job
+                        {
+                            JobName = "Kitchen Renovation",
+                            Description = "Complete kitchen remodel with new cabinets and appliances",
+                            Location = "117 Marshall St, Fitchburg, MA",
+                            City = "Fitchburg",
+                            State = "MA",
+                            ZipCode = "01420",
+                            JobNumber = "2025-01-15-MAR117-001",
+                            StartDate = DateTime.UtcNow.AddDays(-15),
+                            EndDate = DateTime.UtcNow.AddDays(45),
+                            Status = JobStatus.InProgress,
+                            EstimatedCost = 85000.00m,
+                            ActualCost = 32000.00m,
+                            CompanyId = 1,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        },
+                        new Job
+                        {
+                            JobName = "Bathroom Addition",
+                            Description = "New master bathroom construction",
+                            Location = "123 Main Street, Boston, MA",
+                            City = "Boston",
+                            State = "MA",
+                            ZipCode = "02101",
+                            JobNumber = "2025-01-20-MAI123-002",
+                            StartDate = DateTime.UtcNow.AddDays(-10),
+                            EndDate = DateTime.UtcNow.AddDays(30),
+                            Status = JobStatus.InProgress,
+                            EstimatedCost = 45000.00m,
+                            ActualCost = 18000.00m,
+                            CompanyId = 1,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        },
+                        new Job
+                        {
+                            JobName = "Basement Finishing",
+                            Description = "Finish basement with family room and office space",
+                            Location = "40 Warnock St, Lowell, MA",
+                            City = "Lowell",
+                            State = "MA",
+                            ZipCode = "01851",
+                            JobNumber = "2025-01-25-WAR040-003",
+                            StartDate = DateTime.UtcNow.AddDays(-5),
+                            EndDate = DateTime.UtcNow.AddDays(60),
+                            Status = JobStatus.InProgress,
+                            EstimatedCost = 65000.00m,
+                            ActualCost = 12000.00m,
+                            CompanyId = 1,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        },
+                        new Job
+                        {
+                            JobName = "Home Addition",
+                            Description = "Two-story addition with bedrooms and updated electrical",
+                            Location = "61 Beach St, Haverhill, MA",
+                            City = "Haverhill",
+                            State = "MA",
+                            ZipCode = "01830",
+                            JobNumber = "2025-02-01-BEA061-004",
+                            StartDate = DateTime.UtcNow.AddDays(-2),
+                            EndDate = DateTime.UtcNow.AddDays(90),
+                            Status = JobStatus.InProgress,
+                            EstimatedCost = 125000.00m,
+                            ActualCost = 8000.00m,
+                            CompanyId = 1,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        }
                     };
                     
-                    _context.Jobs.Add(sampleJob);
+                    _context.Jobs.AddRange(sampleJobs);
                     await _context.SaveChangesAsync();
                     
-                    // Add sample job sections
+                    // Add sample job sections for the first job
+                    var firstJobId = sampleJobs[0].Id;
                     var sections = new List<JobSection>
                     {
                         new JobSection
                         {
-                            JobId = sampleJob.Id,
+                            JobId = firstJobId,
                             SectionType = 0, // Demolition
                             Description = "Remove existing kitchen cabinets and flooring",
                             Status = 2, // Completed
