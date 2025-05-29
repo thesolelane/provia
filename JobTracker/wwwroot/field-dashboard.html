@@ -469,33 +469,87 @@
                 document.getElementById('clockContent').innerHTML = `
                     <div class="text-center">
                         <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                        <p>Getting your location...</p>
+                        <p>Getting high-accuracy location...</p>
                         <small class="text-muted">Selected: ${jobName}</small>
+                        <div class="mt-2">
+                            <small class="text-info">This may take up to 15 seconds for better accuracy</small>
+                        </div>
                     </div>
                 `;
                 
+                // Use high accuracy GPS settings
+                const gpsOptions = {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 30000
+                };
+                
                 navigator.geolocation.getCurrentPosition(
-                    position => verifyLocationAndShowOptions(position.coords.latitude, position.coords.longitude),
+                    position => {
+                        const accuracy = position.coords.accuracy;
+                        console.log(`GPS Accuracy: ${accuracy} meters`);
+                        verifyLocationAndShowOptions(position.coords.latitude, position.coords.longitude, accuracy);
+                    },
                     error => {
+                        let errorMessage = "Location access is required for clock in/out.";
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location permission denied. Please enable location access in your browser.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location unavailable. Try moving outside or near a window.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Location timeout. Poor GPS signal - try again outdoors.";
+                                break;
+                        }
+                        
                         document.getElementById('clockContent').innerHTML = `
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                Location access is required for clock in/out.
-                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="showJobSiteSelection()">Back to Job Sites</button>
+                                <strong>GPS Error</strong><br>
+                                ${errorMessage}
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="selectJobSite(${window.selectedJob.id}, '${window.selectedJob.name}', '${window.selectedJob.location}', ${window.selectedJob.latitude}, ${window.selectedJob.longitude})">Try Again</button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="showJobSiteSelection()">Back to Job Sites</button>
+                                </div>
                             </div>
                         `;
-                    }
+                    },
+                    gpsOptions
                 );
             }
         }
 
-        function verifyLocationAndShowOptions(userLat, userLng) {
+        function verifyLocationAndShowOptions(userLat, userLng, accuracy) {
             const jobLat = window.selectedJob.latitude;
             const jobLng = window.selectedJob.longitude;
             
             // Calculate distance
             const distance = getDistanceInFeet(userLat, userLng, jobLat, jobLng);
-            const isWithinRange = distance <= 200; // 200 feet geofence
+            const accuracyFeet = Math.round(accuracy * 3.28084);
+            
+            // Adjust geofence based on GPS accuracy
+            let allowedDistance = 200;
+            if (accuracyFeet > 100) {
+                allowedDistance = Math.max(200, accuracyFeet + 100);
+            }
+            
+            const isWithinRange = distance <= allowedDistance;
+            
+            let locationStatus = '';
+            let statusClass = '';
+            
+            if (accuracyFeet > 300) {
+                locationStatus = 'Poor GPS Signal';
+                statusClass = 'text-warning';
+            } else if (accuracyFeet > 100) {
+                locationStatus = 'Moderate GPS Signal';
+                statusClass = 'text-info';
+            } else {
+                locationStatus = 'Good GPS Signal';
+                statusClass = 'text-success';
+            }
             
             if (isWithinRange) {
                 document.getElementById('clockContent').innerHTML = `
@@ -503,7 +557,11 @@
                         <div class="mb-3">
                             <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
                             <p class="text-success">Location verified at ${window.selectedJob.name}</p>
-                            <small class="text-muted">Distance: ${Math.round(distance)} feet</small>
+                            <div class="small">
+                                <div>Distance: ${Math.round(distance)} feet</div>
+                                <div class="${statusClass}">GPS Accuracy: ±${accuracyFeet} feet</div>
+                                <div class="text-muted">Allowed range: ${allowedDistance} feet</div>
+                            </div>
                         </div>
                         <button class="btn btn-success btn-lg me-2" onclick="initiateClockIn(${userLat}, ${userLng})">
                             <i class="fas fa-play me-2"></i>Clock In
@@ -511,8 +569,9 @@
                         <button class="btn btn-danger btn-lg" onclick="clockOut(${userLat}, ${userLng})">
                             <i class="fas fa-stop me-2"></i>Clock Out
                         </button>
-                        <div class="mt-2">
+                        <div class="mt-3">
                             <button class="btn btn-sm btn-outline-secondary" onclick="showJobSiteSelection()">Change Job Site</button>
+                            ${accuracyFeet > 100 ? '<button class="btn btn-sm btn-outline-primary ms-2" onclick="retryHighAccuracyGPS()">Improve GPS</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -520,14 +579,84 @@
                 document.getElementById('clockContent').innerHTML = `
                     <div class="alert alert-warning text-center">
                         <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                        <p><strong>Location Error</strong></p>
-                        <p>You are ${Math.round(distance)} feet from ${window.selectedJob.name}. You must be within 200 feet to clock in.</p>
+                        <p><strong>Location Verification Failed</strong></p>
+                        <div class="mb-3">
+                            <div>Distance: ${Math.round(distance)} feet from ${window.selectedJob.name}</div>
+                            <div class="${statusClass}">GPS Accuracy: ±${accuracyFeet} feet</div>
+                            <div class="text-muted">Required: Within ${allowedDistance} feet</div>
+                        </div>
+                        ${accuracyFeet > 200 ? 
+                            '<div class="alert alert-info mb-3"><small><strong>Tip:</strong> Poor GPS signal detected. Try moving outdoors, away from buildings, or near a window for better accuracy.</small></div>' : ''}
                         <div class="mt-3">
-                            <button class="btn btn-sm btn-outline-primary" onclick="showJobSiteSelection()">Try Different Job Site</button>
+                            <button class="btn btn-sm btn-primary me-2" onclick="retryHighAccuracyGPS()">Retry GPS</button>
+                            <button class="btn btn-sm btn-outline-secondary me-2" onclick="showJobSiteSelection()">Different Job Site</button>
+                            ${distance > 1000 ? '<button class="btn btn-sm btn-warning" onclick="requestManualOverride()">Request Override</button>' : ''}
                         </div>
                     </div>
                 `;
             }
+        }
+
+        function retryHighAccuracyGPS() {
+            if (!window.selectedJob) return;
+            
+            document.getElementById('clockContent').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-satellite-dish fa-2x mb-3 text-primary"></i>
+                    <p>Attempting high-precision GPS...</p>
+                    <small class="text-muted">Please wait while we get the most accurate location possible</small>
+                    <div class="mt-2">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                </div>
+            `;
+
+            // Try multiple GPS readings and use the most accurate one
+            let bestReading = null;
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            function tryGPSReading() {
+                attempts++;
+                
+                const gpsOptions = {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0 // Force fresh reading
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const currentAccuracy = position.coords.accuracy;
+                        
+                        if (!bestReading || currentAccuracy < bestReading.accuracy) {
+                            bestReading = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                accuracy: currentAccuracy
+                            };
+                        }
+
+                        if (attempts < maxAttempts && currentAccuracy > 50) {
+                            setTimeout(tryGPSReading, 1000);
+                        } else {
+                            console.log(`Best GPS reading: ±${Math.round(bestReading.accuracy)} meters after ${attempts} attempts`);
+                            verifyLocationAndShowOptions(bestReading.latitude, bestReading.longitude, bestReading.accuracy);
+                        }
+                    },
+                    error => {
+                        if (bestReading) {
+                            verifyLocationAndShowOptions(bestReading.latitude, bestReading.longitude, bestReading.accuracy);
+                        } else {
+                            showInAppMessage('GPS Error', 'Unable to get accurate location. Please try again outdoors.', 'warning');
+                            showJobSiteSelection();
+                        }
+                    },
+                    gpsOptions
+                );
+            }
+
+            tryGPSReading();
         }
 
         function getDistanceInFeet(lat1, lon1, lat2, lon2) {
