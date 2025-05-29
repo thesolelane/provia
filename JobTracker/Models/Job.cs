@@ -55,22 +55,14 @@ namespace JobTracker.Models
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         
-        [ForeignKey("Company")]
-        public int CompanyId { get; set; }
-        public Company Company { get; set; } = null!;
-        
-        [ForeignKey("ProjectManager")]
-        public int? ProjectManagerId { get; set; }
-        public User? ProjectManager { get; set; }
+        public int? CompanyId { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
         // Navigation properties
+        public Company? Company { get; set; }
         public ICollection<JobSection> Sections { get; set; } = new List<JobSection>();
-        public ICollection<MaterialRequest> MaterialRequests { get; set; } = new List<MaterialRequest>();
-        public ICollection<ChangeRequest> ChangeRequests { get; set; } = new List<ChangeRequest>();
-        public ICollection<UserJobAssignment> UserAssignments { get; set; } = new List<UserJobAssignment>();
     }
     
     public enum JobStatus
