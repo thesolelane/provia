@@ -138,7 +138,7 @@ namespace JobTracker.Controllers
                         selectedUser.FirstName,
                         selectedUser.LastName,
                         selectedUser.Email,
-                        role = selectedUser.Role == UserRole.RegularUser ? "FieldOperator" : selectedUser.Role.ToString(),
+                        role = (int)selectedUser.Role == 2 ? "FieldOperator" : selectedUser.Role.ToString(),
                         selectedUser.LanguagePreference,
                         selectedUser.IsEmailVerified,
                         selectedUser.IsPhoneVerified
