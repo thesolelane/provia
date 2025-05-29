@@ -21,7 +21,7 @@ namespace JobTracker.Models
         
         [Required]
         [StringLength(300)]
-        public string Address { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
         
         [StringLength(100)]
         public string City { get; set; } = string.Empty;

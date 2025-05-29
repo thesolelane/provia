@@ -109,7 +109,7 @@ namespace JobTracker.Controllers
                         {
                             activeTimeEntry.Job.JobNumber,
                             activeTimeEntry.Job.JobName,
-                            activeTimeEntry.Job.Address
+                            activeTimeEntry.Job.Location
                         }
                     } : null,
                     PendingClockIn = pendingClockIn != null ? new
