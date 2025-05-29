@@ -107,4 +107,10 @@ namespace JobTracker.Models
         [Required]
         public UserRole RequestedRole { get; set; } = UserRole.RegularUser;
     }
+
+    public class UpdateProfileRequest
+    {
+        public string? PhoneNumber { get; set; }
+        public bool LocationTrackingConsent { get; set; }
+    }
 }
