@@ -386,14 +386,72 @@
             const modal = new bootstrap.Modal(document.getElementById('clockModal'));
             modal.show();
             
+            // First show job site selection
+            showJobSiteSelection();
+        }
+
+        function showJobSiteSelection() {
+            document.getElementById('clockContent').innerHTML = `
+                <div>
+                    <h6 class="mb-3">Select Job Site</h6>
+                    <div id="jobSiteOptions" class="mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p class="mt-2">Loading job sites...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Load available job sites
+            fetch('/api/jobs', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let jobOptions = '';
+                data.forEach(job => {
+                    if (job.status !== 'Completed' && job.status !== 'Cancelled') {
+                        jobOptions += `
+                            <div class="card mb-2" style="cursor: pointer;" onclick="selectJobSite(${job.id}, '${job.name}', '${job.location}', ${job.latitude}, ${job.longitude})">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-1">${job.name}</h6>
+                                    <small class="text-muted">${job.location}</small>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                document.getElementById('jobSiteOptions').innerHTML = jobOptions || '<p class="text-muted">No active job sites available</p>';
+            })
+            .catch(error => {
+                document.getElementById('jobSiteOptions').innerHTML = '<p class="text-danger">Failed to load job sites</p>';
+            });
+        }
+
+        function selectJobSite(jobId, jobName, jobLocation, jobLat, jobLng) {
+            // Store selected job info
+            window.selectedJob = { id: jobId, name: jobName, location: jobLocation, latitude: jobLat, longitude: jobLng };
+            
+            // Now get GPS location and verify
             if (navigator.geolocation) {
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Getting your location...</p>
+                        <small class="text-muted">Selected: ${jobName}</small>
+                    </div>
+                `;
+                
                 navigator.geolocation.getCurrentPosition(
-                    position => showClockOptions(position.coords.latitude, position.coords.longitude),
+                    position => verifyLocationAndShowOptions(position.coords.latitude, position.coords.longitude),
                     error => {
                         document.getElementById('clockContent').innerHTML = `
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 Location access is required for clock in/out.
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="showJobSiteSelection()">Back to Job Sites</button>
                             </div>
                         `;
                     }
@@ -401,38 +459,83 @@
             }
         }
 
-        function showClockOptions(lat, lng) {
-            document.getElementById('clockContent').innerHTML = `
-                <div class="text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
-                        <p class="text-success">Location verified</p>
+        function verifyLocationAndShowOptions(userLat, userLng) {
+            const jobLat = window.selectedJob.latitude;
+            const jobLng = window.selectedJob.longitude;
+            
+            // Calculate distance (simplified calculation)
+            const distance = getDistanceInFeet(userLat, userLng, jobLat, jobLng);
+            const isWithinRange = distance <= 200; // 200 feet geofence
+            
+            if (isWithinRange) {
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
+                            <p class="text-success">Location verified</p>
+                            <small class="text-muted">${window.selectedJob.name}</small>
+                        </div>
+                        <button class="btn btn-success btn-lg me-2" onclick="clockIn(${userLat}, ${userLng})">
+                            <i class="fas fa-play me-2"></i>Clock In
+                        </button>
+                        <button class="btn btn-danger btn-lg" onclick="clockOut(${userLat}, ${userLng})">
+                            <i class="fas fa-stop me-2"></i>Clock Out
+                        </button>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="showJobSiteSelection()">Change Job Site</button>
+                        </div>
                     </div>
-                    <button class="btn btn-success btn-lg me-2" onclick="clockIn(${lat}, ${lng})">
-                        <i class="fas fa-play me-2"></i>Clock In
-                    </button>
-                    <button class="btn btn-danger btn-lg" onclick="clockOut(${lat}, ${lng})">
-                        <i class="fas fa-stop me-2"></i>Clock Out
-                    </button>
-                </div>
-            `;
+                `;
+            } else {
+                document.getElementById('clockContent').innerHTML = `
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p><strong>Location Error</strong></p>
+                        <p>You are ${Math.round(distance)} feet from the job site. You must be within 200 feet to clock in.</p>
+                        <small class="text-muted">${window.selectedJob.name}</small>
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="showJobSiteSelection()">Try Different Job Site</button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
+        function getDistanceInFeet(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const meters = R * c;
+            return meters * 3.28084; // Convert to feet
+        }
+
+
+
         function clockIn(lat, lng) {
+            const requestData = { 
+                latitude: lat, 
+                longitude: lng,
+                jobId: window.selectedJob ? window.selectedJob.id : null
+            };
+
             fetch('/api/timetracking/clock-in', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                 },
-                body: JSON.stringify({ latitude: lat, longitude: lng })
+                body: JSON.stringify(requestData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
                     checkClockStatus();
-                    alert('Successfully clocked in!');
+                    alert(`Successfully clocked in at ${window.selectedJob ? window.selectedJob.name : 'job site'}!`);
                 } else {
                     alert('Clock in failed: ' + (data.message || 'Please try again'));
                 }
@@ -441,20 +544,26 @@
         }
 
         function clockOut(lat, lng) {
+            const requestData = { 
+                latitude: lat, 
+                longitude: lng,
+                jobId: window.selectedJob ? window.selectedJob.id : null
+            };
+
             fetch('/api/timetracking/clock-out', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                 },
-                body: JSON.stringify({ latitude: lat, longitude: lng })
+                body: JSON.stringify(requestData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     bootstrap.Modal.getInstance(document.getElementById('clockModal')).hide();
                     checkClockStatus();
-                    alert('Successfully clocked out!');
+                    alert(`Successfully clocked out from ${window.selectedJob ? window.selectedJob.name : 'job site'}!`);
                 } else {
                     alert('Clock out failed: ' + (data.message || 'Please try again'));
                 }
