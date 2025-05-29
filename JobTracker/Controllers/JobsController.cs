@@ -24,7 +24,35 @@ namespace JobTracker.Controllers
         {
             try
             {
-                var jobs = await _context.Jobs.ToListAsync();
+                // Add retry logic for database connection issues
+                var jobs = new List<Job>();
+                var retryCount = 0;
+                const int maxRetries = 3;
+                
+                while (retryCount < maxRetries)
+                {
+                    try
+                    {
+                        jobs = await _context.Jobs.ToListAsync();
+                        break;
+                    }
+                    catch (Exception dbEx) when (retryCount < maxRetries - 1)
+                    {
+                        _logger.LogWarning($"Database retry {retryCount + 1}/{maxRetries}: {dbEx.Message}");
+                        retryCount++;
+                        await Task.Delay(1000 * retryCount); // Progressive delay
+                        
+                        // Try to recreate the context if needed
+                        try
+                        {
+                            await _context.Database.EnsureCreatedAsync();
+                        }
+                        catch (Exception ensureEx)
+                        {
+                            _logger.LogWarning($"Database ensure failed: {ensureEx.Message}");
+                        }
+                    }
+                }
                 
                 // If no jobs exist, create sample jobs
                 if (jobs.Count == 0)
