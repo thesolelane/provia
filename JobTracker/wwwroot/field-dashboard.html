@@ -592,7 +592,11 @@
                             </div>
                         `;
                     },
-                    gpsOptions
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
                 );
             }
         }
