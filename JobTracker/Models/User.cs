@@ -59,6 +59,9 @@ namespace JobTracker.Models
         // For tracking login activity
         public DateTime? LastLoginAt { get; set; }
 
+        // For GPS tracking consent during work hours
+        public bool LocationTrackingConsent { get; set; } = false;
+
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch
         {
