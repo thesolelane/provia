@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets/dashboard.html"
     },
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/field-dashboard.html",
+      "PackagePath": "staticwebassets/field-dashboard.html"
+    },
+    {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/field-operator-dashboard.html",
       "PackagePath": "staticwebassets/field-operator-dashboard.html"
     },
