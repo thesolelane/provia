@@ -81,7 +81,7 @@ namespace JobTracker.Services
         {
             return await _context.Jobs
                 .Where(j => j.Latitude == null || j.Longitude == null)
-                .Where(j => j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled)
+                .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
                 .ToListAsync();
         }
     }

@@ -180,7 +180,7 @@ namespace JobTracker.Controllers
                     mr.DepartureTime,
                     mr.ArrivalAtStoreTime,
                     mr.DepartureFromStoreTime,
-                    Job = new { mr.Job.JobNumber, mr.Job.JobName },
+                    Job = new { mr.Job.JobNumber, mr.Job.Name },
                     Store = new { mr.MaterialStore.StoreName, mr.MaterialStore.Address }
                 }));
             }
@@ -218,7 +218,7 @@ namespace JobTracker.Controllers
                         mr.TotalTimeHours,
                         mr.TravelTimeHours,
                         mr.LocationVerified,
-                        Job = new { mr.Job.JobNumber, mr.Job.JobName },
+                        Job = new { mr.Job.JobNumber, mr.Job.Name },
                         Store = new { mr.MaterialStore.StoreName, mr.MaterialStore.Address }
                     })
                     .ToListAsync();
