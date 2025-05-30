@@ -29,7 +29,7 @@ namespace JobTracker.Controllers
             try
             {
                 // Get user ID from token (simplified for testing)
-                var userId = 3; // Mike Johnson's ID for testing
+                var userId = 9; // Mike Johnson corrected ID
                 
                 // Log the actual coordinates received
                 _logger.LogInformation($"Clock-in attempt - User coordinates: {request.Latitude}, {request.Longitude}");
@@ -271,7 +271,7 @@ namespace JobTracker.Controllers
             try
             {
                 // Get user ID from token (simplified for testing)
-                var userId = 3; // Mike Johnson's ID for testing
+                var userId = 9; // Mike Johnson corrected ID
                 
                 var result = await _geoFencingService.ClockOut(userId, request.Latitude, request.Longitude);
                 
@@ -295,7 +295,7 @@ namespace JobTracker.Controllers
             try
             {
                 // Get user ID from token (simplified for testing)
-                var userId = 3; // Mike Johnson's ID for testing
+                var userId = 9; // Mike Johnson corrected ID
                 
                 var activeTimeEntry = await _context.TimeEntries
                     .Include(t => t.Job)
