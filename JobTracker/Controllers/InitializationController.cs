@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using JobTracker.Services;
 
 namespace JobTracker.Controllers
 {
@@ -7,28 +6,17 @@ namespace JobTracker.Controllers
     [ApiController]
     public class InitializationController : ControllerBase
     {
-        private readonly MaterialStoreService _materialStoreService;
         private readonly ILogger<InitializationController> _logger;
 
-        public InitializationController(MaterialStoreService materialStoreService, ILogger<InitializationController> logger)
+        public InitializationController(ILogger<InitializationController> logger)
         {
-            _materialStoreService = materialStoreService;
             _logger = logger;
         }
 
-        [HttpPost("seed-material-stores")]
-        public async Task<IActionResult> SeedMaterialStores()
+        [HttpGet("status")]
+        public IActionResult GetStatus()
         {
-            try
-            {
-                await _materialStoreService.SeedMaterialStoresAsync();
-                return Ok(new { message = "Material stores seeded successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error seeding material stores");
-                return StatusCode(500, new { message = "Failed to seed material stores" });
-            }
+            return Ok(new { message = "Initialization controller is ready" });
         }
     }
 }
