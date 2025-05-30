@@ -123,8 +123,8 @@ namespace JobTracker.Controllers
                     .Where(u => u.CompanyId == request.CompanyId && u.IsActive)
                     .ToListAsync();
 
-                var masterAdminCount = currentUsers.Count(u => u.Role == UserRole.MasterAdmin);
-                var adminCount = currentUsers.Count(u => u.Role == UserRole.Admin);
+                var masterAdminCount = currentUsers.Count(u => u.Role == UserRoles.MasterAdmin);
+                var adminCount = currentUsers.Count(u => u.Role == UserRoles.Admin);
 
                 if ((int)request.Role == 2 && masterAdminCount >= 3)  // MasterAdmin = 2
                 {
@@ -366,17 +366,7 @@ namespace JobTracker.Controllers
         }
     }
 
-    public class CreateUserRequest
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public UserRole Role { get; set; }
-        public string? LanguagePreference { get; set; }
-        public string? Password { get; set; }
-        public int CompanyId { get; set; }
-    }
+
 
     public class UpdateUserRequest
     {

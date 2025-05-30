@@ -34,13 +34,13 @@ namespace JobTracker.Controllers
             var currentUser = await _context.Users.FindAsync(currentUserId);
             if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
             {
-                return Forbidden("Only admins can create users");
+                return StatusCode(403, "Only admins can create users");
             }
 
             // Validate role assignment permissions
             if (request.Role == UserRoles.MasterAdmin && !UserRoles.IsMasterAdmin(currentUser.Role))
             {
-                return Forbidden("Only Master Admins can create Master Admin accounts");
+                return StatusCode(403, "Only Master Admins can create Master Admin accounts");
             }
 
             try
@@ -92,7 +92,7 @@ namespace JobTracker.Controllers
             var currentUser = await _context.Users.FindAsync(currentUserId);
             if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
             {
-                return Forbidden("Only admins can create users");
+                return StatusCode(403, "Only admins can create users");
             }
 
             var results = new List<object>();
@@ -176,7 +176,7 @@ namespace JobTracker.Controllers
             var currentUser = _context.Users.Find(currentUserId);
             if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
             {
-                return Forbidden("Only admins can access role information");
+                return StatusCode(403, "Only admins can access role information");
             }
 
             var availableRoles = new List<object>();
@@ -208,7 +208,7 @@ namespace JobTracker.Controllers
             var currentUser = await _context.Users.FindAsync(currentUserId);
             if (currentUser == null || !UserRoles.IsMasterAdmin(currentUser.Role))
             {
-                return Forbidden("Only Master Admins can assign user codes");
+                return StatusCode(403, "Only Master Admins can assign user codes");
             }
 
             try
