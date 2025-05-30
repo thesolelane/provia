@@ -786,12 +786,12 @@ namespace JobTracker.Controllers
         {
             try
             {
-                // Get admin Erika's email
-                var adminUser = await _context.Users
-                    .Where(u => u.FirstName == "Erika" && u.Role >= 1520)
-                    .FirstOrDefaultAsync();
+                // Get all master admins (1510) and admins (1520)
+                var adminUsers = await _context.Users
+                    .Where(u => u.Role >= 1510)
+                    .ToListAsync();
 
-                if (adminUser != null)
+                if (adminUsers.Any())
                 {
                     var user = await _context.Users.FindAsync(materialRun.UserId);
                     var job = await _context.Jobs.FindAsync(materialRun.JobId);
@@ -811,7 +811,14 @@ Materials Needed:
 This is an automated notification from the Job Tracker system.
 ";
 
-                    await _emailService.SendEmailAsync(adminUser.Email, subject, body);
+                    // Send email to all master admins and admins
+                    foreach (var admin in adminUsers)
+                    {
+                        if (!string.IsNullOrEmpty(admin.Email))
+                        {
+                            await _emailService.SendEmailAsync(admin.Email, subject, body);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
