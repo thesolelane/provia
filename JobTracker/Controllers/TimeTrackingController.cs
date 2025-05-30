@@ -23,6 +23,18 @@ namespace JobTracker.Controllers
             _emailService = emailService;
         }
 
+        private int? GetUserIdFromToken()
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+            return null;
+        }
+
+
+
         [HttpPost("clock-in/initiate")]
         public async Task<IActionResult> InitiateClockIn([FromBody] InitiateClockInRequest request)
         {
@@ -611,7 +623,7 @@ namespace JobTracker.Controllers
                 // Verify user is at job site
                 var distance = CalculateDistance(
                     request.Latitude, request.Longitude,
-                    activeTimeEntry.Job.Latitude, activeTimeEntry.Job.Longitude
+                    activeTimeEntry.Job.Latitude ?? 0, activeTimeEntry.Job.Longitude ?? 0
                 );
 
                 if (distance > 106) // 350 feet
@@ -715,7 +727,7 @@ namespace JobTracker.Controllers
                 // Calculate distance from job site
                 var distance = CalculateDistance(
                     request.Latitude, request.Longitude,
-                    materialRun.Job.Latitude, materialRun.Job.Longitude
+                    materialRun.Job.Latitude ?? 0, materialRun.Job.Longitude ?? 0
                 );
 
                 // Within 350 feet means back at job site
