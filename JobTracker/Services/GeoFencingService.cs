@@ -196,7 +196,7 @@ namespace JobTracker.Services
                 activeTimeEntry.ClockOutLatitude = latitude;
                 activeTimeEntry.ClockOutLongitude = longitude;
                 activeTimeEntry.IsActive = false;
-                activeTimeEntry.LocationVerified = distance <= ALLOWED_DISTANCE_FEET;
+                activeTimeEntry.LocationVerified = distance <= BASE_ALLOWED_DISTANCE_FEET;
 
                 var totalHours = (activeTimeEntry.ClockOutTime.Value - activeTimeEntry.ClockInTime).TotalHours;
                 activeTimeEntry.TotalHours = (decimal)totalHours;
@@ -239,7 +239,7 @@ namespace JobTracker.Services
                 if (job.Latitude.HasValue && job.Longitude.HasValue)
                 {
                     var distance = CalculateDistance(userLat, userLon, job.Latitude.Value, job.Longitude.Value);
-                    if (distance <= ALLOWED_DISTANCE_FEET)
+                    if (distance <= BASE_ALLOWED_DISTANCE_FEET)
                     {
                         return job;
                     }
@@ -286,7 +286,7 @@ namespace JobTracker.Services
                     <ul>
                         <li>Job Site: {job.Location}</li>
                         <li>Distance moved during verification: {distance:F0} feet</li>
-                        <li>Maximum allowed distance: {ALLOWED_DISTANCE_FEET} feet</li>
+                        <li>Maximum allowed distance: {BASE_ALLOWED_DISTANCE_FEET} feet</li>
                         <li>Time: {DateTime.Now:MMM dd, yyyy h:mm tt}</li>
                     </ul>
                     <p>You are <strong>NOT</strong> clocked in for this job. Please ensure you remain at the job site during the verification process and try again.</p>
