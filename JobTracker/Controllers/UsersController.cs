@@ -93,9 +93,9 @@ namespace JobTracker.Controllers
                     stats = new
                     {
                         totalUsers = users.Count,
-                        masterAdmins = roleStats.FirstOrDefault(r => r.Role == UserRole.MasterAdmin)?.Count ?? 0,
-                        admins = roleStats.FirstOrDefault(r => r.Role == UserRole.Admin)?.Count ?? 0,
-                        regularUsers = roleStats.FirstOrDefault(r => r.Role == UserRole.RegularUser)?.Count ?? 0
+                        masterAdmins = roleStats.FirstOrDefault(r => r.Role == UserRoles.MasterAdmin)?.Count ?? 0,
+                        admins = roleStats.FirstOrDefault(r => r.Role == UserRoles.Admin)?.Count ?? 0,
+                        fieldOperators = roleStats.FirstOrDefault(r => r.Role == UserRoles.FieldOperator)?.Count ?? 0
                     }
                 });
             }
@@ -107,7 +107,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestLegacy request)
         {
             try
             {
@@ -126,12 +126,12 @@ namespace JobTracker.Controllers
                 var masterAdminCount = currentUsers.Count(u => u.Role == UserRoles.MasterAdmin);
                 var adminCount = currentUsers.Count(u => u.Role == UserRoles.Admin);
 
-                if ((int)request.Role == 2 && masterAdminCount >= 3)  // MasterAdmin = 2
+                if (request.Role == UserRoles.MasterAdmin && masterAdminCount >= 3)
                 {
                     return BadRequest(new { message = "Maximum 3 Master Admins allowed per company" });
                 }
 
-                if ((int)request.Role == 1 && adminCount >= 10)  // Admin = 1
+                if (request.Role == UserRoles.Admin && adminCount >= 10)
                 {
                     return BadRequest(new { message = "Maximum 10 Admins allowed per company" });
                 }
@@ -224,7 +224,7 @@ namespace JobTracker.Controllers
                 {
                     message = "User created successfully",
                     userId = user.Id,
-                    loginMethod = user.Role == UserRole.RegularUser ? "phone" : "email",
+                    loginMethod = user.Role == UserRoles.FieldOperator ? "phone" : "email",
                     emailStatus,
                     verificationRequired = true,
                     temporaryPassword = emailStatus.Contains("not configured") ? temporaryPassword : "Check email",
@@ -367,6 +367,18 @@ namespace JobTracker.Controllers
     }
 
 
+
+    public class CreateUserRequestLegacy
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public int Role { get; set; }
+        public string? LanguagePreference { get; set; }
+        public string? Password { get; set; }
+        public int CompanyId { get; set; }
+    }
 
     public class UpdateUserRequest
     {
