@@ -57,7 +57,8 @@ namespace JobTracker.Controllers
                     ClockInLongitude = request.Longitude,
                     LocationVerified = false, // Will be verified later
                     VerificationPending = true, // Mark as pending verification
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 _context.TimeEntries.Add(timeEntry);
