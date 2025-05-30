@@ -73,7 +73,7 @@ namespace JobTracker.Controllers
                     FirstName = request.AdminFirstName,
                     LastName = request.AdminLastName,
                     Email = request.ContactEmail,
-                    Role = UserRole.MasterAdmin,
+                    Role = UserRoles.MasterAdmin,
                     LanguagePreference = request.LanguagePreference,
                     PasswordHash = HashPassword(request.AdminPassword),
                     CompanyId = company.Id,
