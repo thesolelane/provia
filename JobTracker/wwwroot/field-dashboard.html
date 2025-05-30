@@ -661,9 +661,18 @@
                         <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                         <p><strong>Location Verification Failed</strong></p>
                         <div class="mb-3">
-                            <div>Distance: ${Math.round(distance)} feet from ${window.selectedJob.name}</div>
-                            <div class="${statusClass}">GPS Accuracy: ±${accuracyFeet} feet</div>
-                            <div class="text-muted">Required: Within ${allowedDistance} feet</div>
+                            <div><strong>Distance:</strong> ${Math.round(distance)} feet from ${window.selectedJob.name}</div>
+                            <div class="${statusClass}"><strong>GPS Accuracy:</strong> ±${accuracyFeet} feet</div>
+                            <div class="text-muted"><strong>Required:</strong> Within ${allowedDistance} feet</div>
+                            <hr class="my-2">
+                            <div class="small text-start">
+                                <div><strong>Your Current Location:</strong></div>
+                                <div>Latitude: ${userLat.toFixed(6)}</div>
+                                <div>Longitude: ${userLng.toFixed(6)}</div>
+                                <div class="mt-2"><strong>Job Site (${window.selectedJob.name}):</strong></div>
+                                <div>Latitude: ${jobLat.toFixed(6)}</div>
+                                <div>Longitude: ${jobLng.toFixed(6)}</div>
+                            </div>
                         </div>
                         ${accuracyFeet > 200 ? 
                             '<div class="alert alert-info mb-3"><small><strong>Tip:</strong> Poor GPS signal detected. Try moving outdoors, away from buildings, or near a window for better accuracy.</small></div>' : ''}

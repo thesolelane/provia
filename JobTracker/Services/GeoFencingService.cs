@@ -117,7 +117,7 @@ namespace JobTracker.Services
                     latitude, 
                     longitude);
 
-                if (distance > ALLOWED_DISTANCE_FEET)
+                if (distance > BASE_ALLOWED_DISTANCE_FEET)
                 {
                     // Send email notification
                     await SendLocationVerificationFailureEmail(pendingClockIn.User, pendingClockIn.Job, distance);
