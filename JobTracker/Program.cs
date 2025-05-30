@@ -28,6 +28,9 @@ builder.Services.AddScoped<JobTracker.Services.MaterialStoreService>();
 builder.Services.AddScoped<JobTracker.Services.MaterialRunService>();
 builder.Services.AddScoped<JobTracker.Services.JobLocationService>();
 builder.Services.AddScoped<JobTracker.Services.UserCodeService>();
+builder.Services.AddScoped<JobTracker.Services.LocationTrackingService>();
+builder.Services.AddScoped<JobTracker.Services.EmailService>();
+builder.Services.AddScoped<JobTracker.Services.SMSService>();
 builder.Services.AddHttpClient();
 
 // Add Authentication

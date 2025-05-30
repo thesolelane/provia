@@ -103,7 +103,31 @@ namespace JobTracker.Controllers
                 pendingClockIn.CompletedTimeEntryId = timeEntry.Id;
                 await _context.SaveChangesAsync();
 
-                return Ok(new { success = true, message = "Successfully clocked in!" });
+                // Start background location tracking
+                try 
+                {
+                    var locationTrackingService = HttpContext.RequestServices.GetService<JobTracker.Services.LocationTrackingService>();
+                    if (locationTrackingService != null)
+                    {
+                        await locationTrackingService.StartLocationTracking(
+                            timeEntry.Id, 
+                            pendingClockIn.UserId, 
+                            pendingClockIn.JobId, 
+                            pendingClockIn.Latitude, 
+                            pendingClockIn.Longitude
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to start location tracking, but clock-in was successful");
+                }
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Successfully clocked in! Background location tracking started.",
+                    timeEntryId = timeEntry.Id 
+                });
             }
             catch (Exception ex)
             {
