@@ -125,7 +125,7 @@ namespace JobTracker.Controllers
                     if (locationTrackingService != null)
                     {
                         await locationTrackingService.StartLocationTracking(
-                            timeEntry.Id, 
+                            pendingClockIn.TimeEntry?.Id ?? 0, 
                             pendingClockIn.UserId, 
                             pendingClockIn.JobId, 
                             pendingClockIn.InitialLatitude, 
@@ -141,7 +141,7 @@ namespace JobTracker.Controllers
                 return Ok(new { 
                     success = true, 
                     message = "Successfully clocked in! Background location tracking started.",
-                    timeEntryId = timeEntry.Id 
+                    timeEntryId = pendingClockIn.TimeEntry?.Id 
                 });
             }
             catch (Exception ex)
