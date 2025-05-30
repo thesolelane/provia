@@ -9,14 +9,14 @@ namespace JobTracker.Services
     {
         private readonly JobTrackerContext _context;
         private readonly ILogger<LocationTrackingService> _logger;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
         private readonly SMSService _smsService;
         private readonly Timer _locationCheckTimer;
 
         public LocationTrackingService(
             JobTrackerContext context, 
             ILogger<LocationTrackingService> logger,
-            EmailService emailService,
+            IEmailService emailService,
             SMSService smsService)
         {
             _context = context;
@@ -201,7 +201,7 @@ namespace JobTracker.Services
                     
                     // Calculate total hours
                     var totalHours = (timeEntry.ClockOutTime.Value - timeEntry.ClockInTime).TotalHours;
-                    timeEntry.TotalHours = Math.Round(totalHours, 2);
+                    timeEntry.TotalHours = (decimal)Math.Round(totalHours, 2);
                 }
 
                 // Deactivate location tracker
