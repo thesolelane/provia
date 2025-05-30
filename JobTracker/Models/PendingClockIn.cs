@@ -32,6 +32,10 @@ namespace JobTracker.Models
         // Status tracking
         public bool IsActive { get; set; } = true;
 
+        // Reference to the temporary time entry created during initiation
+        public int? TimeEntryId { get; set; }
+        public TimeEntry? TimeEntry { get; set; }
+
         // Reference to completed time entry if successful
         public int? CompletedTimeEntryId { get; set; }
         public TimeEntry? CompletedTimeEntry { get; set; }
