@@ -9,7 +9,7 @@ namespace JobTracker.Services
         private readonly JobTrackerContext _context;
         private readonly IEmailService _emailService;
         private readonly ILogger<GeoFencingService> _logger;
-        private const double ALLOWED_DISTANCE_FEET = 200.0;
+        private const double BASE_ALLOWED_DISTANCE_FEET = 350.0;
 
         public GeoFencingService(JobTrackerContext context, IEmailService emailService, ILogger<GeoFencingService> logger)
         {
