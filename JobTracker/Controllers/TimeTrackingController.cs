@@ -47,6 +47,21 @@ namespace JobTracker.Controllers
                     _logger.LogInformation($"Distance to job site: {distance:F2} feet");
                 }
                 
+                // Create a temporary TimeEntry that shows user as clocked in
+                var timeEntry = new TimeEntry
+                {
+                    UserId = userId,
+                    JobId = request.JobId,
+                    ClockInTime = DateTime.UtcNow,
+                    ClockInLatitude = request.Latitude,
+                    ClockInLongitude = request.Longitude,
+                    LocationVerified = false, // Will be verified later
+                    VerificationPending = true, // Mark as pending verification
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.TimeEntries.Add(timeEntry);
+
                 var pendingClockIn = new PendingClockIn
                 {
                     UserId = userId,
@@ -55,7 +70,8 @@ namespace JobTracker.Controllers
                     InitialLongitude = request.Longitude,
                     InitiatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(9),
-                    IsActive = true
+                    IsActive = true,
+                    TimeEntryId = timeEntry.Id // Link to the temp time entry
                 };
 
                 _context.PendingClockIns.Add(pendingClockIn);
@@ -76,6 +92,7 @@ namespace JobTracker.Controllers
             try
             {
                 var pendingClockIn = await _context.PendingClockIns
+                    .Include(p => p.TimeEntry)
                     .FirstOrDefaultAsync(p => p.Id == request.PendingClockInId && p.IsActive);
 
                 if (pendingClockIn == null)
@@ -83,24 +100,22 @@ namespace JobTracker.Controllers
                     return Ok(new { success = false, message = "Clock-in session not found or expired." });
                 }
 
-                // For testing, always allow clock-in to succeed
-                var timeEntry = new TimeEntry
+                // Update the existing temporary TimeEntry to mark it as verified
+                if (pendingClockIn.TimeEntry != null)
                 {
-                    UserId = pendingClockIn.UserId,
-                    JobId = pendingClockIn.JobId,
-                    ClockInTime = pendingClockIn.InitiatedAt,
-                    ClockInLatitude = request.Latitude,
-                    ClockInLongitude = request.Longitude,
-                    LocationVerified = true,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    pendingClockIn.TimeEntry.LocationVerified = true;
+                    pendingClockIn.TimeEntry.VerificationPending = false;
+                    pendingClockIn.TimeEntry.UpdatedAt = DateTime.UtcNow;
+                    
+                    // Update final verification coordinates if different
+                    pendingClockIn.TimeEntry.ClockInLatitude = request.Latitude;
+                    pendingClockIn.TimeEntry.ClockInLongitude = request.Longitude;
+                }
 
-                _context.TimeEntries.Add(timeEntry);
-                await _context.SaveChangesAsync();
-                
-                // Now update the pending clock-in with the created TimeEntry ID
+                // Mark the pending clock-in as completed
                 pendingClockIn.IsActive = false;
-                pendingClockIn.CompletedTimeEntryId = timeEntry.Id;
+                pendingClockIn.CompletedTimeEntryId = pendingClockIn.TimeEntry?.Id;
+                
                 await _context.SaveChangesAsync();
 
                 // Start background location tracking

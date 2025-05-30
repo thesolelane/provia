@@ -39,6 +39,7 @@ namespace JobTracker.Models
 
         // Two-stage verification system
         public bool IsPendingVerification { get; set; } = false;
+        public bool VerificationPending { get; set; } = false;
         public DateTime? VerificationDeadline { get; set; }
         public bool VerificationFailed { get; set; } = false;
         public DateTime? AutoLogoutTime { get; set; }
