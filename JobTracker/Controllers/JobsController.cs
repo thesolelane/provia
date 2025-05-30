@@ -329,5 +329,46 @@ namespace JobTracker.Controllers
         {
             return _context.Jobs.Any(e => e.Id == id);
         }
+
+        // POST: api/Jobs/{id}/update-coordinates
+        [HttpPost("{id}/update-coordinates")]
+        public async Task<IActionResult> UpdateJobCoordinates(int id, [FromBody] UpdateCoordinatesRequest request)
+        {
+            try
+            {
+                var job = await _context.Jobs.FindAsync(id);
+                if (job == null)
+                {
+                    return NotFound();
+                }
+
+                // Update coordinates
+                job.Latitude = request.Latitude;
+                job.Longitude = request.Longitude;
+                job.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Job site coordinates updated for {job.Name} at {job.Location}: {request.Latitude}, {request.Longitude} by admin");
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Job site coordinates updated successfully",
+                    latitude = request.Latitude,
+                    longitude = request.Longitude
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating job coordinates for job {JobId}", id);
+                return StatusCode(500, new { success = false, message = "Failed to update coordinates" });
+            }
+        }
+    }
+
+    public class UpdateCoordinatesRequest
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
     }
 }
