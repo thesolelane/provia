@@ -23,7 +23,10 @@ namespace JobTracker.Models
         public string? PhoneNumber { get; set; }
 
         [Required]
-        public UserRole Role { get; set; } = UserRole.RegularUser;
+        public int Role { get; set; } = 2001; // Using new role codes: 1510, 1520, 2001
+
+        [StringLength(50)]
+        public string? UserCode { get; set; } // Format: 36DMRD-1520-001
 
         [Required]
         [StringLength(10)]
