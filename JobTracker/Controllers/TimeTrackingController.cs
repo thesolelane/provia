@@ -638,7 +638,7 @@ namespace JobTracker.Controllers
                 // Create material run record
                 var materialRun = new MaterialRun
                 {
-                    UserId = userId.Value,
+                    UserId = userId,
                     JobId = request.JobId,
                     TimeEntryId = activeTimeEntry.Id,
                     StoreType = request.StoreType,
