@@ -25,6 +25,9 @@ namespace JobTracker.Data
         public DbSet<PendingClockIn> PendingClockIns { get; set; } = null!;
         public DbSet<MaterialStore> MaterialStores { get; set; } = null!;
         public DbSet<MaterialRun> MaterialRuns { get; set; } = null!;
+        public DbSet<LocationTracker> LocationTrackers { get; set; } = null!;
+        public DbSet<LocationPing> LocationPings { get; set; } = null!;
+        public DbSet<LocationVerificationRequest> LocationVerificationRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,6 +98,51 @@ namespace JobTracker.Data
             modelBuilder.Entity<Company>().HasIndex(c => c.IsActive);
             modelBuilder.Entity<Job>().HasIndex(j => j.CompanyId);
             modelBuilder.Entity<User>().HasIndex(u => u.CompanyId);
+
+            // Configure LocationTracker relationships
+            modelBuilder.Entity<LocationTracker>()
+                .HasOne(lt => lt.TimeEntry)
+                .WithOne()
+                .HasForeignKey<LocationTracker>(lt => lt.TimeEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LocationTracker>()
+                .HasOne(lt => lt.User)
+                .WithMany()
+                .HasForeignKey(lt => lt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LocationTracker>()
+                .HasOne(lt => lt.Job)
+                .WithMany()
+                .HasForeignKey(lt => lt.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure LocationPing relationships
+            modelBuilder.Entity<LocationPing>()
+                .HasOne(lp => lp.LocationTracker)
+                .WithMany(lt => lt.LocationPings)
+                .HasForeignKey(lp => lp.LocationTrackerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure LocationVerificationRequest relationships
+            modelBuilder.Entity<LocationVerificationRequest>()
+                .HasOne(lvr => lvr.LocationTracker)
+                .WithMany(lt => lt.VerificationRequests)
+                .HasForeignKey(lvr => lvr.LocationTrackerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LocationVerificationRequest>()
+                .HasOne(lvr => lvr.User)
+                .WithMany()
+                .HasForeignKey(lvr => lvr.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Add indexes for location tracking performance
+            modelBuilder.Entity<LocationTracker>().HasIndex(lt => new { lt.UserId, lt.IsActive });
+            modelBuilder.Entity<LocationTracker>().HasIndex(lt => lt.NextLocationCheckAt);
+            modelBuilder.Entity<LocationPing>().HasIndex(lp => lp.PingTime);
+            modelBuilder.Entity<LocationVerificationRequest>().HasIndex(lvr => new { lvr.UserId, lvr.Status });
         }
 
         public override int SaveChanges()
