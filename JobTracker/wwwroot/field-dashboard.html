@@ -1285,10 +1285,10 @@
                     // Update status to show lunch
                     updateClockStatus('lunch');
                     
-                    // Start silent 8-minute verification
+                    // Start silent verification (10 seconds for testing, normally 8 minutes)
                     setTimeout(() => {
                         verifyLunchLocation(data.lunchBreakId, lat, lng);
-                    }, 480000); // 8 minutes
+                    }, 10000); // 10 seconds for testing
                     
                     showInAppMessage('Lunch Break Started', 'Enjoy your lunch! You have 1 hour.', 'success');
                 } else {
