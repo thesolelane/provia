@@ -27,6 +27,7 @@ builder.Services.AddScoped<JobTracker.Services.GeoFencingService>();
 builder.Services.AddScoped<JobTracker.Services.MaterialStoreService>();
 builder.Services.AddScoped<JobTracker.Services.MaterialRunService>();
 builder.Services.AddScoped<JobTracker.Services.JobLocationService>();
+builder.Services.AddScoped<JobTracker.Services.UserCodeService>();
 builder.Services.AddHttpClient();
 
 // Add Authentication

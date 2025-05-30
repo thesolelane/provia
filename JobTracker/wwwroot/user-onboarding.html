@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Onboarding - Job Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .batch-user {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
+        .batch-user h4 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        .remove-user {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .user-code {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>User Onboarding</h1>
+            <p>Create new user accounts for your organization</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('single')">Single User</div>
+            <div class="tab" onclick="showTab('batch')">Batch Create</div>
+        </div>
+
+        <!-- Single User Form -->
+        <div id="single-tab" class="tab-content active">
+            <h2>Create Single User</h2>
+            <form id="single-user-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required>
+                            <option value="">Select Role</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="language">Language Preference</label>
+                        <select id="language" name="language">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="fr">French</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="tempPassword">Temporary Password</label>
+                    <input type="password" id="tempPassword" name="tempPassword" required>
+                </div>
+                <button type="submit" class="btn">Create User</button>
+            </form>
+        </div>
+
+        <!-- Batch User Form -->
+        <div id="batch-tab" class="tab-content">
+            <h2>Batch Create Users</h2>
+            <div id="batch-users">
+                <div class="batch-user">
+                    <h4>User 1</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" name="phoneNumber">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select name="role" required>
+                                <option value="">Select Role</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Language</label>
+                            <select name="language">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="pt">Portuguese</option>
+                                <option value="fr">French</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin: 20px 0;">
+                <button type="button" class="btn btn-secondary" onclick="addBatchUser()">Add Another User</button>
+                <button type="button" class="btn" onclick="submitBatchUsers()">Create All Users</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>Processing users...</p>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let batchUserCount = 1;
+        let availableRoles = [];
+
+        // Load available roles on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAvailableRoles();
+        });
+
+        async function loadAvailableRoles() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/UserManagement/available-roles', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    availableRoles = await response.json();
+                    updateRoleSelects();
+                } else {
+                    showError('Failed to load available roles');
+                }
+            } catch (error) {
+                showError('Error loading roles: ' + error.message);
+            }
+        }
+
+        function updateRoleSelects() {
+            const selects = document.querySelectorAll('select[name="role"]');
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Select Role</option>';
+                availableRoles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.Code;
+                    option.textContent = role.Name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function addBatchUser() {
+            batchUserCount++;
+            const userDiv = document.createElement('div');
+            userDiv.className = 'batch-user';
+            userDiv.innerHTML = `
+                <h4>User ${batchUserCount} <button type="button" class="remove-user" onclick="removeBatchUser(this)">Remove</button></h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="lastName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phoneNumber">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select name="role" required>
+                            <option value="">Select Role</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Language</label>
+                        <select name="language">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="fr">French</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            document.getElementById('batch-users').appendChild(userDiv);
+            updateRoleSelects();
+        }
+
+        function removeBatchUser(button) {
+            button.parentElement.parentElement.remove();
+        }
+
+        // Single user form submission
+        document.getElementById('single-user-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const userData = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phoneNumber: formData.get('phoneNumber'),
+                role: parseInt(formData.get('role')),
+                temporaryPassword: formData.get('tempPassword'),
+                languagePreference: formData.get('language')
+            };
+
+            await createSingleUser(userData);
+        });
+
+        async function createSingleUser(userData) {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/UserManagement/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (response.ok) {
+                    showSuccess(`User created successfully! User Code: ${result.UserCode}`);
+                    document.getElementById('single-user-form').reset();
+                } else {
+                    showError('Error creating user: ' + result.message);
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showError('Error creating user: ' + error.message);
+            }
+        }
+
+        async function submitBatchUsers() {
+            const batchUsers = document.querySelectorAll('.batch-user');
+            const users = [];
+
+            batchUsers.forEach(userDiv => {
+                const inputs = userDiv.querySelectorAll('input, select');
+                const userData = {};
+                
+                inputs.forEach(input => {
+                    if (input.name === 'role') {
+                        userData[input.name] = parseInt(input.value);
+                    } else {
+                        userData[input.name] = input.value;
+                    }
+                });
+                
+                if (userData.firstName && userData.lastName && userData.email && userData.role) {
+                    userData.temporaryPassword = 'TempPass123!';
+                    users.push(userData);
+                }
+            });
+
+            if (users.length === 0) {
+                showError('Please fill out at least one complete user form');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').style.display = 'block';
+                
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/UserManagement/batch-create-users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ users: users })
+                });
+
+                const result = await response.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (response.ok) {
+                    showBatchResults(result);
+                } else {
+                    showError('Error creating users: ' + result.message);
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showError('Error creating users: ' + error.message);
+            }
+        }
+
+        function showBatchResults(result) {
+            const resultsDiv = document.getElementById('results');
+            let html = `<h3>Batch Creation Results</h3>`;
+            html += `<p>Total Processed: ${result.TotalProcessed}, Successfully Created: ${result.SuccessfullyCreated}</p>`;
+            
+            if (result.CreatedUsers.length > 0) {
+                html += `<h4 class="success">Successfully Created Users:</h4><ul>`;
+                result.CreatedUsers.forEach(user => {
+                    html += `<li><strong>${user.Name}</strong> (${user.Email}) - Role: ${user.Role} - User Code: <span class="user-code">${user.UserCode}</span></li>`;
+                });
+                html += `</ul>`;
+            }
+
+            if (result.Errors.length > 0) {
+                html += `<h4 class="error">Errors:</h4><ul>`;
+                result.Errors.forEach(error => {
+                    html += `<li class="error">${error}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="success"><h3>Success!</h3><p>${message}</p></div>`;
+            resultsDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="error"><h3>Error</h3><p>${message}</p></div>`;
+            resultsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
