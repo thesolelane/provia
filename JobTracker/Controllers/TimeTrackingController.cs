@@ -113,8 +113,8 @@ namespace JobTracker.Controllers
                             timeEntry.Id, 
                             pendingClockIn.UserId, 
                             pendingClockIn.JobId, 
-                            pendingClockIn.Latitude, 
-                            pendingClockIn.Longitude
+                            pendingClockIn.InitialLatitude, 
+                            pendingClockIn.InitialLongitude
                         );
                     }
                 }
