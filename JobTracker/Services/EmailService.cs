@@ -29,9 +29,15 @@ namespace JobTracker.Services
             _fromName = configuration["EmailSettings:FromName"] ?? "Smart Job Tracker";
             
             var apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+            _logger.LogInformation($"SendGrid API Key found: {!string.IsNullOrEmpty(apiKey)}");
             if (!string.IsNullOrEmpty(apiKey))
             {
                 _sendGridClient = new SendGridClient(apiKey);
+                _logger.LogInformation("SendGrid client initialized successfully");
+            }
+            else
+            {
+                _logger.LogWarning("SendGrid API Key not found - emails will be simulated");
             }
         }
 
