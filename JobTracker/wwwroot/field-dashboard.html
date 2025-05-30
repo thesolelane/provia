@@ -1252,23 +1252,42 @@
             .then(response => response.json())
             .then(data => {
                 const content = document.getElementById('sectionsContent');
-                if (data.length === 0) {
+                
+                // Filter out subcontractor sections - only show sections for field workers
+                const fieldWorkerSections = data.filter(section => 
+                    !section.isSubcontracted && 
+                    !section.useSubcontractor &&
+                    section.subcontractorId === null
+                );
+                
+                if (fieldWorkerSections.length === 0) {
                     content.innerHTML = `
                         <div class="text-center py-4">
                             <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
-                            <p class="text-muted">No sections created for this job site yet.</p>
+                            <p class="text-muted">No field work sections available for this job site.</p>
+                            <small class="text-muted">Subcontractor sections are managed by administrators.</small>
                         </div>
                     `;
                 } else {
-                    content.innerHTML = data.map(section => `
-                        <div class="card mb-2">
+                    content.innerHTML = fieldWorkerSections.map(section => `
+                        <div class="card mb-2 section-card" data-section-id="${section.id}">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1">${section.name}</h6>
-                                        <p class="mb-0 text-muted">${section.description || 'No description'}</p>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-tools text-primary me-2"></i>
+                                            ${section.name}
+                                        </h6>
+                                        <p class="mb-1 text-muted">${section.description || 'No description'}</p>
+                                        ${section.assignedEmployee ? 
+                                            `<small class="text-success"><i class="fas fa-user me-1"></i>Assigned: ${section.assignedEmployee}</small>` : 
+                                            `<small class="text-warning"><i class="fas fa-user-clock me-1"></i>No assignment</small>`
+                                        }
                                     </div>
-                                    <span class="badge bg-secondary">${section.status}</span>
+                                    <div class="text-end">
+                                        <span class="badge ${getSectionStatusBadge(section.status)}">${section.status}</span>
+                                        ${section.estimatedHours ? `<br><small class="text-muted">${section.estimatedHours}h est.</small>` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1383,6 +1402,25 @@
                 return false;
             }
             return true;
+        }
+
+        function getSectionStatusBadge(status) {
+            switch(status?.toLowerCase()) {
+                case 'not started':
+                    return 'bg-secondary';
+                case 'in progress':
+                    return 'bg-primary';
+                case 'completed':
+                    return 'bg-success';
+                case 'on hold':
+                    return 'bg-warning';
+                case 'pending inspection':
+                    return 'bg-info';
+                case 'failed inspection':
+                    return 'bg-danger';
+                default:
+                    return 'bg-secondary';
+            }
         }
     </script>
 
