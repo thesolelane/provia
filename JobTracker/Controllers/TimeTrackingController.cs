@@ -778,6 +778,44 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { success = false, message = "Server error during material run verification" });
             }
         }
+
+        private async Task SendMaterialListToAdmin(MaterialRun materialRun, TimeEntry timeEntry)
+        {
+            try
+            {
+                // Get admin Erika's email
+                var adminUser = await _context.Users
+                    .Where(u => u.FirstName == "Erika" && u.Role >= 1520)
+                    .FirstOrDefaultAsync();
+
+                if (adminUser != null)
+                {
+                    var user = await _context.Users.FindAsync(materialRun.UserId);
+                    var job = await _context.Jobs.FindAsync(materialRun.JobId);
+
+                    var subject = $"Material Run Request - {user?.FirstName} {user?.LastName}";
+                    var body = $@"
+Material Run Details:
+
+Employee: {user?.FirstName} {user?.LastName}
+Job Site: {job?.Location}
+Store Type: {materialRun.StoreType}
+Start Time: {materialRun.StartTime:MM/dd/yyyy HH:mm}
+
+Materials Needed:
+{materialRun.Materials}
+
+This is an automated notification from the Job Tracker system.
+";
+
+                    await _emailService.SendEmailAsync(adminUser.Email, subject, body);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send material list email to admin");
+            }
+        }
     }
 
     public class InitiateClockInRequest
