@@ -8,7 +8,7 @@ namespace JobTracker.Services
         Task<bool> SendLocationViolationEmailAsync(string toEmail, string userName, string jobName, double distance, double allowedDistance);
         Task<bool> SendAdminLocationAlertAsync(string toEmail, string adminName, string workerName, string jobName, double distance, double allowedDistance);
         Task<bool> SendEmailAsync(string to, string subject, string body);
-        Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName);
+        Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName, string? companyName = null);
         Task<bool> SendWelcomeEmailAsync(string email, string firstName, string tempPassword);
         Task<bool> SendPasswordResetEmailAsync(string email, string resetCode, string firstName);
     }
@@ -65,7 +65,7 @@ namespace JobTracker.Services
 
                 var plainTextContent = $"Location Alert: You have been automatically clocked out. You were {distance} feet from {jobName} (allowed: {allowedDistance} feet). Return to the job site or select a different location to continue working.";
 
-                return await SendEmailAsync(toEmail, subject, htmlContent, plainTextContent);
+                return await SendEmailInternalAsync(toEmail, subject, htmlContent, plainTextContent);
             }
             catch (Exception ex)
             {
@@ -105,7 +105,7 @@ namespace JobTracker.Services
 
                 var plainTextContent = $"Admin Alert: {workerName} was automatically clocked out for being {distance} feet from {jobName} (allowed: {allowedDistance} feet) at {DateTime.Now:yyyy-MM-dd HH:mm:ss}.";
 
-                return await SendEmailAsync(toEmail, subject, htmlContent, plainTextContent);
+                return await SendEmailInternalAsync(toEmail, subject, htmlContent, plainTextContent);
             }
             catch (Exception ex)
             {
@@ -128,7 +128,7 @@ namespace JobTracker.Services
             }
         }
 
-        public async Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName)
+        public async Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName, string? companyName = null)
         {
             try
             {
