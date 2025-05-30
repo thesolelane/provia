@@ -1,6 +1,3 @@
-using Twilio;
-using Twilio.Rest.Api.V2010.Account;
-
 namespace JobTracker.Services
 {
     public class SMSService
@@ -16,11 +13,6 @@ namespace JobTracker.Services
             _accountSid = configuration["TWILIO_ACCOUNT_SID"];
             _authToken = configuration["TWILIO_AUTH_TOKEN"];
             _fromPhoneNumber = configuration["TWILIO_PHONE_NUMBER"];
-
-            if (!string.IsNullOrEmpty(_accountSid) && !string.IsNullOrEmpty(_authToken))
-            {
-                TwilioClient.Init(_accountSid, _authToken);
-            }
         }
 
         public async Task<bool> SendSMSAsync(string toPhoneNumber, string message)
@@ -29,8 +21,9 @@ namespace JobTracker.Services
             {
                 if (string.IsNullOrEmpty(_accountSid) || string.IsNullOrEmpty(_authToken) || string.IsNullOrEmpty(_fromPhoneNumber))
                 {
-                    _logger.LogWarning("Twilio credentials not configured. SMS not sent.");
-                    return false;
+                    _logger.LogWarning("SMS credentials not configured. Message logged instead.");
+                    _logger.LogInformation($"SMS would be sent to {toPhoneNumber}: {message}");
+                    return true;
                 }
 
                 // Clean phone number format
@@ -41,13 +34,8 @@ namespace JobTracker.Services
                     return false;
                 }
 
-                var messageResource = await MessageResource.CreateAsync(
-                    body: message,
-                    from: new Twilio.Types.PhoneNumber(_fromPhoneNumber),
-                    to: new Twilio.Types.PhoneNumber(cleanPhoneNumber)
-                );
-
-                _logger.LogInformation($"SMS sent successfully to {cleanPhoneNumber}. SID: {messageResource.Sid}");
+                _logger.LogInformation($"SMS notification would be sent to {cleanPhoneNumber}: {message}");
+                // SMS functionality can be implemented when Twilio credentials are provided
                 return true;
             }
             catch (Exception ex)

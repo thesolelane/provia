@@ -423,19 +423,5 @@ namespace JobTracker.Services
         }
     }
 
-    public enum LocationTrackerStatus
-    {
-        ClockedIn = 1,
-        LunchBreak = 2,
-        MaterialRun = 3,
-        ClockedOut = 4
-    }
 
-    public enum VerificationStatus
-    {
-        Pending = 1,
-        Completed = 2,
-        Failed = 3,
-        Expired = 4
-    }
 }
