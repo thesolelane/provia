@@ -588,6 +588,181 @@ namespace JobTracker.Controllers
                 return Ok(new { success = false, message = "Lunch verification failed: " + ex.Message });
             }
         }
+
+        [HttpPost("material-run/start")]
+        public async Task<IActionResult> StartMaterialRun([FromBody] MaterialRunStartRequest request)
+        {
+            try
+            {
+                var userId = GetUserIdFromToken();
+                if (userId == null) return Unauthorized();
+
+                // Check if user is currently clocked in
+                var activeTimeEntry = await _context.TimeEntries
+                    .Include(t => t.Job)
+                    .Where(t => t.UserId == userId && t.ClockOutTime == null)
+                    .FirstOrDefaultAsync();
+
+                if (activeTimeEntry == null)
+                {
+                    return BadRequest(new { success = false, message = "You must be clocked in to start a material run" });
+                }
+
+                // Verify user is at job site
+                var distance = CalculateDistance(
+                    request.Latitude, request.Longitude,
+                    activeTimeEntry.Job.Latitude, activeTimeEntry.Job.Longitude
+                );
+
+                if (distance > 106) // 350 feet
+                {
+                    return BadRequest(new { success = false, message = "You must be at the job site to start a material run" });
+                }
+
+                // Create material run record
+                var materialRun = new MaterialRun
+                {
+                    UserId = userId.Value,
+                    JobId = request.JobId,
+                    TimeEntryId = activeTimeEntry.Id,
+                    StoreType = request.StoreType,
+                    Materials = request.Materials,
+                    StartLatitude = request.Latitude,
+                    StartLongitude = request.Longitude,
+                    StartTime = DateTime.UtcNow,
+                    VerificationDeadline = DateTime.UtcNow.AddMinutes(75), // 1.25 hours
+                    IsActive = true
+                };
+
+                _context.MaterialRuns.Add(materialRun);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, materialRunId = materialRun.Id, message = "Material run started" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Server error starting material run" });
+            }
+        }
+
+        [HttpPost("material-run/ping")]
+        public async Task<IActionResult> MaterialRunPing([FromBody] MaterialRunPingRequest request)
+        {
+            try
+            {
+                var userId = GetUserIdFromToken();
+                if (userId == null) return Unauthorized();
+
+                var materialRun = await _context.MaterialRuns
+                    .Where(m => m.Id == request.MaterialRunId && m.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (materialRun == null)
+                {
+                    return BadRequest(new { success = false, message = "Material run not found" });
+                }
+
+                // Check if material run has timed out
+                if (DateTime.UtcNow > materialRun.VerificationDeadline)
+                {
+                    materialRun.VerificationFailed = true;
+                    materialRun.IsActive = false;
+                    
+                    // Auto logout
+                    var activeTimeEntry = await _context.TimeEntries
+                        .Where(t => t.UserId == userId && t.ClockOutTime == null)
+                        .FirstOrDefaultAsync();
+
+                    if (activeTimeEntry != null)
+                    {
+                        activeTimeEntry.ClockOutTime = DateTime.UtcNow;
+                        activeTimeEntry.AutoLogoutTime = DateTime.UtcNow;
+                        activeTimeEntry.IsActive = false;
+                        activeTimeEntry.Notes = "Auto logout - material run timeout";
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                    
+                    return Ok(new { success = false, timeout = true, message = "Material run timeout" });
+                }
+
+                return Ok(new { success = true, message = "Location ping recorded" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Server error during material run ping" });
+            }
+        }
+
+        [HttpPost("material-run/verify-return")]
+        public async Task<IActionResult> VerifyMaterialRunReturn([FromBody] MaterialRunVerificationRequest request)
+        {
+            try
+            {
+                var userId = GetUserIdFromToken();
+                if (userId == null) return Unauthorized();
+
+                var materialRun = await _context.MaterialRuns
+                    .Include(m => m.Job)
+                    .Where(m => m.Id == request.MaterialRunId && m.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (materialRun == null)
+                {
+                    return BadRequest(new { success = false, message = "Material run not found" });
+                }
+
+                // Calculate distance from job site
+                var distance = CalculateDistance(
+                    request.Latitude, request.Longitude,
+                    materialRun.Job.Latitude, materialRun.Job.Longitude
+                );
+
+                // Within 350 feet means back at job site
+                var isAtJobSite = distance <= 106;
+
+                if (isAtJobSite)
+                {
+                    // Successfully returned to job site
+                    materialRun.EndTime = DateTime.UtcNow;
+                    materialRun.EndLatitude = request.Latitude;
+                    materialRun.EndLongitude = request.Longitude;
+                    materialRun.LocationVerified = true;
+                    materialRun.IsActive = false;
+                    
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { success = true, message = "Material run completed - back to work" });
+                }
+                else
+                {
+                    // User is not back at job site - auto logout
+                    materialRun.VerificationFailed = true;
+                    materialRun.IsActive = false;
+                    
+                    // Auto logout current time entry
+                    var activeTimeEntry = await _context.TimeEntries
+                        .Where(t => t.UserId == userId && t.ClockOutTime == null)
+                        .FirstOrDefaultAsync();
+
+                    if (activeTimeEntry != null)
+                    {
+                        activeTimeEntry.ClockOutTime = DateTime.UtcNow;
+                        activeTimeEntry.AutoLogoutTime = DateTime.UtcNow;
+                        activeTimeEntry.IsActive = false;
+                        activeTimeEntry.Notes = $"Auto logout - material run verification failed. Distance from job site: {distance:F0}m";
+                    }
+                    
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { success = false, autoLogout = true, message = "Auto logout - not at job site after material run" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Server error during material run verification" });
+            }
+        }
     }
 
     public class InitiateClockInRequest
@@ -628,6 +803,29 @@ namespace JobTracker.Controllers
 
     public class SimpleClockRequest
     {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class MaterialRunStartRequest
+    {
+        public int JobId { get; set; }
+        public string StoreType { get; set; } = string.Empty;
+        public string Materials { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class MaterialRunPingRequest
+    {
+        public int MaterialRunId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class MaterialRunVerificationRequest
+    {
+        public int MaterialRunId { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }
