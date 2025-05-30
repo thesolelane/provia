@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "TCQ7cfLtXb0qI8nM+UTIgKtBdffXCI3Uu65GJiS4pb0=",
+  "Hash": "83pAweQn2197GH1qqdNHiGO9Bb0e8DMLxZnYa7VO5I8=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -117,6 +117,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/update-coordinates.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/user-onboarding.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "user-onboarding.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/user-onboarding.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/users.html",

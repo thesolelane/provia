@@ -43,3 +43,4 @@
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/JobTracker.pdb
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/JobTracker.genruntimeconfig.cache
 /home/runner/workspace/JobTracker/obj/Debug/net7.0/ref/JobTracker.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/BCrypt.Net-Next.dll

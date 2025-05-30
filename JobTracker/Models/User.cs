@@ -68,9 +68,9 @@ namespace JobTracker.Models
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch
         {
-            UserRole.MasterAdmin => "Master Admin",
-            UserRole.Admin => "Admin",
-            UserRole.RegularUser => "User",
+            1510 => "Master Admin",
+            1520 => "Admin", 
+            2001 => "Field Operator",
             _ => "Unknown"
         };
     }
