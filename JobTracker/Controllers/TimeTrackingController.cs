@@ -475,6 +475,119 @@ namespace JobTracker.Controllers
             
             return distanceMiles * 5280; // Convert to feet
         }
+
+        [HttpPost("lunch/start")]
+        public async Task<IActionResult> StartLunchBreak([FromBody] LunchBreakRequest request)
+        {
+            try
+            {
+                var userId = 9; // Mike Johnson for testing
+                
+                // Verify user is currently clocked in
+                var currentTimeEntry = await _context.TimeEntries
+                    .FirstOrDefaultAsync(t => t.UserId == userId && t.ClockOutTime == null && t.IsActive);
+
+                if (currentTimeEntry == null)
+                {
+                    return Ok(new { success = false, message = "You must be clocked in to start a lunch break." });
+                }
+
+                // Get job coordinates for location verification
+                var job = await _context.Jobs.FindAsync(request.JobId);
+                if (job == null)
+                {
+                    return Ok(new { success = false, message = "Job not found." });
+                }
+
+                // Calculate distance to verify they're at the job site
+                var distance = CalculateDistance(request.Latitude, request.Longitude, 
+                                               job.Latitude ?? 0, job.Longitude ?? 0);
+
+                if (distance > 350) // 350 feet geofence
+                {
+                    return Ok(new { success = false, message = "You are not at job site - you must be at the job site to start lunch break." });
+                }
+
+                // Create lunch break record
+                var lunchBreak = new LunchBreak
+                {
+                    UserId = userId,
+                    JobId = request.JobId,
+                    TimeEntryId = currentTimeEntry.Id,
+                    StartLatitude = request.Latitude,
+                    StartLongitude = request.Longitude,
+                    StartTime = DateTime.UtcNow,
+                    VerificationDeadline = DateTime.UtcNow.AddMinutes(8),
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.LunchBreaks.Add(lunchBreak);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, lunchBreakId = lunchBreak.Id, message = "Lunch break started" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting lunch break: {Error}", ex.Message);
+                return Ok(new { success = false, message = "Lunch break start failed: " + ex.Message });
+            }
+        }
+
+        [HttpPost("lunch/verify")]
+        public async Task<IActionResult> VerifyLunchLocation([FromBody] LunchVerificationRequest request)
+        {
+            try
+            {
+                var lunchBreak = await _context.LunchBreaks
+                    .Include(l => l.Job)
+                    .FirstOrDefaultAsync(l => l.Id == request.LunchBreakId && l.IsActive);
+
+                if (lunchBreak == null)
+                {
+                    return Ok(new { success = false, message = "Lunch break session not found." });
+                }
+
+                // Calculate distance to verify they returned to the job site
+                var distance = CalculateDistance(request.Latitude, request.Longitude, 
+                                               lunchBreak.Job.Latitude ?? 0, lunchBreak.Job.Longitude ?? 0);
+
+                if (distance > 350) // 350 feet geofence
+                {
+                    // User failed verification - mark lunch break as failed
+                    lunchBreak.IsActive = false;
+                    lunchBreak.VerificationFailed = true;
+                    lunchBreak.EndTime = DateTime.UtcNow;
+
+                    // Clock out the user
+                    var timeEntry = await _context.TimeEntries.FindAsync(lunchBreak.TimeEntryId);
+                    if (timeEntry != null)
+                    {
+                        timeEntry.ClockOutTime = DateTime.UtcNow;
+                        timeEntry.IsActive = false;
+                    }
+
+                    await _context.SaveChangesAsync();
+                    return Ok(new { success = false, message = "Location verification failed - automatically clocked out" });
+                }
+
+                // Verification successful - mark lunch break as completed
+                lunchBreak.IsActive = false;
+                lunchBreak.EndLatitude = request.Latitude;
+                lunchBreak.EndLongitude = request.Longitude;
+                lunchBreak.EndTime = DateTime.UtcNow;
+                lunchBreak.LocationVerified = true;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Lunch break completed - back to work" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying lunch location: {Error}", ex.Message);
+                return Ok(new { success = false, message = "Lunch verification failed: " + ex.Message });
+            }
+        }
     }
 
     public class InitiateClockInRequest
@@ -495,6 +608,20 @@ namespace JobTracker.Controllers
     public class ClockOutRequest
     {
         public int UserId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class LunchBreakRequest
+    {
+        public int JobId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class LunchVerificationRequest
+    {
+        public int LunchBreakId { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }
