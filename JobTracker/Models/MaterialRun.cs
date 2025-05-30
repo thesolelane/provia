@@ -10,52 +10,59 @@ namespace JobTracker.Models
 
         [Required]
         public int UserId { get; set; }
-        public User User { get; set; } = null!;
 
         [Required]
         public int JobId { get; set; }
-        public Job Job { get; set; } = null!;
 
         [Required]
-        public int MaterialStoreId { get; set; }
-        public MaterialStore MaterialStore { get; set; } = null!;
+        public int TimeEntryId { get; set; }
 
         [Required]
-        [StringLength(500)]
-        public string Purpose { get; set; } = string.Empty; // What materials were being picked up
+        [StringLength(100)]
+        public string StoreType { get; set; } = string.Empty;
 
-        // Travel tracking
-        public DateTime? DepartureTime { get; set; }
-        public DateTime? ArrivalAtStoreTime { get; set; }
-        public DateTime? DepartureFromStoreTime { get; set; }
-        public DateTime? ReturnTime { get; set; }
-
-        // GPS coordinates for departure (job site)
-        public double? DepartureLatitude { get; set; }
-        public double? DepartureLongitude { get; set; }
-
-        // GPS coordinates for return (job site)
-        public double? ReturnLatitude { get; set; }
-        public double? ReturnLongitude { get; set; }
-
-        // Calculated times
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal? TravelTimeHours { get; set; }
-
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal? StoreTimeHours { get; set; }
-
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal? TotalTimeHours { get; set; }
-
-        // Verification flags
-        public bool LocationVerified { get; set; } = false;
-        public bool IsCompleted { get; set; } = false;
-
+        [Required]
         [StringLength(1000)]
-        public string Notes { get; set; } = string.Empty;
+        public string Materials { get; set; } = string.Empty;
+
+        [Required]
+        public double StartLatitude { get; set; }
+
+        [Required]
+        public double StartLongitude { get; set; }
+
+        public double? EndLatitude { get; set; }
+
+        public double? EndLongitude { get; set; }
+
+        [Required]
+        public DateTime StartTime { get; set; }
+
+        public DateTime? EndTime { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public bool LocationVerified { get; set; } = false;
+
+        public bool VerificationFailed { get; set; } = false;
+
+        public DateTime? VerificationDeadline { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation properties
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; } = null!;
+
+        [ForeignKey("JobId")]
+        public virtual Job Job { get; set; } = null!;
+
+        [ForeignKey("TimeEntryId")]
+        public virtual TimeEntry TimeEntry { get; set; } = null!;
     }
 }
