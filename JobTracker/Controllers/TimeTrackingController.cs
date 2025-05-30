@@ -31,11 +31,26 @@ namespace JobTracker.Controllers
                 // Get user ID from token (simplified for testing)
                 var userId = 3; // Mike Johnson's ID for testing
                 
-                // For testing, create a pending clock-in record directly
+                // Log the actual coordinates received
+                _logger.LogInformation($"Clock-in attempt - User coordinates: {request.Latitude}, {request.Longitude}");
+                _logger.LogInformation($"Job ID {request.JobId} selected for clock-in");
+                
+                // Get the selected job to check coordinates
+                var selectedJob = await _context.Jobs.FindAsync(request.JobId);
+                if (selectedJob != null)
+                {
+                    _logger.LogInformation($"Job coordinates: {selectedJob.Latitude}, {selectedJob.Longitude} at {selectedJob.Location}");
+                    
+                    // Calculate distance
+                    var distance = CalculateDistance(request.Latitude, request.Longitude, 
+                                                   selectedJob.Latitude ?? 0, selectedJob.Longitude ?? 0);
+                    _logger.LogInformation($"Distance to job site: {distance:F2} feet");
+                }
+                
                 var pendingClockIn = new PendingClockIn
                 {
                     UserId = userId,
-                    JobId = 9, // Test job at headquarters
+                    JobId = request.JobId,
                     InitialLatitude = request.Latitude,
                     InitialLongitude = request.Longitude,
                     InitiatedAt = DateTime.UtcNow,
@@ -397,11 +412,32 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { message = "Failed to get time entries" });
             }
         }
+
+        private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            // Haversine formula to calculate distance between two GPS coordinates
+            const double earthRadiusMiles = 3959.0;
+            
+            var lat1Rad = lat1 * Math.PI / 180;
+            var lat2Rad = lat2 * Math.PI / 180;
+            var deltaLat = (lat2 - lat1) * Math.PI / 180;
+            var deltaLon = (lon2 - lon1) * Math.PI / 180;
+            
+            var a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                    Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+                    Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+            
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            var distanceMiles = earthRadiusMiles * c;
+            
+            return distanceMiles * 5280; // Convert to feet
+        }
     }
 
     public class InitiateClockInRequest
     {
         public int UserId { get; set; }
+        public int JobId { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }
