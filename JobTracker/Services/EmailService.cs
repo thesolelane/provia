@@ -1,5 +1,7 @@
 using System.Net.Mail;
 using System.Net;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace JobTracker.Services
 {
@@ -16,18 +18,21 @@ namespace JobTracker.Services
     public class EmailService : IEmailService
     {
         private readonly ILogger<EmailService> _logger;
+        private readonly ISendGridClient _sendGridClient;
         private readonly string _fromEmail;
         private readonly string _fromName;
-        private readonly string _smtpHost;
-        private readonly int _smtpPort;
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _logger = logger;
-            _fromEmail = configuration["EmailSettings:FromEmail"] ?? "noreply@jobtracker.com";
-            _fromName = configuration["EmailSettings:FromName"] ?? "Job Tracker System";
-            _smtpHost = configuration["EmailSettings:SmtpHost"] ?? "localhost";
-            _smtpPort = int.Parse(configuration["EmailSettings:SmtpPort"] ?? "587");
+            _fromEmail = configuration["EmailSettings:FromEmail"] ?? "noreply@preferredbuildersusa.com";
+            _fromName = configuration["EmailSettings:FromName"] ?? "Preferred Builders USA";
+            
+            var apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+            if (!string.IsNullOrEmpty(apiKey))
+            {
+                _sendGridClient = new SendGridClient(apiKey);
+            }
         }
 
         public async Task<bool> SendLocationViolationEmailAsync(string toEmail, string userName, string jobName, double distance, double allowedDistance)
@@ -180,8 +185,28 @@ namespace JobTracker.Services
         {
             try
             {
-                _logger.LogInformation($"Email notification would be sent to {toEmail}: {subject}");
-                return true;
+                if (_sendGridClient == null)
+                {
+                    _logger.LogWarning($"SendGrid not configured. Email would be sent to {toEmail}: {subject}");
+                    return false;
+                }
+
+                var from = new EmailAddress(_fromEmail, _fromName);
+                var to = new EmailAddress(toEmail);
+                var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+
+                var response = await _sendGridClient.SendEmailAsync(msg);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"Email successfully sent to {toEmail}: {subject}");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogError($"Failed to send email to {toEmail}. Status: {response.StatusCode}");
+                    return false;
+                }
             }
             catch (Exception ex)
             {
