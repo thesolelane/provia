@@ -649,6 +649,9 @@ namespace JobTracker.Controllers
                 _context.MaterialRuns.Add(materialRun);
                 await _context.SaveChangesAsync();
 
+                // Send material list to admin Erika
+                await SendMaterialListToAdmin(materialRun, activeTimeEntry);
+
                 return Ok(new { success = true, materialRunId = materialRun.Id, message = "Material run started" });
             }
             catch (Exception ex)
