@@ -118,6 +118,11 @@
             font-size: 0.9rem;
         }
         
+        .clock-status.lunch {
+            background-color: #28a745;
+            color: white;
+        }
+        
         .clocked-in { background: #d4edda; color: #155724; }
         .clocked-out { background: #f8d7da; color: #721c24; }
     </style>
@@ -196,6 +201,16 @@
                     </div>
                     <h6 class="mb-0">View Job Sites</h6>
                     <small>See current locations</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="action-btn w-100 h-100" onclick="startLunchBreak()">
+                    <div class="action-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h6 class="mb-0">Lunch Break</h6>
+                    <small>Start lunch break</small>
                 </div>
             </div>
             
@@ -634,6 +649,9 @@
             if (status === 'clocked-in') {
                 statusElement.textContent = 'Clocked In';
                 statusElement.className = 'clock-status clocked-in me-3';
+            } else if (status === 'lunch') {
+                statusElement.textContent = 'Lunch';
+                statusElement.className = 'clock-status lunch me-3';
             } else if (status === 'processing') {
                 statusElement.textContent = 'Processing';
                 statusElement.className = 'clock-status processing me-3';
@@ -1213,6 +1231,100 @@
 
         function scrollToJobSites() {
             document.querySelector('.worker-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startLunchBreak() {
+            // Check if user is currently clocked in
+            fetch('/api/timetracking/current', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.clockInTime || data.clockOutTime) {
+                    showInAppMessage('Lunch Break Error', 'You must be clocked in to start a lunch break.', 'warning');
+                    return;
+                }
+
+                // User is clocked in, proceed with lunch break
+                getCurrentLocation((lat, lng) => {
+                    initiateLunchBreak(lat, lng, data.jobId);
+                });
+            })
+            .catch(error => {
+                showInAppMessage('Error', 'Unable to verify clock status. Please try again.', 'danger');
+            });
+        }
+
+        function initiateLunchBreak(lat, lng, jobId) {
+            const requestData = {
+                latitude: lat,
+                longitude: lng,
+                jobId: jobId
+            };
+
+            fetch('/api/timetracking/lunch/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update status to show lunch
+                    updateClockStatus('lunch');
+                    
+                    // Start silent 8-minute verification
+                    setTimeout(() => {
+                        verifyLunchLocation(data.lunchBreakId, lat, lng);
+                    }, 480000); // 8 minutes
+                    
+                    showInAppMessage('Lunch Break Started', 'Enjoy your lunch! You have 1 hour.', 'success');
+                } else {
+                    if (data.message && data.message.includes('not at job site')) {
+                        showInAppMessage('Location Error', 'You are not logged in - you must be at the job site to start lunch break.', 'warning');
+                    } else {
+                        showInAppMessage('Lunch Break Failed', data.message || 'Please try again', 'warning');
+                    }
+                }
+            })
+            .catch(error => {
+                showInAppMessage('Connection Error', 'Failed to start lunch break. Please try again.', 'danger');
+            });
+        }
+
+        function verifyLunchLocation(lunchBreakId, initialLat, initialLng) {
+            getCurrentLocation((lat, lng) => {
+                fetch('/api/timetracking/lunch/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify({
+                        lunchBreakId: lunchBreakId,
+                        latitude: lat,
+                        longitude: lng
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Return to clocked-in status
+                        updateClockStatus('clocked-in');
+                        console.log('Lunch break verification completed - user back to work');
+                    } else {
+                        // User failed verification - log them out
+                        updateClockStatus('clocked-out');
+                        showInAppMessage('Auto Logout', 'You were automatically logged out due to location verification failure.', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lunch verification failed:', error);
+                });
+            });
         }
 
         function showMaterialModal() {
