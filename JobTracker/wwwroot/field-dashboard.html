@@ -1233,6 +1233,26 @@
             document.querySelector('.worker-card:last-of-type').scrollIntoView({ behavior: 'smooth' });
         }
 
+        function getCurrentLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        console.log(`Location method: Browser GPS, Accuracy: ${Math.round(position.coords.accuracy)} meters`);
+                        callback(lat, lng);
+                    },
+                    error => {
+                        console.error('Geolocation error:', error);
+                        showInAppMessage('Location Error', 'Unable to get your current location. Please enable GPS.', 'warning');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            } else {
+                showInAppMessage('Location Error', 'Geolocation is not supported by this browser.', 'danger');
+            }
+        }
+
         function startLunchBreak() {
             // For testing, skip authentication check and proceed directly
             // In production, this would verify clock status through API
