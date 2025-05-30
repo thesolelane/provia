@@ -61,6 +61,7 @@ namespace JobTracker.Controllers
                 };
 
                 _context.TimeEntries.Add(timeEntry);
+                await _context.SaveChangesAsync(); // Save TimeEntry first to get the ID
 
                 var pendingClockIn = new PendingClockIn
                 {
