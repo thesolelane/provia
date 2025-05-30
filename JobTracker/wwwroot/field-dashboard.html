@@ -123,6 +123,11 @@
             color: white;
         }
         
+        .clock-status.material-run {
+            background-color: #fd7e14;
+            color: white;
+        }
+        
         .clocked-in { background: #d4edda; color: #155724; }
         .clocked-out { background: #f8d7da; color: #721c24; }
     </style>
@@ -652,6 +657,9 @@
             } else if (status === 'lunch') {
                 statusElement.textContent = 'Lunch';
                 statusElement.className = 'clock-status lunch me-3';
+            } else if (status === 'material-run') {
+                statusElement.textContent = 'Material Run';
+                statusElement.className = 'clock-status material-run me-3';
             } else if (status === 'processing') {
                 statusElement.textContent = 'Processing';
                 statusElement.className = 'clock-status processing me-3';
@@ -1365,12 +1373,127 @@
             const materials = document.getElementById('materialsText').value;
 
             if (!jobId || !storeType || !materials) {
-                alert('Please fill in all fields');
+                showInAppMessage('Missing Information', 'Please fill in all required fields', 'warning');
                 return;
             }
 
-            alert('Material run started! (Feature in development)');
-            bootstrap.Modal.getInstance(document.getElementById('materialModal')).hide();
+            // Get current location and start material run
+            getCurrentLocation((lat, lng) => {
+                initiateMaterialRun(lat, lng, jobId, storeType, materials);
+            });
+        }
+
+        function initiateMaterialRun(lat, lng, jobId, storeType, materials) {
+            const requestData = {
+                latitude: lat,
+                longitude: lng,
+                jobId: jobId,
+                storeType: storeType,
+                materials: materials
+            };
+
+            fetch('/api/timetracking/material-run/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update status to show material run
+                    updateClockStatus('material-run');
+                    
+                    // Start 15-minute location pings and 1.25-hour timeout
+                    startMaterialRunTracking(data.materialRunId, lat, lng);
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('materialModal')).hide();
+                    showInAppMessage('Material Run Started', 'Safe travels! Return within 1.25 hours.', 'success');
+                } else {
+                    if (data.message && data.message.includes('not at job site')) {
+                        showInAppMessage('Location Error', 'You must be at the job site to start a material run.', 'warning');
+                    } else {
+                        showInAppMessage('Material Run Failed', data.message || 'Please try again', 'warning');
+                    }
+                }
+            })
+            .catch(error => {
+                showInAppMessage('Connection Error', 'Failed to start material run. Please try again.', 'danger');
+            });
+        }
+
+        function startMaterialRunTracking(materialRunId, initialLat, initialLng) {
+            // Track location every 15 minutes during material run
+            const trackingInterval = setInterval(() => {
+                getCurrentLocation((lat, lng) => {
+                    // Send location ping
+                    fetch('/api/timetracking/material-run/ping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                        },
+                        body: JSON.stringify({
+                            materialRunId: materialRunId,
+                            latitude: lat,
+                            longitude: lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success && data.timeout) {
+                            // Material run timed out
+                            clearInterval(trackingInterval);
+                            updateClockStatus('clocked-out');
+                            showInAppMessage('Material Run Timeout', 'You were automatically logged out due to extended material run time.', 'warning');
+                        }
+                    })
+                    .catch(error => console.error('Material run ping failed:', error));
+                });
+            }, 900000); // 15 minutes
+
+            // Auto-timeout after 1.25 hours
+            setTimeout(() => {
+                clearInterval(trackingInterval);
+                verifyMaterialRunReturn(materialRunId, initialLat, initialLng);
+            }, 4500000); // 1.25 hours
+        }
+
+        function verifyMaterialRunReturn(materialRunId, jobLat, jobLng) {
+            getCurrentLocation((lat, lng) => {
+                fetch('/api/timetracking/material-run/verify-return', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify({
+                        materialRunId: materialRunId,
+                        latitude: lat,
+                        longitude: lng
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Successfully returned to job site
+                        updateClockStatus('clocked-in');
+                        showInAppMessage('Material Run Complete', 'Welcome back! You are clocked in and working.', 'success');
+                    } else {
+                        // Failed to return to job site - auto logout
+                        updateClockStatus('clocked-out');
+                        showInAppMessage('Auto Logout', 'Material run timeout - automatically logged out.', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Material run verification failed:', error);
+                    // Default to logout on error
+                    updateClockStatus('clocked-out');
+                    showInAppMessage('Auto Logout', 'Material run verification failed - automatically logged out.', 'warning');
+                });
+            });
         }
 
         function showJobSections(jobId, jobName, location) {
