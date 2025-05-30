@@ -41,7 +41,7 @@ namespace JobTracker.Controllers
                 var role = int.Parse(parts[2]);
                 
                 // Check if user belongs to the requested company and has admin role
-                return tokenCompanyId == companyId && role >= 1; // Admin or MasterAdmin
+                return tokenCompanyId == companyId && (role == UserRoles.Admin || role == UserRoles.MasterAdmin);
             }
             catch
             {
