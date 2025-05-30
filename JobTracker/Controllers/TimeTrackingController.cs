@@ -96,9 +96,11 @@ namespace JobTracker.Controllers
                 };
 
                 _context.TimeEntries.Add(timeEntry);
+                await _context.SaveChangesAsync();
+                
+                // Now update the pending clock-in with the created TimeEntry ID
                 pendingClockIn.IsActive = false;
                 pendingClockIn.CompletedTimeEntryId = timeEntry.Id;
-                
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Successfully clocked in!" });
