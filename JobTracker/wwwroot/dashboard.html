@@ -10,6 +10,41 @@
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        body.loaded {
+            opacity: 1;
+        }
+        
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .auth-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-left: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .navbar {
@@ -181,6 +216,14 @@
     </style>
 </head>
 <body>
+    <!-- Authentication Loading Overlay -->
+    <div class="auth-loading" id="authLoading">
+        <div class="text-center">
+            <div class="spinner"></div>
+            <div>Verifying admin access...</div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
@@ -344,19 +387,98 @@
         let currentCompany = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Immediate redirect check for Field Operators
-            const userInfo = localStorage.getItem('userInfo');
-            if (userInfo) {
+            // Start with authentication check and loading overlay
+            performAuthenticationCheck();
+        });
+
+        async function performAuthenticationCheck() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfo = localStorage.getItem('userInfo');
+                const companyInfo = localStorage.getItem('companyInfo');
+
+                // If no auth data, redirect to login
+                if (!token || !userInfo || !companyInfo) {
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                    return;
+                }
+
                 const user = JSON.parse(userInfo);
+                
+                // Immediate redirect for Field Operators
                 if (user.role === 'FieldOperator') {
                     window.location.replace('/field-dashboard.html');
                     return;
                 }
+
+                // Check if user has admin privileges
+                if (user.role !== 'Admin' && user.role !== 'MasterAdmin') {
+                    document.getElementById('authLoading').innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                            <div style="font-size: 18px; margin-bottom: 10px;">Access Denied</div>
+                            <div style="opacity: 0.8;">You do not have admin privileges</div>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 3000);
+                    return;
+                }
+
+                // Verify token is still valid
+                const response = await fetch('/api/Jobs', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('companyInfo');
+                    
+                    document.getElementById('authLoading').innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-clock" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                            <div style="font-size: 18px; margin-bottom: 10px;">Session Expired</div>
+                            <div style="opacity: 0.8;">Please log in again</div>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                    return;
+                }
+
+                // Authentication successful - hide loading and show dashboard
+                setTimeout(() => {
+                    document.getElementById('authLoading').style.display = 'none';
+                    document.body.classList.add('loaded');
+                    
+                    // Now load dashboard content
+                    checkAuthentication();
+                    loadDashboardData();
+                }, 800); // Small delay to prevent flash
+                
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                document.getElementById('authLoading').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <div style="font-size: 18px; margin-bottom: 10px;">Connection Error</div>
+                        <div style="opacity: 0.8;">Please try again</div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
             }
-            
-            checkAuthentication();
-            loadDashboardData();
-        });
+        }
 
         function checkAuthentication() {
             const token = localStorage.getItem('authToken');
