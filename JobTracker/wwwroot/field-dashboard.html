@@ -743,8 +743,23 @@
         }
 
         function loadJobSections(jobId, contentElement) {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                contentElement.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Authentication required. Please log in again.
+                    </div>
+                `;
+                return;
+            }
+
             fetch(`/api/jobsections/job/${jobId}`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                method: 'GET',
+                headers: { 
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
             .then(data => {
