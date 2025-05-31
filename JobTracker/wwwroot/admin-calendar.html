@@ -421,9 +421,25 @@
             container.innerHTML = workers.map(worker => {
                 const todayKey = `${worker.id}-${today}`;
                 const hoursWorked = workerHours[todayKey] || 0;
-                const remainingHours = 8 - hoursWorked;
+                const remainingHours = Math.max(0, 8 - hoursWorked);
+                
+                // Count locations assigned today
+                const todaysAssignments = Object.values(scheduleData).flat().filter(a => 
+                    a.workerId === worker.id && 
+                    a.date === today && 
+                    a.isStart
+                );
+                const locationCount = new Set(todaysAssignments.map(a => a.jobName)).size;
+                
                 const availabilityClass = remainingHours > 0 ? 'available' : 'fully-booked';
-                const availabilityText = remainingHours > 0 ? `${remainingHours}h left` : 'Fully booked';
+                let availabilityText = remainingHours > 0 ? `${remainingHours}h available` : 'Fully scheduled';
+                
+                // Add location info
+                let locationInfo = '';
+                if (hoursWorked > 0 && locationCount > 0) {
+                    const locText = locationCount === 1 ? 'location' : 'locations';
+                    locationInfo = `<br><small style="font-size: 9px; color: #6c757d;">${hoursWorked}h at ${locationCount} ${locText}</small>`;
+                }
                 
                 return `
                     <div class="worker-item ${availabilityClass}" 
@@ -433,9 +449,12 @@
                          title="${worker.name} - ${availabilityText} today">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span><i class="fas fa-user me-1"></i>${worker.name}</span>
-                            <small style="font-size: 10px; color: ${remainingHours > 0 ? '#28a745' : '#dc3545'};">
-                                ${availabilityText}
-                            </small>
+                            <div style="text-align: right;">
+                                <small style="font-size: 10px; color: ${remainingHours > 0 ? '#28a745' : '#dc3545'};">
+                                    ${availabilityText}
+                                </small>
+                                ${locationInfo}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -745,14 +764,32 @@
             const workerHours = {};
             const maxHoursPerDay = 8;
             
+            // Group assignments by worker and date
+            const workerAssignments = {};
             Object.values(scheduleData).flat().forEach(assignment => {
                 const key = `${assignment.workerId}-${assignment.date}`;
-                if (!workerHours[key]) {
-                    workerHours[key] = 0;
+                if (!workerAssignments[key]) {
+                    workerAssignments[key] = [];
                 }
-                if (assignment.isStart) { // Count only once per assignment block
-                    workerHours[key] += assignment.duration;
-                }
+                workerAssignments[key].push(assignment);
+            });
+
+            // Calculate total hours per worker per day
+            Object.entries(workerAssignments).forEach(([key, assignments]) => {
+                const uniqueAssignments = new Set();
+                let totalHours = 0;
+                
+                assignments.forEach(assignment => {
+                    if (assignment.isStart) {
+                        const assignmentKey = `${assignment.id}-${assignment.duration}`;
+                        if (!uniqueAssignments.has(assignmentKey)) {
+                            uniqueAssignments.add(assignmentKey);
+                            totalHours += assignment.duration;
+                        }
+                    }
+                });
+                
+                workerHours[key] = totalHours;
             });
 
             // Update worker list to show availability
@@ -766,19 +803,37 @@
         }
 
         function updateStatusMessages() {
-            const totalAssignments = Object.values(scheduleData).flat().filter(a => a.isStart).length;
-            const pendingAssignments = Object.values(scheduleData).flat().filter(a => a.isStart && a.status === 'pending').length;
+            const assignments = Object.values(scheduleData).flat().filter(a => a.isStart);
+            const totalAssignments = assignments.length;
+            const pendingAssignments = assignments.filter(a => a.status === 'pending').length;
+            
+            // Count unique job locations assigned
+            const uniqueLocations = new Set(assignments.map(a => a.jobName)).size;
+            
+            // Count workers with assignments
+            const workersWithAssignments = new Set(assignments.map(a => a.workerId)).size;
+            
+            // Calculate total worker hours scheduled
+            const totalHours = assignments.reduce((sum, a) => sum + a.duration, 0);
             
             let messages = [];
             if (totalAssignments > 0) {
-                messages.push(`${totalAssignments} worker assignments scheduled`);
+                messages.push(`${totalAssignments} assignments across ${uniqueLocations} locations`);
+                messages.push(`${workersWithAssignments} workers scheduled for ${totalHours} total hours`);
+                
                 if (pendingAssignments > 0) {
                     messages.push(`${pendingAssignments} pending approval`);
+                }
+                
+                // Show multi-location capability
+                if (uniqueLocations > 1) {
+                    messages.push(`Multi-location scheduling active`);
                 }
             }
             
             if (workers.length > 0) {
-                messages.push(`${workers.length} field workers available`);
+                const availableWorkers = workers.length - workersWithAssignments;
+                messages.push(`${workers.length} field workers (${availableWorkers} unassigned)`);
             }
             
             const statusPanel = document.getElementById('statusMessages');
