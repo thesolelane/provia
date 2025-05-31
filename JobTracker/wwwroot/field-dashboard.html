@@ -779,34 +779,64 @@
                     `;
                 } else {
                     contentElement.innerHTML = fieldWorkerSections.map(section => `
-                        <div class="card section-card mb-2 border-start border-primary border-3">
-                            <div class="card-body py-2">
-                                <div class="row align-items-center">
+                        <div class="card section-card mb-3 border-start border-primary border-3">
+                            <div class="card-body">
+                                <div class="row align-items-start">
                                     <div class="col-md-8">
-                                        <h6 class="mb-1">
+                                        <h6 class="mb-2">
                                             <i class="fas fa-tools text-primary me-2"></i>
                                             ${getSectionTypeName(section.sectionType)}
                                         </h6>
-                                        <p class="mb-1 text-muted small">${section.description || 'No description available'}</p>
-                                        ${section.responsibleEmployeeId ? 
-                                            `<small class="text-success">
-                                                <i class="fas fa-user me-1"></i>
-                                                Assigned: Employee #${section.responsibleEmployeeId}
-                                            </small>` : 
-                                            `<small class="text-warning">
-                                                <i class="fas fa-user-clock me-1"></i>
-                                                Unassigned
-                                            </small>`
-                                        }
+                                        <p class="mb-2 text-muted small">${section.description || 'No description available'}</p>
+                                        
+                                        <!-- Status Controls -->
+                                        <div class="mb-3">
+                                            <label class="form-label small"><strong>Status:</strong></label>
+                                            <div class="btn-group w-100" role="group">
+                                                <input type="radio" class="btn-check" name="status-${section.id}" id="status-${section.id}-progress" 
+                                                       ${section.status === 1 ? 'checked' : ''} onchange="updateSectionStatus(${section.id}, 1)">
+                                                <label class="btn btn-outline-primary btn-sm" for="status-${section.id}-progress">
+                                                    <i class="fas fa-play me-1"></i>In Progress
+                                                </label>
+                                                
+                                                <input type="radio" class="btn-check" name="status-${section.id}" id="status-${section.id}-complete" 
+                                                       ${section.status === 3 ? 'checked' : ''} onchange="updateSectionStatus(${section.id}, 3)">
+                                                <label class="btn btn-outline-success btn-sm" for="status-${section.id}-complete">
+                                                    <i class="fas fa-check me-1"></i>Completed
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Materials Needed -->
+                                        <div class="mb-3" ${section.status === 3 ? 'style="display:none"' : ''} id="materials-${section.id}">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="materials-${section.id}-check" 
+                                                       ${!section.materialsOrdered ? 'checked' : ''} onchange="updateMaterialsNeeded(${section.id}, this.checked)">
+                                                <label class="form-check-label small text-warning" for="materials-${section.id}-check">
+                                                    <i class="fas fa-truck me-1"></i>Additional Materials Needed
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notes Section -->
+                                        <div class="mb-2">
+                                            <label class="form-label small"><strong>Notes:</strong></label>
+                                            <textarea class="form-control form-control-sm" id="notes-${section.id}" rows="2" 
+                                                      placeholder="Add notes about progress, issues, or requirements..."
+                                                      onchange="updateSectionNotes(${section.id}, this.value)">${section.notes || ''}</textarea>
+                                        </div>
                                     </div>
                                     <div class="col-md-4 text-end">
-                                        <span class="badge ${getSectionStatusBadge(section.status)} mb-1">${getSectionStatusName(section.status)}</span>
+                                        <span class="badge ${getSectionStatusBadge(section.status)} mb-2">${getSectionStatusName(section.status)}</span>
                                         ${section.startDate ? `<br><small class="text-muted">Started: ${new Date(section.startDate).toLocaleDateString()}</small>` : ''}
-                                        <br>
-                                        <button class="btn btn-sm btn-primary mt-1" onclick="selectSectionForWork(${section.id}, '${getSectionTypeName(section.sectionType)}', ${jobId})">
-                                            <i class="fas fa-play me-1"></i>
-                                            Work On This
-                                        </button>
+                                        ${section.materialsOrdered ? '<br><small class="text-success"><i class="fas fa-check me-1"></i>Materials Ordered</small>' : ''}
+                                        ${!section.materialsOrdered && section.status === 1 ? '<br><small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Materials Needed</small>' : ''}
+                                        
+                                        <div class="mt-3">
+                                            <button class="btn btn-sm btn-primary w-100" onclick="startTimeTracking(${section.id}, '${getSectionTypeName(section.sectionType)}', ${jobId})">
+                                                <i class="fas fa-clock me-1"></i>Start Time Tracking
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -867,11 +897,86 @@
             }
         }
 
-        function selectSectionForWork(sectionId, sectionName, jobId) {
-            // Store selected section for clock-in process
+        function updateSectionStatus(sectionId, newStatus) {
+            const data = { status: newStatus };
+            
+            fetch(`/api/jobsections/${sectionId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Hide materials section if completed
+                    const materialsDiv = document.getElementById(`materials-${sectionId}`);
+                    if (materialsDiv) {
+                        materialsDiv.style.display = newStatus === 3 ? 'none' : 'block';
+                    }
+                    
+                    showInAppMessage('Status Updated', 'Section status has been updated successfully.', 'success', 3000);
+                } else {
+                    showInAppMessage('Update Failed', 'Failed to update section status. Please try again.', 'danger', 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating section status:', error);
+                showInAppMessage('Update Error', 'Error updating section status.', 'danger', 5000);
+            });
+        }
+
+        function updateMaterialsNeeded(sectionId, materialsNeeded) {
+            const data = { materialsOrdered: !materialsNeeded };
+            
+            fetch(`/api/jobsections/${sectionId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showInAppMessage('Materials Updated', 'Materials requirement has been updated.', 'success', 3000);
+                } else {
+                    showInAppMessage('Update Failed', 'Failed to update materials status.', 'danger', 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating materials:', error);
+                showInAppMessage('Update Error', 'Error updating materials status.', 'danger', 5000);
+            });
+        }
+
+        function updateSectionNotes(sectionId, notes) {
+            const data = { notes: notes };
+            
+            fetch(`/api/jobsections/${sectionId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showInAppMessage('Notes Saved', 'Section notes have been saved.', 'success', 2000);
+                } else {
+                    showInAppMessage('Save Failed', 'Failed to save notes.', 'danger', 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating notes:', error);
+                showInAppMessage('Save Error', 'Error saving notes.', 'danger', 5000);
+            });
+        }
+
+        function startTimeTracking(sectionId, sectionName, jobId) {
+            // Store selected section for time tracking
             window.selectedSection = { id: sectionId, name: sectionName, jobId: jobId };
             
-            // Show clock-in modal/process
+            // Show clock-in process
             showClockInSection();
         }
 
