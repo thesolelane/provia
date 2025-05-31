@@ -751,8 +751,7 @@
                 // Filter out subcontractor sections - only show sections for field workers
                 const fieldWorkerSections = data.filter(section => 
                     !section.isSubcontracted && 
-                    !section.useSubcontractor &&
-                    section.subcontractorId === null
+                    (section.subcontractorId === null || section.subcontractorId === undefined)
                 );
                 
                 if (fieldWorkerSections.length === 0) {
