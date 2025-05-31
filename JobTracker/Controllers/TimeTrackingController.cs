@@ -797,7 +797,82 @@ namespace JobTracker.Controllers
                     var job = await _context.Jobs.FindAsync(materialRun.JobId);
 
                     var subject = $"Material Run Request - {user?.FirstName} {user?.LastName}";
-                    var body = $@"
+                    
+                    // Parse materials list for HTML template
+                    var materialsHtml = "";
+                    if (!string.IsNullOrEmpty(materialRun.Materials))
+                    {
+                        var materialLines = materialRun.Materials.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var line in materialLines)
+                        {
+                            materialsHtml += $"<li>{System.Web.HttpUtility.HtmlEncode(line.Trim())}</li>";
+                        }
+                    }
+
+                    var htmlBody = $@"
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {{
+        font-family: Roboto, Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+      }}
+      .container {{
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 600px;
+        margin: auto;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }}
+      h2 {{
+        color: #3f51b5;
+      }}
+      .label {{
+        font-weight: bold;
+        color: #333;
+      }}
+      .value {{
+        margin-bottom: 10px;
+      }}
+      ul.materials {{
+        padding-left: 20px;
+        margin-top: 10px;
+      }}
+      .footer {{
+        font-size: 12px;
+        color: #777;
+        margin-top: 20px;
+        text-align: center;
+      }}
+    </style>
+  </head>
+  <body>
+    <div class=""container"">
+      <h2>📦 Material Run Details</h2>
+      <div class=""value""><span class=""label"">👷 Employee:</span> {user?.FirstName} {user?.LastName}</div>
+      <div class=""value""><span class=""label"">📍 Job Site:</span> {job?.Location}</div>
+      <div class=""value""><span class=""label"">🏪 Store Type:</span> {materialRun.StoreType}</div>
+      <div class=""value""><span class=""label"">🕐 Start Time:</span> {materialRun.StartTime:MM/dd/yyyy HH:mm}</div>
+
+      <div class=""value"">
+        <span class=""label"">🧰 Materials Needed:</span>
+        <ul class=""materials"">
+          {materialsHtml}
+        </ul>
+      </div>
+
+      <div class=""footer"">
+        This is an automated notification from the <strong>Job Tracker</strong> system.
+      </div>
+    </div>
+  </body>
+</html>";
+
+                    var plainTextBody = $@"
 Material Run Details:
 
 Employee: {user?.FirstName} {user?.LastName}
@@ -816,7 +891,7 @@ This is an automated notification from the Job Tracker system.
                     {
                         if (!string.IsNullOrEmpty(admin.Email))
                         {
-                            await _emailService.SendEmailAsync(admin.Email, subject, body);
+                            await _emailService.SendEmailInternalAsync(admin.Email, subject, htmlBody, plainTextBody);
                         }
                     }
                 }
