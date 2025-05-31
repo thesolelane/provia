@@ -606,7 +606,7 @@
                         
                         <div class="d-flex gap-2 justify-content-end">
                             <button class="btn btn-secondary" onclick="closeWorkDetailsDialog()">Cancel</button>
-                            <button class="btn btn-primary" onclick="confirmWorkAssignment('${date}', ${hour}, ${worker.id}, '${worker.name}', ${jobId})">Assign</button>
+                            <button class="btn btn-primary" onclick="confirmWorkAssignment('${date}', ${hour}, ${worker.id}, '${worker.name.replace(/'/g, "\\'")}', ${jobId})">Assign</button>
                         </div>
                     </div>
                 </div>
