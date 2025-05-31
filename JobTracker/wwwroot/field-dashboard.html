@@ -334,6 +334,7 @@
                             <option value="Site Access Problem">Site Access Problem</option>
                             <option value="Quality Issue">Quality Issue</option>
                             <option value="Injury Report">Injury Report</option>
+                            <option value="Unforeseen Condition">Unforeseen Condition (Change Order Required)</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
@@ -367,9 +368,9 @@
                                placeholder="Specific location details (e.g., 'Second floor bathroom', 'Main entrance')">
                     </div>
                     
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Next Steps:</strong> After submitting, you'll be able to take photos or videos using Cams-A-Lot to document the issue.
+                    <div class="alert alert-warning">
+                        <i class="fas fa-camera me-2"></i>
+                        <strong>Documentation Required:</strong> Cams-A-Lot connection is required to attach pictures or videos for proper documentation of this report.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1775,12 +1776,13 @@
                     <p class="mb-3">
                         Email and SMS notifications have been sent to all administrators and master administrators.
                     </p>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-danger">
                         <i class="fas fa-camera me-2"></i>
-                        <strong>Next Step:</strong> You can now take photos or videos using Cams-A-Lot to document this issue.
+                        <strong>Documentation Required:</strong> You must connect to Cams-A-Lot and attach pictures or videos to complete this report.
+                        ${issueType === 'Unforeseen Condition' ? '<br><strong>Change Order Alert:</strong> This condition may require approval and change order processing.' : ''}
                     </div>
-                    <button class="btn btn-primary" onclick="openCamsALot('${reportId}')">
-                        <i class="fas fa-camera me-2"></i>Open Cams-A-Lot
+                    <button class="btn btn-danger" onclick="openCamsALot('${reportId}')">
+                        <i class="fas fa-camera me-2"></i>Connect to Cams-A-Lot (Required)
                     </button>
                 </div>
             `;
