@@ -743,7 +743,7 @@
         }
 
         function loadJobSections(jobId, contentElement) {
-            fetch(`/api/jobs/${jobId}/sections`, {
+            fetch(`/api/jobsections/job/${jobId}`, {
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
             })
             .then(response => response.json())
@@ -771,13 +771,13 @@
                                     <div class="col-md-8">
                                         <h6 class="mb-1">
                                             <i class="fas fa-tools text-primary me-2"></i>
-                                            ${section.name}
+                                            ${getSectionTypeName(section.sectionType)}
                                         </h6>
                                         <p class="mb-1 text-muted small">${section.description || 'No description available'}</p>
-                                        ${section.assignedEmployee ? 
+                                        ${section.responsibleEmployeeId ? 
                                             `<small class="text-success">
                                                 <i class="fas fa-user me-1"></i>
-                                                Assigned: ${section.assignedEmployee}
+                                                Assigned: Employee #${section.responsibleEmployeeId}
                                             </small>` : 
                                             `<small class="text-warning">
                                                 <i class="fas fa-user-clock me-1"></i>
@@ -786,10 +786,10 @@
                                         }
                                     </div>
                                     <div class="col-md-4 text-end">
-                                        <span class="badge ${getSectionStatusBadge(section.status)} mb-1">${section.status}</span>
-                                        ${section.estimatedHours ? `<br><small class="text-muted">${section.estimatedHours}h est.</small>` : ''}
+                                        <span class="badge ${getSectionStatusBadge(section.status)} mb-1">${getSectionStatusName(section.status)}</span>
+                                        ${section.startDate ? `<br><small class="text-muted">Started: ${new Date(section.startDate).toLocaleDateString()}</small>` : ''}
                                         <br>
-                                        <button class="btn btn-sm btn-primary mt-1" onclick="selectSectionForWork(${section.id}, '${section.name}', ${jobId})">
+                                        <button class="btn btn-sm btn-primary mt-1" onclick="selectSectionForWork(${section.id}, '${getSectionTypeName(section.sectionType)}', ${jobId})">
                                             <i class="fas fa-play me-1"></i>
                                             Work On This
                                         </button>
@@ -811,13 +811,44 @@
             });
         }
 
+        function getSectionTypeName(sectionType) {
+            const sectionTypes = {
+                1: 'Permits & Approvals',
+                2: 'Demolition',
+                3: 'Foundation',
+                4: 'Framing',
+                5: 'Electrical',
+                6: 'Plumbing',
+                7: 'HVAC',
+                8: 'Insulation & Drywall',
+                9: 'Interior Finishes',
+                10: 'Flooring',
+                11: 'Painting',
+                12: 'Final Inspections',
+                13: 'Trim & Cabinets',
+                14: 'Final Inspections & Occupancy'
+            };
+            return sectionTypes[sectionType] || 'Unknown Section';
+        }
+
+        function getSectionStatusName(status) {
+            const statusNames = {
+                0: 'Not Started',
+                1: 'In Progress', 
+                2: 'On Hold',
+                3: 'Completed',
+                4: 'Review Required'
+            };
+            return statusNames[status] || 'Unknown Status';
+        }
+
         function getSectionStatusBadge(status) {
             switch(status) {
-                case 'Not Started': return 'bg-secondary';
-                case 'In Progress': return 'bg-primary';
-                case 'Completed': return 'bg-success';
-                case 'On Hold': return 'bg-warning';
-                case 'Review': return 'bg-info';
+                case 0: return 'bg-secondary';  // Not Started
+                case 1: return 'bg-primary';   // In Progress
+                case 2: return 'bg-warning';   // On Hold
+                case 3: return 'bg-success';   // Completed
+                case 4: return 'bg-info';      // Review Required
                 default: return 'bg-secondary';
             }
         }
