@@ -107,13 +107,16 @@ app.UseCors("AllowReactApp");
 
 app.UseAuthorization();
 
-app.MapControllers();
-
 // Add simple test endpoint
 app.MapGet("/api/test", () => new { Message = "Job Tracker API is working!", Timestamp = DateTime.UtcNow });
 
+app.MapControllers();
+
 // Add SPA fallback route to serve index.html for all non-API routes
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html").Add(endpointBuilder => 
+{
+    endpointBuilder.Metadata.Add(new Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute());
+});
 
 // Create database and tables on startup
 using (var scope = app.Services.CreateScope())
