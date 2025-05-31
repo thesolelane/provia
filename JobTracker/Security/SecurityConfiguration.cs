@@ -77,7 +77,7 @@ namespace JobTracker.Security
                     return false;
                 }
 
-                if (!string.IsNullOrEmpty(requiredRole) && user.Role != requiredRole)
+                if (!string.IsNullOrEmpty(requiredRole) && !string.Equals(user.Role.ToString(), requiredRole, StringComparison.OrdinalIgnoreCase))
                 {
                     await LogSecurityEventAsync("INSUFFICIENT_PRIVILEGES", userId, 
                         $"Required: {requiredRole}, Actual: {user.Role}", null);
