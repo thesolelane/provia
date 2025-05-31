@@ -90,7 +90,10 @@ namespace JobTracker.Controllers
 
                 if (!adminUsers.Any()) return;
 
-                var subject = $"🚨 Issue Report #{report.Id} - {report.Priority} Priority";
+                var changeOrderRequired = report.IssueType == "Unforeseen Condition";
+                var subject = changeOrderRequired 
+                    ? $"⚠️ CHANGE ORDER REQUIRED - Issue Report #{report.Id} - {report.Priority} Priority"
+                    : $"🚨 Issue Report #{report.Id} - {report.Priority} Priority";
                 
                 // Create HTML email content
                 var priorityColor = report.Priority switch
@@ -121,6 +124,14 @@ namespace JobTracker.Controllers
                             {(report.Accuracy.HasValue ? $" (±{report.Accuracy:F0}m accuracy)" : "")}
                         </div>";
                 }
+
+                var changeOrderAlert = changeOrderRequired ? $@"
+      <div class=""change-order-alert"">
+        <div style=""background-color: #ffc107; color: #212529; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid #fd7e14;"">
+          <strong>⚠️ CHANGE ORDER REQUIRED</strong><br>
+          This unforeseen condition may require client approval and change order processing before work can continue.
+        </div>
+      </div>" : "";
 
                 var htmlBody = $@"
 <!DOCTYPE html>
@@ -190,6 +201,8 @@ namespace JobTracker.Controllers
         <div class=""priority-badge"">{report.Priority} Priority</div>
       </div>
       
+      {changeOrderAlert}
+      
       <div class=""value""><span class=""label"">👷 Reported by:</span> {user.FirstName} {user.LastName}</div>
       <div class=""value""><span class=""label"">📧 Contact:</span> {user.Email}</div>
       {(string.IsNullOrEmpty(user.PhoneNumber) ? "" : $@"<div class=""value""><span class=""label"">📱 Phone:</span> {user.PhoneNumber}</div>")}
@@ -207,6 +220,7 @@ namespace JobTracker.Controllers
       <div class=""footer"">
         This is an automated notification from the <strong>Job Tracker</strong> system.<br>
         Report ID: #{report.Id} | Status: Open
+        {(changeOrderRequired ? "<br><strong>Action Required:</strong> Review for change order processing" : "")}
       </div>
     </div>
   </body>
