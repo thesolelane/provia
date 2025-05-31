@@ -577,6 +577,9 @@
             const formattedDate = new Date(date).toLocaleDateString();
             const formattedTime = formatHour(hour);
             
+            // Store assignment data globally to avoid syntax issues
+            window.pendingAssignment = { date, hour, worker, jobId };
+            
             const dialogHtml = `
                 <div id="workDetailsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
                     <div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; width: 90%;">
@@ -606,7 +609,7 @@
                         
                         <div class="d-flex gap-2 justify-content-end">
                             <button class="btn btn-secondary" onclick="closeWorkDetailsDialog()">Cancel</button>
-                            <button class="btn btn-primary" onclick="confirmWorkAssignment('${date}', ${hour}, ${worker.id}, '${worker.name.replace(/'/g, "\\'")}', ${jobId})">Assign</button>
+                            <button class="btn btn-primary" onclick="confirmWorkAssignmentFromDialog()">Assign</button>
                         </div>
                     </div>
                 </div>
@@ -626,6 +629,35 @@
             if (modal) {
                 modal.remove();
             }
+        }
+
+        function confirmWorkAssignmentFromDialog() {
+            if (!window.pendingAssignment) {
+                console.error('No pending assignment data found');
+                return;
+            }
+            
+            const { date, hour, worker, jobId } = window.pendingAssignment;
+            const duration = document.getElementById('workDuration').value;
+            const customHours = document.getElementById('customHours').value;
+            const notes = document.getElementById('workNotes').value;
+            
+            let hours;
+            switch(duration) {
+                case 'full':
+                    hours = 8;
+                    break;
+                case 'half':
+                    hours = 4;
+                    break;
+                case 'custom':
+                    hours = parseFloat(customHours);
+                    break;
+            }
+            
+            addWorkerAssignment(date, hour, worker, jobId, hours, notes);
+            closeWorkDetailsDialog();
+            window.pendingAssignment = null;
         }
 
         function confirmWorkAssignment(date, hour, workerId, workerName, jobId) {
