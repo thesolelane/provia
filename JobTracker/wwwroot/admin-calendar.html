@@ -142,6 +142,20 @@
             color: white;
         }
         
+        .worker-item.available {
+            border-left: 4px solid #28a745;
+        }
+        
+        .worker-item.fully-booked {
+            border-left: 4px solid #dc3545;
+            opacity: 0.7;
+        }
+        
+        .worker-item.fully-booked:hover {
+            background: #fff5f5;
+            border-color: #dc3545;
+        }
+        
         .assignment-remove {
             cursor: pointer;
             opacity: 0.7;
@@ -390,16 +404,33 @@
             }
         }
 
-        function renderWorkersList() {
+        function renderWorkersList(workerHours = {}) {
             const container = document.getElementById('workersList');
-            container.innerHTML = workers.map(worker => `
-                <div class="worker-item" 
-                     draggable="true" 
-                     data-worker-id="${worker.id}"
-                     ondragstart="handleWorkerDragStart(event)">
-                    <i class="fas fa-user me-1"></i>${worker.name}
-                </div>
-            `).join('');
+            const currentWeekStart = getWeekStartingFriday(currentDate);
+            const today = new Date().toISOString().split('T')[0];
+            
+            container.innerHTML = workers.map(worker => {
+                const todayKey = `${worker.id}-${today}`;
+                const hoursWorked = workerHours[todayKey] || 0;
+                const remainingHours = 8 - hoursWorked;
+                const availabilityClass = remainingHours > 0 ? 'available' : 'fully-booked';
+                const availabilityText = remainingHours > 0 ? `${remainingHours}h left` : 'Fully booked';
+                
+                return `
+                    <div class="worker-item ${availabilityClass}" 
+                         draggable="true" 
+                         data-worker-id="${worker.id}"
+                         ondragstart="handleWorkerDragStart(event)"
+                         title="${worker.name} - ${availabilityText} today">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-user me-1"></i>${worker.name}</span>
+                            <small style="font-size: 10px; color: ${remainingHours > 0 ? '#28a745' : '#dc3545'};">
+                                ${availabilityText}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderJobFilter() {
@@ -611,30 +642,83 @@
         }
 
         function addWorkerAssignment(date, hour, worker, jobId, hours = 1, notes = '') {
-            const timeKey = `${date}-${hour}`;
-            if (!scheduleData[timeKey]) {
-                scheduleData[timeKey] = [];
+            const startHour = parseInt(hour);
+            const endHour = startHour + Math.ceil(hours);
+            
+            // Check for conflicts
+            if (checkWorkerConflict(worker.id, date, startHour, endHour)) {
+                alert(`${worker.name} is already assigned during this time period. Please choose a different time or remove the existing assignment.`);
+                return;
             }
 
             const job = jobs.find(j => j.id == jobId);
-            const assignment = {
-                id: Date.now(),
-                workerId: worker.id,
-                workerName: worker.name,
-                jobId: jobId,
-                jobName: job ? job.name : 'Unknown Job',
-                status: 'pending',
-                date: date,
-                hour: hour,
-                timeKey: timeKey,
-                duration: hours,
-                notes: notes,
-                durationLabel: getDurationLabel(hours)
-            };
+            const assignmentId = Date.now();
+            
+            // Create time block spanning multiple hours
+            for (let currentHour = startHour; currentHour < endHour && currentHour <= 19; currentHour++) {
+                const timeKey = `${date}-${currentHour}`;
+                if (!scheduleData[timeKey]) {
+                    scheduleData[timeKey] = [];
+                }
 
-            scheduleData[timeKey].push(assignment);
+                const assignment = {
+                    id: assignmentId,
+                    workerId: worker.id,
+                    workerName: worker.name,
+                    jobId: jobId,
+                    jobName: job ? job.name : 'Unknown Job',
+                    status: 'pending',
+                    date: date,
+                    hour: currentHour,
+                    timeKey: timeKey,
+                    duration: hours,
+                    notes: notes,
+                    durationLabel: getDurationLabel(hours),
+                    isStart: currentHour === startHour,
+                    isEnd: currentHour === endHour - 1,
+                    blockPosition: currentHour - startHour,
+                    totalBlocks: Math.ceil(hours)
+                };
+
+                scheduleData[timeKey].push(assignment);
+            }
+
             renderScheduleAssignments();
             updateScheduleSummary();
+            updateWorkerAvailability();
+        }
+
+        function checkWorkerConflict(workerId, date, startHour, endHour) {
+            for (let hour = startHour; hour < endHour; hour++) {
+                const timeKey = `${date}-${hour}`;
+                const assignments = scheduleData[timeKey] || [];
+                if (assignments.some(a => a.workerId === workerId)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateWorkerAvailability() {
+            // Calculate hours for each worker per day
+            const workerHours = {};
+            const maxHoursPerDay = 8;
+            
+            Object.values(scheduleData).flat().forEach(assignment => {
+                const key = `${assignment.workerId}-${assignment.date}`;
+                if (!workerHours[key]) {
+                    workerHours[key] = 0;
+                }
+                if (assignment.isStart) { // Count only once per assignment block
+                    workerHours[key] += assignment.duration;
+                }
+            });
+
+            // Update worker list to show availability
+            renderWorkersList(workerHours);
+            
+            // Store for use in conflict checking
+            window.workerDailyHours = workerHours;
         }
 
         function getDurationLabel(hours) {
@@ -650,10 +734,14 @@
                     slot.innerHTML = scheduleData[timeKey].map(assignment => {
                         const jobColorClass = getJobColorClass(assignment.jobId);
                         const tooltipText = `${assignment.workerName} - ${assignment.jobName}\n${assignment.durationLabel || '1h'}\n${assignment.notes || 'No notes'}`;
-                        return `
-                            <div class="worker-assignment ${assignment.status} ${jobColorClass}" 
-                                 data-assignment-id="${assignment.id}"
-                                 title="${tooltipText}">
+                        
+                        // Style blocks differently based on position
+                        let blockStyle = '';
+                        let displayContent = '';
+                        
+                        if (assignment.isStart) {
+                            // First block shows full info
+                            displayContent = `
                                 <span style="font-size: 9px; line-height: 1.1;">
                                     ${assignment.workerName.split(' ')[0]}<br>
                                     <small style="font-size: 7px;">${assignment.durationLabel || '1h'}</small>
@@ -661,6 +749,23 @@
                                 <i class="fas fa-times assignment-remove" 
                                    onclick="removeAssignment('${timeKey}', ${assignment.id})"
                                    style="font-size: 8px;"></i>
+                            `;
+                            blockStyle = 'border-top: 2px solid rgba(255,255,255,0.8);';
+                        } else if (assignment.isEnd) {
+                            // Last block shows continuation
+                            displayContent = `<span style="font-size: 7px;">↑</span>`;
+                            blockStyle = 'border-bottom: 2px solid rgba(255,255,255,0.8);';
+                        } else {
+                            // Middle blocks show continuation
+                            displayContent = `<span style="font-size: 7px;">↑</span>`;
+                        }
+                        
+                        return `
+                            <div class="worker-assignment ${assignment.status} ${jobColorClass}" 
+                                 data-assignment-id="${assignment.id}"
+                                 title="${tooltipText}"
+                                 style="${blockStyle} border-left: 3px solid rgba(255,255,255,0.6);">
+                                ${displayContent}
                             </div>
                         `;
                     }).join('');
@@ -697,12 +802,17 @@
                 return;
             }
 
-            scheduleData[timeKey] = scheduleData[timeKey].filter(a => a.id !== assignmentId);
-            if (scheduleData[timeKey].length === 0) {
-                delete scheduleData[timeKey];
-            }
+            // Remove all blocks with the same assignment ID across all time slots
+            Object.keys(scheduleData).forEach(key => {
+                scheduleData[key] = scheduleData[key].filter(a => a.id !== assignmentId);
+                if (scheduleData[key].length === 0) {
+                    delete scheduleData[key];
+                }
+            });
+            
             renderScheduleAssignments();
             updateScheduleSummary();
+            updateWorkerAvailability();
         }
 
         function openTimeSlotDetails(date, hour) {
