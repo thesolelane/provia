@@ -9,7 +9,6 @@ namespace JobTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
     public class JobSectionsController : ControllerBase
     {
         private readonly JobTrackerContext _context;
@@ -24,6 +23,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpGet("job/{jobId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSections(int jobId)
         {
             try
