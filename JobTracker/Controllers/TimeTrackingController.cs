@@ -660,6 +660,7 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error starting material run");
                 return StatusCode(500, new { success = false, message = "Server error starting material run" });
             }
         }
@@ -708,6 +709,7 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during material run ping");
                 return StatusCode(500, new { success = false, message = "Server error during material run ping" });
             }
         }
@@ -778,6 +780,7 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during material run verification");
                 return StatusCode(500, new { success = false, message = "Server error during material run verification" });
             }
         }
