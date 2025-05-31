@@ -278,50 +278,31 @@
 
         async function loadWorkers() {
             try {
-                const response = await fetch('/api/users/field-operators', {
-                    headers: {
-                        'Authorization': 'Bearer test-token'
-                    }
-                });
+                const response = await fetch('/api/users/field-operators');
                 
                 if (response.ok) {
                     workers = await response.json();
                     renderWorkersList();
+                } else {
+                    console.error('Failed to load workers:', response.status);
                 }
             } catch (error) {
                 console.error('Error loading workers:', error);
-                // Demo data for development
-                workers = [
-                    { id: 1, name: 'John Smith', role: 'FieldOperator' },
-                    { id: 2, name: 'Mike Johnson', role: 'FieldOperator' },
-                    { id: 3, name: 'Sarah Wilson', role: 'FieldOperator' },
-                    { id: 4, name: 'David Brown', role: 'FieldOperator' }
-                ];
-                renderWorkersList();
             }
         }
 
         async function loadJobs() {
             try {
-                const response = await fetch('/api/jobs', {
-                    headers: {
-                        'Authorization': 'Bearer test-token'
-                    }
-                });
+                const response = await fetch('/api/jobs');
                 
                 if (response.ok) {
                     jobs = await response.json();
                     renderJobFilter();
+                } else {
+                    console.error('Failed to load jobs:', response.status);
                 }
             } catch (error) {
                 console.error('Error loading jobs:', error);
-                // Demo data for development
-                jobs = [
-                    { id: 1, name: '123 Main St Kitchen Renovation' },
-                    { id: 2, name: '456 Oak Ave Bathroom Remodel' },
-                    { id: 3, name: '789 Pine Rd Full Renovation' }
-                ];
-                renderJobFilter();
             }
         }
 
