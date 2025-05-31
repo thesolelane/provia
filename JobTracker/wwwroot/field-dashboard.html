@@ -314,6 +314,74 @@
         </div>
     </div>
 
+    <!-- Report Issue Modal -->
+    <div class="modal fade" id="reportIssueModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Report Issue</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Issue Type</label>
+                        <select class="form-select" id="issueTypeSelect">
+                            <option value="">Choose issue type...</option>
+                            <option value="Safety Concern">Safety Concern</option>
+                            <option value="Equipment Problem">Equipment Problem</option>
+                            <option value="Material Issue">Material Issue</option>
+                            <option value="Weather Delay">Weather Delay</option>
+                            <option value="Site Access Problem">Site Access Problem</option>
+                            <option value="Quality Issue">Quality Issue</option>
+                            <option value="Injury Report">Injury Report</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Priority Level</label>
+                        <select class="form-select" id="prioritySelect">
+                            <option value="Low">Low - Can wait until end of day</option>
+                            <option value="Medium" selected>Medium - Needs attention today</option>
+                            <option value="High">High - Urgent attention needed</option>
+                            <option value="Critical">Critical - Stop work immediately</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Job Site (Optional)</label>
+                        <select class="form-select" id="reportJobSelect">
+                            <option value="">Not specific to any job site</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="issueDescription" rows="4" 
+                                  placeholder="Please describe the issue in detail..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Location Notes (Optional)</label>
+                        <input type="text" class="form-control" id="locationNotes" 
+                               placeholder="Specific location details (e.g., 'Second floor bathroom', 'Main entrance')">
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Next Steps:</strong> After submitting, you'll be able to take photos or videos using Cams-A-Lot to document the issue.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="submitIssueReport()">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Submit Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Job Sections Modal -->
     <div class="modal fade" id="sectionsModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -1561,7 +1629,183 @@
         }
 
         function reportIssue() {
-            alert('Issue reporting feature coming soon!');
+            // Load job sites for the dropdown
+            loadJobSitesForReport();
+            const reportModal = new bootstrap.Modal(document.getElementById('reportIssueModal'));
+            reportModal.show();
+        }
+
+        async function loadJobSitesForReport() {
+            try {
+                const response = await fetch('/api/jobs', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                
+                if (response.ok) {
+                    const jobs = await response.json();
+                    const jobSelect = document.getElementById('reportJobSelect');
+                    
+                    // Clear existing options except the first one
+                    jobSelect.innerHTML = '<option value="">Not specific to any job site</option>';
+                    
+                    jobs.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.id;
+                        option.textContent = `${job.name} - ${job.location}`;
+                        jobSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading job sites for report:', error);
+            }
+        }
+
+        async function submitIssueReport() {
+            const issueType = document.getElementById('issueTypeSelect').value;
+            const priority = document.getElementById('prioritySelect').value;
+            const jobId = document.getElementById('reportJobSelect').value || null;
+            const description = document.getElementById('issueDescription').value.trim();
+            const locationNotes = document.getElementById('locationNotes').value.trim();
+
+            // Validation
+            if (!issueType) {
+                showInAppMessage('Validation Error', 'Please select an issue type.', 'warning');
+                return;
+            }
+            
+            if (!description) {
+                showInAppMessage('Validation Error', 'Please provide a description of the issue.', 'warning');
+                return;
+            }
+
+            if (description.length < 10) {
+                showInAppMessage('Validation Error', 'Please provide a more detailed description (at least 10 characters).', 'warning');
+                return;
+            }
+
+            // Get current location (no GPS requirement - just for record keeping)
+            let currentLocation = null;
+            try {
+                const location = await getHighAccuracyLocation();
+                currentLocation = {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy
+                };
+            } catch (error) {
+                console.log('Location not available for issue report - proceeding without GPS coordinates');
+            }
+
+            // Prepare report data
+            const reportData = {
+                issueType: issueType,
+                priority: priority,
+                jobId: jobId,
+                description: description,
+                locationNotes: locationNotes,
+                latitude: currentLocation?.latitude || null,
+                longitude: currentLocation?.longitude || null,
+                accuracy: currentLocation?.accuracy || null,
+                submittedAt: new Date().toISOString()
+            };
+
+            // Show loading state
+            const submitButton = document.querySelector('#reportIssueModal .btn-warning');
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/issues/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Hide the modal
+                    bootstrap.Modal.getInstance(document.getElementById('reportIssueModal')).hide();
+                    
+                    // Clear form
+                    clearReportForm();
+                    
+                    // Show success message with next steps
+                    showIssueReportSuccess(result.reportId, issueType, priority);
+                } else {
+                    throw new Error(result.message || 'Failed to submit issue report');
+                }
+            } catch (error) {
+                console.error('Error submitting issue report:', error);
+                showInAppMessage('Submission Error', 'Failed to submit issue report. Please try again.', 'danger');
+            } finally {
+                // Reset button
+                submitButton.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Submit Report';
+                submitButton.disabled = false;
+            }
+        }
+
+        function clearReportForm() {
+            document.getElementById('issueTypeSelect').value = '';
+            document.getElementById('prioritySelect').value = 'Medium';
+            document.getElementById('reportJobSelect').value = '';
+            document.getElementById('issueDescription').value = '';
+            document.getElementById('locationNotes').value = '';
+        }
+
+        function showIssueReportSuccess(reportId, issueType, priority) {
+            const priorityColor = priority === 'Critical' ? 'danger' : 
+                                 priority === 'High' ? 'warning' : 
+                                 priority === 'Medium' ? 'primary' : 'secondary';
+            
+            const message = `
+                <div class="text-center">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5>Issue Report Submitted Successfully</h5>
+                    <div class="alert alert-info">
+                        <strong>Report ID:</strong> #${reportId}<br>
+                        <strong>Type:</strong> ${issueType}<br>
+                        <strong>Priority:</strong> <span class="badge bg-${priorityColor}">${priority}</span>
+                    </div>
+                    <p class="mb-3">
+                        Email and SMS notifications have been sent to all administrators and master administrators.
+                    </p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-camera me-2"></i>
+                        <strong>Next Step:</strong> You can now take photos or videos using Cams-A-Lot to document this issue.
+                    </div>
+                    <button class="btn btn-primary" onclick="openCamsALot('${reportId}')">
+                        <i class="fas fa-camera me-2"></i>Open Cams-A-Lot
+                    </button>
+                </div>
+            `;
+            
+            showInAppMessage('Report Submitted', message, 'success', 10000);
+        }
+
+        function openCamsALot(reportId) {
+            // This would integrate with the Cams-A-Lot application
+            // For now, show instructions
+            const message = `
+                <div class="text-center">
+                    <i class="fas fa-camera fa-2x text-primary mb-3"></i>
+                    <h6>Cams-A-Lot Integration</h6>
+                    <p>
+                        Please open the Cams-A-Lot app on your device and reference 
+                        Report ID: <strong>#${reportId}</strong> when taking photos or videos.
+                    </p>
+                    <small class="text-muted">
+                        This feature will be fully integrated in the next update.
+                    </small>
+                </div>
+            `;
+            
+            showInAppMessage('Cams-A-Lot', message, 'info', 8000);
         }
 
         function signOut() {
