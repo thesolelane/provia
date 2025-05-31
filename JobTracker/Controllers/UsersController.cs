@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
-using System.Security.Cryptography;
-using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobTracker.Controllers
 {
@@ -12,387 +11,67 @@ namespace JobTracker.Controllers
     public class UsersController : ControllerBase
     {
         private readonly JobTrackerContext _context;
-        private readonly JobTracker.Services.IEmailService _emailService;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(JobTrackerContext context, JobTracker.Services.IEmailService emailService, ILogger<UsersController> logger)
+        public UsersController(JobTrackerContext context, ILogger<UsersController> logger)
         {
             _context = context;
-            _emailService = emailService;
             _logger = logger;
         }
 
-        private async Task<bool> CheckAdminAccess(string? authHeader, int companyId)
-        {
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-                return false;
-
-            try
-            {
-                var token = authHeader.Substring("Bearer ".Length);
-                var tokenBytes = Convert.FromBase64String(token);
-                var tokenPayload = Encoding.UTF8.GetString(tokenBytes);
-                var parts = tokenPayload.Split(':');
-                
-                if (parts.Length < 3) return false;
-                
-                var userId = int.Parse(parts[0]);
-                var tokenCompanyId = int.Parse(parts[1]);
-                var role = int.Parse(parts[2]);
-                
-                // Check if user belongs to the requested company and has admin role
-                return tokenCompanyId == companyId && (role == UserRoles.Admin || role == UserRoles.MasterAdmin);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        [HttpGet("company/{companyId}")]
-        public async Task<IActionResult> GetCompanyUsers(int companyId, [FromHeader] string? Authorization)
+        [HttpGet("field-operators")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<object>>> GetFieldOperators()
         {
             try
             {
-                // Check if user has admin permissions
-                var hasAdminAccess = await CheckAdminAccess(Authorization, companyId);
-                if (!hasAdminAccess)
-                {
-                    return StatusCode(403, new { message = "Only administrators can view company user data" });
-                }
-
-                var users = await _context.Users
-                    .Where(u => u.CompanyId == companyId && u.IsActive)
-                    .OrderBy(u => u.Role)
-                    .ThenBy(u => u.LastName)
+                var fieldOperators = await _context.Users
+                    .Where(u => u.Role == 2001 && u.IsActive) // Field Operator role code
                     .Select(u => new
                     {
-                        u.Id,
-                        u.FirstName,
-                        u.LastName,
-                        u.Email,
-                        u.PhoneNumber,
-                        Role = ((int)u.Role).ToString(),
-                        u.LanguagePreference,
-                        u.IsEmailVerified,
-                        u.IsPhoneVerified,
-                        u.LastLoginAt,
-                        u.CreatedAt
+                        id = u.Id,
+                        name = u.FirstName + " " + u.LastName,
+                        role = "FieldOperator",
+                        email = u.Email,
+                        phone = u.PhoneNumber
                     })
                     .ToListAsync();
 
-                var roleStats = await _context.Users
-                    .Where(u => u.CompanyId == companyId && u.IsActive)
-                    .GroupBy(u => u.Role)
-                    .Select(g => new { Role = g.Key, Count = g.Count() })
+                return Ok(fieldOperators);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving field operators");
+                return StatusCode(500, "Error retrieving field operators");
+            }
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<object>>> GetUsers()
+        {
+            try
+            {
+                var users = await _context.Users
+                    .Where(u => u.IsActive)
+                    .Select(u => new
+                    {
+                        id = u.Id,
+                        name = u.FirstName + " " + u.LastName,
+                        role = u.Role == 1510 ? "MasterAdmin" : 
+                               u.Role == 1520 ? "Admin" : 
+                               u.Role == 2001 ? "FieldOperator" : "Unknown",
+                        email = u.Email,
+                        phone = u.PhoneNumber
+                    })
                     .ToListAsync();
 
-                return Ok(new
-                {
-                    users,
-                    stats = new
-                    {
-                        totalUsers = users.Count,
-                        masterAdmins = roleStats.FirstOrDefault(r => r.Role == UserRoles.MasterAdmin)?.Count ?? 0,
-                        admins = roleStats.FirstOrDefault(r => r.Role == UserRoles.Admin)?.Count ?? 0,
-                        fieldOperators = roleStats.FirstOrDefault(r => r.Role == UserRoles.FieldOperator)?.Count ?? 0
-                    }
-                });
+                return Ok(users);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting users for company {CompanyId}", companyId);
-                return StatusCode(500, new { message = "Failed to retrieve users" });
+                _logger.LogError(ex, "Error retrieving users");
+                return StatusCode(500, "Error retrieving users");
             }
         }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestLegacy request)
-        {
-            try
-            {
-                // Validate company exists
-                var company = await _context.Companies.FindAsync(request.CompanyId);
-                if (company == null || !company.IsActive)
-                {
-                    return BadRequest(new { message = "Invalid company" });
-                }
-
-                // Check role limits
-                var currentUsers = await _context.Users
-                    .Where(u => u.CompanyId == request.CompanyId && u.IsActive)
-                    .ToListAsync();
-
-                var masterAdminCount = currentUsers.Count(u => u.Role == UserRoles.MasterAdmin);
-                var adminCount = currentUsers.Count(u => u.Role == UserRoles.Admin);
-
-                if (request.Role == UserRoles.MasterAdmin && masterAdminCount >= 3)
-                {
-                    return BadRequest(new { message = "Maximum 3 Master Admins allowed per company" });
-                }
-
-                if (request.Role == UserRoles.Admin && adminCount >= 10)
-                {
-                    return BadRequest(new { message = "Maximum 10 Admins allowed per company" });
-                }
-
-                if (currentUsers.Count >= company.MaxUsers)
-                {
-                    return BadRequest(new { message = $"Maximum {company.MaxUsers} users allowed for your subscription" });
-                }
-
-                // Check for duplicate email/phone and enforce 2-company maximum
-                if (!string.IsNullOrEmpty(request.Email))
-                {
-                    var existingUserCount = await _context.Users
-                        .Where(u => u.Email == request.Email && u.IsActive)
-                        .CountAsync();
-                    
-                    if (existingUserCount >= 2)
-                    {
-                        return BadRequest(new { message = "Email address already associated with maximum allowed companies (2)" });
-                    }
-                    
-                    // Check if already exists in THIS company
-                    var emailExistsInCompany = await _context.Users
-                        .AnyAsync(u => u.Email == request.Email && u.CompanyId == request.CompanyId && u.IsActive);
-                    
-                    if (emailExistsInCompany)
-                    {
-                        return BadRequest(new { message = "Email address already exists in this company" });
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(request.PhoneNumber))
-                {
-                    var phoneExists = await _context.Users.AnyAsync(u => u.PhoneNumber == request.PhoneNumber && u.IsActive);
-                    if (phoneExists)
-                    {
-                        return BadRequest(new { message = "Phone number already exists" });
-                    }
-                }
-
-                // Generate verification code and temporary password
-                var verificationCode = GenerateVerificationCode();
-                var temporaryPassword = GenerateTemporaryPassword();
-
-                // Create user
-                var user = new User
-                {
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    Role = request.Role,
-                    LanguagePreference = request.LanguagePreference ?? "en",
-                    PasswordHash = HashPassword(temporaryPassword),
-                    CompanyId = request.CompanyId,
-                    IsActive = true,
-                    IsEmailVerified = false, // Require verification for all users
-                    IsPhoneVerified = false,
-                    EmailVerificationCode = verificationCode,
-                    EmailVerificationExpiry = DateTime.UtcNow.AddHours(24),
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                // Send verification email automatically
-                string emailStatus = "Email service not configured";
-                if (!string.IsNullOrEmpty(user.Email))
-                {
-                    try
-                    {
-                        var emailSent = await _emailService.SendVerificationEmailAsync(
-                            user.Email,
-                            user.FirstName,
-                            verificationCode,
-                            temporaryPassword
-                        );
-                        emailStatus = emailSent ? "Verification email sent" : "Email service needs configuration";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Could not send verification email to {Email}", user.Email);
-                        emailStatus = "Email service needs setup";
-                    }
-                }
-
-                return Ok(new
-                {
-                    message = "User created successfully",
-                    userId = user.Id,
-                    loginMethod = user.Role == UserRoles.FieldOperator ? "phone" : "email",
-                    emailStatus,
-                    verificationRequired = true,
-                    temporaryPassword = emailStatus.Contains("not configured") ? temporaryPassword : "Check email",
-                    verificationCode = emailStatus.Contains("not configured") ? verificationCode : "Check email"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating user");
-                return StatusCode(500, new { message = "Failed to create user" });
-            }
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
-        {
-            try
-            {
-                var user = await _context.Users.FindAsync(id);
-                if (user == null || !user.IsActive)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
-
-                // Update fields
-                user.FirstName = request.FirstName ?? user.FirstName;
-                user.LastName = request.LastName ?? user.LastName;
-                user.Email = request.Email ?? user.Email;
-                user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
-                user.LanguagePreference = request.LanguagePreference ?? user.LanguagePreference;
-                
-                if (!string.IsNullOrEmpty(request.Password))
-                {
-                    user.PasswordHash = HashPassword(request.Password);
-                }
-
-                user.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "User updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating user {UserId}", id);
-                return StatusCode(500, new { message = "Failed to update user" });
-            }
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeactivateUser(int id)
-        {
-            try
-            {
-                var user = await _context.Users.FindAsync(id);
-                if (user == null)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
-
-                // Soft delete
-                user.IsActive = false;
-                user.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "User deactivated successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deactivating user {UserId}", id);
-                return StatusCode(500, new { message = "Failed to deactivate user" });
-            }
-        }
-
-        [HttpPost("test-email")]
-        public async Task<IActionResult> TestEmail([FromBody] TestEmailRequest request)
-        {
-            try
-            {
-                var verificationCode = GenerateVerificationCode();
-                var temporaryPassword = GenerateTemporaryPassword();
-
-                var emailSent = await _emailService.SendVerificationEmailAsync(
-                    request.Email,
-                    request.FirstName,
-                    verificationCode,
-                    temporaryPassword
-                );
-
-                return Ok(new
-                {
-                    success = emailSent,
-                    message = emailSent ? "Test email sent successfully!" : "Failed to send email - check SendGrid configuration",
-                    email = request.Email,
-                    verificationCode,
-                    temporaryPassword
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending test email to {Email}", request.Email);
-                return StatusCode(500, new { 
-                    success = false,
-                    message = "Email service error: " + ex.Message 
-                });
-            }
-        }
-
-        private static string GenerateVerificationCode()
-        {
-            using var rng = RandomNumberGenerator.Create();
-            var bytes = new byte[4];
-            rng.GetBytes(bytes);
-            return Math.Abs(BitConverter.ToInt32(bytes, 0)).ToString("D8")[..6];
-        }
-
-        private static string GenerateTemporaryPassword()
-        {
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
-            using var rng = RandomNumberGenerator.Create();
-            var result = new char[12];
-            var bytes = new byte[4];
-
-            for (int i = 0; i < 12; i++)
-            {
-                rng.GetBytes(bytes);
-                result[i] = chars[Math.Abs(BitConverter.ToInt32(bytes, 0)) % chars.Length];
-            }
-
-            return new string(result);
-        }
-
-        private static string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "JobTracker_User_Salt"));
-            return Convert.ToBase64String(hashedBytes);
-        }
-    }
-
-
-
-    public class CreateUserRequestLegacy
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public int Role { get; set; }
-        public string? LanguagePreference { get; set; }
-        public string? Password { get; set; }
-        public int CompanyId { get; set; }
-    }
-
-    public class UpdateUserRequest
-    {
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? LanguagePreference { get; set; }
-        public string? Password { get; set; }
-    }
-
-    public class TestEmailRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
     }
 }
