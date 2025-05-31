@@ -227,13 +227,13 @@
             </div>
             
             <div class="calendar-grid">
+                <div class="fw-bold text-center p-2 bg-light">Fri</div>
+                <div class="fw-bold text-center p-2 bg-light">Sat</div>
                 <div class="fw-bold text-center p-2 bg-light">Sun</div>
                 <div class="fw-bold text-center p-2 bg-light">Mon</div>
                 <div class="fw-bold text-center p-2 bg-light">Tue</div>
                 <div class="fw-bold text-center p-2 bg-light">Wed</div>
                 <div class="fw-bold text-center p-2 bg-light">Thu</div>
-                <div class="fw-bold text-center p-2 bg-light">Fri</div>
-                <div class="fw-bold text-center p-2 bg-light">Sat</div>
                 
                 <!-- Calendar days will be generated here -->
                 <div id="calendarDays"></div>
@@ -361,7 +361,10 @@
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            // Adjust for Friday start (Friday = 5, so we want to go back to previous Friday)
+            const dayOfWeek = firstDay.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday
+            const daysToGoBack = (dayOfWeek + 2) % 7; // Adjust so Friday is day 0
+            startDate.setDate(startDate.getDate() - daysToGoBack);
 
             const calendarDays = document.getElementById('calendarDays');
             calendarDays.innerHTML = '';

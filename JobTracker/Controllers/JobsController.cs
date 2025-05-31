@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobTracker.Controllers
 {
@@ -20,6 +21,7 @@ namespace JobTracker.Controllers
 
         // GET: api/Jobs
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Job>>> GetJobs()
         {
             try
