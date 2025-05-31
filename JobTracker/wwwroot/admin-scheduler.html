@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Scheduling Dashboard - Job Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .calendar-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .worker-list {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .worker-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        .worker-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .worker-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        .fc-event {
+            cursor: pointer;
+        }
+        .approval-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-pending { border-left: 4px solid #ffc107; }
+        .status-approved { border-left: 4px solid #28a745; }
+        .status-rejected { border-left: 4px solid #dc3545; }
+        .navbar-brand { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <div class="p-3">
+                    <h4><i class="fas fa-calendar-alt me-2"></i>Work Scheduler</h4>
+                    <hr>
+                    
+                    <!-- User Info -->
+                    <div class="mb-4">
+                        <p class="mb-1"><strong id="adminName">Admin User</strong></p>
+                        <small id="companyName">Company Name</small>
+                    </div>
+                    
+                    <!-- Available Workers -->
+                    <div class="worker-list">
+                        <h6><i class="fas fa-users me-2"></i>Available Workers</h6>
+                        <div id="workersList">
+                            <div class="text-center py-3">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p class="mt-2">Loading workers...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-4">
+                        <h6><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+                        <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="submitForApproval()">
+                            <i class="fas fa-paper-plane me-1"></i>Submit for Approval
+                        </button>
+                        <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="viewReports()">
+                            <i class="fas fa-chart-bar me-1"></i>View Reports
+                        </button>
+                        <button class="btn btn-outline-light btn-sm w-100" onclick="signOut()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 main-content">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Work Schedule Management</h2>
+                    <div>
+                        <span class="badge bg-warning me-2" id="pendingCount">0 Pending</span>
+                        <span class="badge bg-success" id="approvedCount">0 Approved</span>
+                    </div>
+                </div>
+                
+                <!-- Calendar -->
+                <div class="calendar-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-calendar me-2"></i>48-Hour Advance Schedule</h5>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary btn-sm" onclick="previousWeek()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="today()">Today</button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="calendar"></div>
+                </div>
+                
+                <!-- Master Admin Approval Panel -->
+                <div class="approval-panel" id="approvalPanel" style="display: none;">
+                    <h5><i class="fas fa-check-circle me-2"></i>Master Admin Approval</h5>
+                    <div id="pendingApprovals">
+                        <!-- Pending approvals will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div class="modal fade" id="assignmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Worker to Job</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="assignmentForm">
+                        <div class="mb-3">
+                            <label class="form-label">Worker</label>
+                            <select class="form-select" id="selectedWorker" required>
+                                <option value="">Select a worker...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Job Site</label>
+                            <select class="form-select" id="selectedJob" required>
+                                <option value="">Select a job...</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="startTime" value="08:00" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="endTime" value="17:00" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="assignmentNotes" rows="2" placeholder="Special instructions or notes..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAssignment()">
+                        <i class="fas fa-save me-1"></i>Save Assignment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script>
+        let calendar;
+        let currentUser;
+        let selectedDate;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeScheduler();
+        });
+
+        async function initializeScheduler() {
+            try {
+                // Check authentication
+                const token = localStorage.getItem('authToken');
+                const userInfo = localStorage.getItem('userInfo');
+                
+                if (!token || !userInfo) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = JSON.parse(userInfo);
+                
+                // Only allow Admin and MasterAdmin access
+                if (!['Admin', 'MasterAdmin'].includes(currentUser.role)) {
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                // Update UI with user info
+                document.getElementById('adminName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+                
+                // Initialize calendar
+                initializeCalendar();
+                
+                // Load data
+                await Promise.all([
+                    loadWorkers(),
+                    loadJobs(),
+                    loadSchedules()
+                ]);
+                
+                // Show approval panel for Master Admin
+                if (currentUser.role === 'MasterAdmin') {
+                    document.getElementById('approvalPanel').style.display = 'block';
+                    loadPendingApprovals();
+                }
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showNotification('Error', 'Failed to initialize scheduler', 'error');
+            }
+        }
+
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridWeek,timeGridDay'
+                },
+                slotMinTime: '06:00:00',
+                slotMaxTime: '20:00:00',
+                height: 'auto',
+                editable: true,
+                droppable: true,
+                eventReceive: function(info) {
+                    // Handle worker dropped on calendar
+                    handleWorkerDrop(info);
+                },
+                eventClick: function(info) {
+                    // Handle event click for editing
+                    editAssignment(info.event);
+                },
+                dateClick: function(info) {
+                    // Handle empty date click
+                    selectedDate = info.date;
+                    showAssignmentModal();
+                }
+            });
+            
+            calendar.render();
+        }
+
+        async function loadWorkers() {
+            try {
+                const response = await fetch('/api/users?role=FieldOperator', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                
+                if (response.ok) {
+                    const workers = await response.json();
+                    renderWorkers(workers);
+                }
+            } catch (error) {
+                console.error('Error loading workers:', error);
+            }
+        }
+
+        function renderWorkers(workers) {
+            const workersList = document.getElementById('workersList');
+            
+            if (workers.length === 0) {
+                workersList.innerHTML = `
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <p>No field workers available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            workersList.innerHTML = workers.map(worker => `
+                <div class="worker-card" draggable="true" data-worker-id="${worker.id}" 
+                     ondragstart="handleDragStart(event)">
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">
+                            <i class="fas fa-user-hard-hat text-primary"></i>
+                        </div>
+                        <div>
+                            <strong>${worker.firstName} ${worker.lastName}</strong>
+                            <br><small class="text-muted">${worker.phoneNumber || 'No phone'}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleDragStart(event) {
+            const workerId = event.target.closest('.worker-card').dataset.workerId;
+            event.dataTransfer.setData('text/plain', workerId);
+            event.target.classList.add('dragging');
+        }
+
+        function showNotification(title, message, type = 'info') {
+            // Implementation for showing notifications
+            const alertClass = type === 'error' ? 'alert-danger' : 
+                              type === 'success' ? 'alert-success' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+            notification.innerHTML = `
+                <strong>${title}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function signOut() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('companyInfo');
+            window.location.href = '/';
+        }
+
+        // Placeholder functions for additional features
+        async function loadJobs() {
+            // Implementation for loading jobs
+        }
+
+        async function loadSchedules() {
+            // Implementation for loading existing schedules
+        }
+
+        function showAssignmentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('assignmentModal'));
+            modal.show();
+        }
+
+        function saveAssignment() {
+            // Implementation for saving worker assignments
+        }
+
+        function submitForApproval() {
+            // Implementation for submitting schedules for approval
+        }
+
+        function loadPendingApprovals() {
+            // Implementation for loading pending approvals for Master Admin
+        }
+
+        function previousWeek() { calendar.prev(); }
+        function nextWeek() { calendar.next(); }
+        function today() { calendar.today(); }
+    </script>
+</body>
+</html>

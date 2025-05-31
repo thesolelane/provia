@@ -24,7 +24,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpGet("job/{jobId}")]
-        [AllowAnonymous]
+        [Authorize(Roles = "FieldOperator,Admin,MasterAdmin")]
         public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSections(int jobId)
         {
             try
@@ -115,7 +115,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPatch("{id}")]
-        [AllowAnonymous]
+        [Authorize(Roles = "FieldOperator,Admin,MasterAdmin")]
         public async Task<IActionResult> PatchJobSection(int id, [FromBody] dynamic updates)
         {
             try
