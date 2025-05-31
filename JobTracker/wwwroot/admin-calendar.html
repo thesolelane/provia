@@ -527,12 +527,90 @@
             }
 
             if (draggedWorker) {
-                addWorkerAssignment(date, hour, draggedWorker, selectedJobId);
+                showWorkDetailsDialog(date, hour, draggedWorker, selectedJobId);
                 draggedWorker = null;
             }
         }
 
-        function addWorkerAssignment(date, hour, worker, jobId) {
+        function showWorkDetailsDialog(date, hour, worker, jobId) {
+            const job = jobs.find(j => j.id == jobId);
+            const formattedDate = new Date(date).toLocaleDateString();
+            const formattedTime = formatHour(hour);
+            
+            const dialogHtml = `
+                <div id="workDetailsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; width: 90%;">
+                        <h5>Assign ${worker.name}</h5>
+                        <p><strong>Job:</strong> ${job.name}</p>
+                        <p><strong>Date:</strong> ${formattedDate}</p>
+                        <p><strong>Start Time:</strong> ${formattedTime}</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Work Duration:</label>
+                            <select id="workDuration" class="form-select">
+                                <option value="full">Full Day (8 hours)</option>
+                                <option value="half">Half Day (4 hours)</option>
+                                <option value="custom">Custom Hours</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customHoursDiv" style="display: none;" class="mb-3">
+                            <label class="form-label">Hours:</label>
+                            <input type="number" id="customHours" class="form-control" min="0.5" max="12" step="0.5" value="1">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional):</label>
+                            <textarea id="workNotes" class="form-control" rows="2" placeholder="Special instructions or requirements"></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-secondary" onclick="closeWorkDetailsDialog()">Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmWorkAssignment('${date}', ${hour}, ${worker.id}, '${worker.name}', ${jobId})">Assign</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', dialogHtml);
+            
+            // Add event listener for duration change
+            document.getElementById('workDuration').addEventListener('change', function() {
+                const customDiv = document.getElementById('customHoursDiv');
+                customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        function closeWorkDetailsDialog() {
+            const modal = document.getElementById('workDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function confirmWorkAssignment(date, hour, workerId, workerName, jobId) {
+            const duration = document.getElementById('workDuration').value;
+            const customHours = document.getElementById('customHours').value;
+            const notes = document.getElementById('workNotes').value;
+            
+            let hours;
+            switch(duration) {
+                case 'full':
+                    hours = 8;
+                    break;
+                case 'half':
+                    hours = 4;
+                    break;
+                case 'custom':
+                    hours = parseFloat(customHours);
+                    break;
+            }
+            
+            addWorkerAssignment(date, hour, { id: workerId, name: workerName }, jobId, hours, notes);
+            closeWorkDetailsDialog();
+        }
+
+        function addWorkerAssignment(date, hour, worker, jobId, hours = 1, notes = '') {
             const timeKey = `${date}-${hour}`;
             if (!scheduleData[timeKey]) {
                 scheduleData[timeKey] = [];
@@ -548,12 +626,21 @@
                 status: 'pending',
                 date: date,
                 hour: hour,
-                timeKey: timeKey
+                timeKey: timeKey,
+                duration: hours,
+                notes: notes,
+                durationLabel: getDurationLabel(hours)
             };
 
             scheduleData[timeKey].push(assignment);
             renderScheduleAssignments();
             updateScheduleSummary();
+        }
+
+        function getDurationLabel(hours) {
+            if (hours === 8) return 'Full Day';
+            if (hours === 4) return 'Half Day';
+            return `${hours}h`;
         }
 
         function renderScheduleAssignments() {
@@ -562,12 +649,14 @@
                 if (slot) {
                     slot.innerHTML = scheduleData[timeKey].map(assignment => {
                         const jobColorClass = getJobColorClass(assignment.jobId);
+                        const tooltipText = `${assignment.workerName} - ${assignment.jobName}\n${assignment.durationLabel || '1h'}\n${assignment.notes || 'No notes'}`;
                         return `
                             <div class="worker-assignment ${assignment.status} ${jobColorClass}" 
                                  data-assignment-id="${assignment.id}"
-                                 title="${assignment.workerName} - ${assignment.jobName}">
-                                <span style="font-size: 10px;">
-                                    ${assignment.workerName.split(' ')[0]}
+                                 title="${tooltipText}">
+                                <span style="font-size: 9px; line-height: 1.1;">
+                                    ${assignment.workerName.split(' ')[0]}<br>
+                                    <small style="font-size: 7px;">${assignment.durationLabel || '1h'}</small>
                                 </span>
                                 <i class="fas fa-times assignment-remove" 
                                    onclick="removeAssignment('${timeKey}', ${assignment.id})"
@@ -628,7 +717,12 @@
                 details += 'No assignments for this time slot.';
             } else {
                 assignments.forEach(assignment => {
-                    details += `• ${assignment.workerName} - ${assignment.jobName} (${assignment.status})\n`;
+                    details += `• ${assignment.workerName} - ${assignment.jobName}\n`;
+                    details += `  Duration: ${assignment.durationLabel || '1h'} (${assignment.status})\n`;
+                    if (assignment.notes) {
+                        details += `  Notes: ${assignment.notes}\n`;
+                    }
+                    details += '\n';
                 });
             }
             
