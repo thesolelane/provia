@@ -127,16 +127,7 @@ namespace JobTracker.Services
 
         public async Task<bool> SendEmailAsync(string to, string subject, string body)
         {
-            try
-            {
-                _logger.LogInformation($"Email notification would be sent to {to}: {subject}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to send email to {to}");
-                return false;
-            }
+            return await SendEmailInternalAsync(to, subject, body, body);
         }
 
         public async Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName, string? companyName = null)
