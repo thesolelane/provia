@@ -572,7 +572,7 @@
             event.currentTarget.style.background = '';
             
             if (isSubmittedForApproval) {
-                alert('Cannot modify schedule while pending approval');
+                showMessage('Cannot modify schedule while pending approval', 'warning');
                 return;
             }
 
@@ -581,7 +581,7 @@
             const selectedJobId = document.getElementById('jobFilter').value;
             
             if (!selectedJobId) {
-                alert('Please select a job before assigning workers');
+                showMessage('Please select a job before assigning workers', 'warning');
                 return;
             }
 
