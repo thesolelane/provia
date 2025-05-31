@@ -4,6 +4,7 @@ using JobTracker.Data;
 using JobTracker.Models;
 using JobTracker.Services;
 using Microsoft.AspNetCore.Authorization;
+using Newtonsoft.Json;
 
 namespace JobTracker.Controllers
 {
@@ -110,6 +111,60 @@ namespace JobTracker.Controllers
             {
                 _logger.LogError(ex, "Error retrieving job section {SectionId}", id);
                 return StatusCode(500, "Error retrieving job section");
+            }
+        }
+
+        [HttpPatch("{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> PatchJobSection(int id, [FromBody] dynamic updates)
+        {
+            try
+            {
+                var section = await _context.JobSections.FindAsync(id);
+                if (section == null)
+                {
+                    return NotFound();
+                }
+
+                // Parse the dynamic updates object
+                var updatesDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(updates.ToString());
+
+                // Update specific fields based on what was provided
+                foreach (var update in updatesDict)
+                {
+                    switch (update.Key.ToLower())
+                    {
+                        case "status":
+                            if (int.TryParse(update.Value.ToString(), out int statusValue))
+                            {
+                                section.Status = statusValue;
+                                if (statusValue == 3) // Completed
+                                {
+                                    section.CompletionDate = DateTime.UtcNow;
+                                }
+                            }
+                            break;
+                        case "notes":
+                            section.Notes = update.Value?.ToString() ?? "";
+                            break;
+                        case "materialsordered":
+                            if (bool.TryParse(update.Value.ToString(), out bool materialsOrdered))
+                            {
+                                section.MaterialsOrdered = materialsOrdered;
+                            }
+                            break;
+                    }
+                }
+
+                section.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Section updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating job section {SectionId}", id);
+                return StatusCode(500, "Error updating job section");
             }
         }
 
