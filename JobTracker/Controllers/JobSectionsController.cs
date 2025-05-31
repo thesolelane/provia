@@ -24,7 +24,6 @@ namespace JobTracker.Controllers
         }
 
         [HttpGet("job/{jobId}")]
-        [Authorize(Roles = "FieldOperator,Admin,MasterAdmin")]
         public async Task<ActionResult<IEnumerable<JobSection>>> GetJobSections(int jobId)
         {
             try

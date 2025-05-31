@@ -28,6 +28,9 @@ builder.Services.AddScoped<JobTracker.Services.GeoFencingService>();
 builder.Services.AddScoped<JobTracker.Services.JobLocationService>();
 builder.Services.AddScoped<JobTracker.Services.UserCodeService>();
 builder.Services.AddScoped<JobTracker.Services.LocationTrackingService>();
+
+// Add security services
+builder.Services.AddScoped<JobTracker.Security.ISecurityAuditService, JobTracker.Security.SecurityAuditService>();
 builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Services.EmailService>();
 builder.Services.AddScoped<JobTracker.Services.SMSService>();
 builder.Services.AddHttpClient();
