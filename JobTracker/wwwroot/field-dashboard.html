@@ -1791,23 +1791,50 @@
         }
 
         function openCamsALot(reportId) {
-            // This would integrate with the Cams-A-Lot application
-            // For now, show instructions
-            const message = `
-                <div class="text-center">
-                    <i class="fas fa-camera fa-2x text-primary mb-3"></i>
-                    <h6>Cams-A-Lot Integration</h6>
-                    <p>
-                        Please open the Cams-A-Lot app on your device and reference 
-                        Report ID: <strong>#${reportId}</strong> when taking photos or videos.
-                    </p>
-                    <small class="text-muted">
-                        This feature will be fully integrated in the next update.
-                    </small>
-                </div>
-            `;
+            // Integration with Cams-A-Lot system
+            const camsAlotUrl = `https://replit.com/@realestatebyawc/CamsLinkMaster?reportId=${reportId}&jobId=${window.selectedJob?.id || ''}&userId=9`;
             
-            showInAppMessage('Cams-A-Lot', message, 'info', 8000);
+            // Open Cams-A-Lot in a new window/tab
+            const camsWindow = window.open(camsAlotUrl, '_blank', 'width=800,height=600');
+            
+            if (camsWindow) {
+                const message = `
+                    <div class="text-center">
+                        <i class="fas fa-camera fa-2x text-success mb-3"></i>
+                        <h6>Cams-A-Lot Opened</h6>
+                        <p>
+                            Cams-A-Lot has been opened in a new window for Report ID: <strong>#${reportId}</strong>
+                        </p>
+                        <p class="small text-muted">
+                            Please complete photo/video documentation in the Cams-A-Lot window to finalize your report.
+                        </p>
+                        <button class="btn btn-primary btn-sm" onclick="window.open('${camsAlotUrl}', '_blank')">
+                            <i class="fas fa-external-link-alt me-1"></i>Reopen Cams-A-Lot
+                        </button>
+                    </div>
+                `;
+                
+                showInAppMessage('Cams-A-Lot Connected', message, 'success', 12000);
+            } else {
+                // Popup blocked - provide alternative
+                const message = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <h6>Popup Blocked</h6>
+                        <p>
+                            Your browser blocked the Cams-A-Lot popup. Please click the button below to open it manually.
+                        </p>
+                        <button class="btn btn-warning" onclick="window.open('${camsAlotUrl}', '_blank')">
+                            <i class="fas fa-camera me-2"></i>Open Cams-A-Lot Manually
+                        </button>
+                        <div class="mt-2">
+                            <small class="text-muted">Report ID: #${reportId}</small>
+                        </div>
+                    </div>
+                `;
+                
+                showInAppMessage('Open Cams-A-Lot', message, 'warning', 15000);
+            }
         }
 
         function signOut() {
