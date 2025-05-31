@@ -29,6 +29,7 @@ namespace JobTracker.Data
         public DbSet<LocationPing> LocationPings { get; set; } = null!;
         public DbSet<LocationVerificationRequest> LocationVerificationRequests { get; set; } = null!;
         public DbSet<LunchBreak> LunchBreaks { get; set; } = null!;
+        public DbSet<IssueReport> IssueReports { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
