@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
 using JobTracker.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [AllowAnonymous]
     public class JobSectionsController : ControllerBase
     {
         private readonly JobTrackerContext _context;
