@@ -9,7 +9,7 @@ namespace JobTracker.Controllers
     {
         private readonly ILogger<LocationController> _logger;
         private readonly HttpClient _httpClient;
-        private readonly string _googleApiKey;
+        private readonly string? _googleApiKey;
 
         public LocationController(ILogger<LocationController> logger, HttpClient httpClient, IConfiguration configuration)
         {
