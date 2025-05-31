@@ -1,6 +1,14 @@
 {
   "Files": [
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/admin-calendar.html",
+      "PackagePath": "staticwebassets/admin-calendar.html"
+    },
+    {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/admin-scheduler.html",
+      "PackagePath": "staticwebassets/admin-scheduler.html"
+    },
+    {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/auth-check.html",
       "PackagePath": "staticwebassets/auth-check.html"
     },
