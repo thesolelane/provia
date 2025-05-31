@@ -276,6 +276,12 @@
             </div>
         </div>
 
+        <!-- Status Messages Panel -->
+        <div id="statusMessages" class="alert alert-info" style="display: none;">
+            <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
+            <div id="statusContent"></div>
+        </div>
+
         <!-- Job Legend Panel -->
         <div class="job-legend">
             <h5><i class="fas fa-palette me-2"></i>Job Color Legend</h5>
@@ -366,6 +372,7 @@
                     if (responseText.trim()) {
                         workers = JSON.parse(responseText);
                         console.log('Workers loaded:', workers);
+                        showMessage(`Loaded ${workers.length} field workers successfully`, 'success');
                         renderWorkersList();
                     } else {
                         throw new Error('Empty response');
@@ -385,8 +392,10 @@
                     { id: 9, name: "Mike Johnson" }
                 ];
                 console.log('Using fallback workers:', workers);
+                showMessage(`Using local worker data: ${workers.length} field workers available`, 'warning');
                 renderWorkersList();
             }
+            updateStatusMessages();
         }
 
         async function loadJobs() {
@@ -647,7 +656,7 @@
             
             // Check for conflicts
             if (checkWorkerConflict(worker.id, date, startHour, endHour)) {
-                alert(`${worker.name} is already assigned during this time period. Please choose a different time or remove the existing assignment.`);
+                showMessage(`${worker.name} is already assigned during this time period. Please choose a different time or remove the existing assignment.`, 'warning');
                 return;
             }
 
@@ -719,6 +728,52 @@
             
             // Store for use in conflict checking
             window.workerDailyHours = workerHours;
+            
+            // Update status messages
+            updateStatusMessages();
+        }
+
+        function updateStatusMessages() {
+            const totalAssignments = Object.values(scheduleData).flat().filter(a => a.isStart).length;
+            const pendingAssignments = Object.values(scheduleData).flat().filter(a => a.isStart && a.status === 'pending').length;
+            
+            let messages = [];
+            if (totalAssignments > 0) {
+                messages.push(`${totalAssignments} worker assignments scheduled`);
+                if (pendingAssignments > 0) {
+                    messages.push(`${pendingAssignments} pending approval`);
+                }
+            }
+            
+            if (workers.length > 0) {
+                messages.push(`${workers.length} field workers available`);
+            }
+            
+            const statusPanel = document.getElementById('statusMessages');
+            const statusContent = document.getElementById('statusContent');
+            
+            if (messages.length > 0) {
+                statusContent.innerHTML = messages.join(' • ');
+                statusPanel.style.display = 'block';
+            } else {
+                statusPanel.style.display = 'none';
+            }
+        }
+
+        function showMessage(message, type = 'info') {
+            const statusPanel = document.getElementById('statusMessages');
+            const statusContent = document.getElementById('statusContent');
+            
+            statusPanel.className = `alert alert-${type}`;
+            statusContent.innerHTML = message;
+            statusPanel.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success/warning messages
+            if (type === 'success' || type === 'warning') {
+                setTimeout(() => {
+                    statusPanel.style.display = 'none';
+                }, 5000);
+            }
         }
 
         function getDurationLabel(hours) {
