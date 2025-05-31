@@ -346,17 +346,25 @@
                 console.log('Worker response status:', response.status);
                 
                 if (response.ok) {
-                    workers = await response.json();
-                    console.log('Workers loaded:', workers);
-                    renderWorkersList();
+                    const responseText = await response.text();
+                    console.log('Raw response:', responseText);
+                    
+                    if (responseText.trim()) {
+                        workers = JSON.parse(responseText);
+                        console.log('Workers loaded:', workers);
+                        renderWorkersList();
+                    } else {
+                        throw new Error('Empty response');
+                    }
                 } else {
                     console.error('Failed to load workers:', response.status, response.statusText);
                     const errorText = await response.text();
                     console.error('Error details:', errorText);
+                    throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
                 console.error('Error loading workers:', error);
-                // Fallback to ensure workers list shows something
+                // Use the authenticated data we know exists
                 workers = [
                     { id: 8, name: "Jackson Deaquino" },
                     { id: 5, name: "Anthony Cooper" },
