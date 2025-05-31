@@ -746,17 +746,49 @@
             renderScheduleAssignments();
             updateScheduleSummary();
             updateWorkerAvailability();
+            
+            // Show success message with updated availability
+            setTimeout(() => {
+                const workerKey = `${worker.id}-${date}`;
+                const updatedHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+                const remainingHours = Math.max(0, 8 - updatedHours);
+                showMessage(`${worker.name} assigned to ${job.name} for ${getDurationLabel(hours)}. ${remainingHours}h remaining today.`, 'success');
+            }, 100);
         }
 
         function checkWorkerConflict(workerId, date, startHour, endHour) {
+            // Check for time slot conflicts
             for (let hour = startHour; hour < endHour; hour++) {
                 const timeKey = `${date}-${hour}`;
                 const assignments = scheduleData[timeKey] || [];
                 if (assignments.some(a => a.workerId === workerId)) {
+                    console.log(`Time conflict: Worker ${workerId} already assigned at ${hour}:00`);
                     return true;
                 }
             }
+
+            // Check total daily hours limit
+            const workerKey = `${workerId}-${date}`;
+            const currentHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+            const newAssignmentHours = endHour - startHour;
+            
+            if (currentHours + newAssignmentHours > 8) {
+                console.log(`Daily hour limit exceeded: ${currentHours} + ${newAssignmentHours} > 8 hours`);
+                return true;
+            }
+
             return false;
+        }
+
+        function clearAllAssignments() {
+            if (confirm('Clear all current assignments? This will reset the schedule for testing.')) {
+                scheduleData = {};
+                window.workerDailyHours = {};
+                renderScheduleAssignments();
+                updateScheduleSummary();
+                updateWorkerAvailability();
+                showMessage('All assignments cleared. Ready for new scheduling.', 'info');
+            }
         }
 
         function updateWorkerAvailability() {
