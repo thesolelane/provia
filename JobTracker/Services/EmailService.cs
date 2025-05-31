@@ -19,7 +19,7 @@ namespace JobTracker.Services
     public class EmailService : IEmailService
     {
         private readonly ILogger<EmailService> _logger;
-        private readonly ISendGridClient _sendGridClient;
+        private readonly ISendGridClient? _sendGridClient;
         private readonly string _fromEmail;
         private readonly string _fromName;
 

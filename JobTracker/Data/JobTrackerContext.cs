@@ -31,6 +31,7 @@ namespace JobTracker.Data
         public DbSet<LunchBreak> LunchBreaks { get; set; } = null!;
         public DbSet<IssueReport> IssueReports { get; set; } = null!;
         public DbSet<JobTracker.Security.SecurityAuditLog> SecurityAuditLogs { get; set; } = null!;
+        public DbSet<JobTracker.Controllers.WorkSchedule> WorkSchedules { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -89,9 +89,9 @@ namespace JobTracker.Controllers
 
     public class WifiAccessPoint
     {
-        public string MacAddress { get; set; }
+        public string MacAddress { get; set; } = string.Empty;
         public int SignalStrength { get; set; }
-        public string Age { get; set; }
+        public string Age { get; set; } = string.Empty;
     }
 
     public class CellTower
@@ -106,7 +106,7 @@ namespace JobTracker.Controllers
 
     public class GoogleGeolocationResponse
     {
-        public LocationData Location { get; set; }
+        public LocationData Location { get; set; } = new LocationData();
         public double Accuracy { get; set; }
     }
 
