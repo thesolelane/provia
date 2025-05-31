@@ -10,6 +10,7 @@ namespace JobTracker.Services
         Task<bool> SendLocationViolationEmailAsync(string toEmail, string userName, string jobName, double distance, double allowedDistance);
         Task<bool> SendAdminLocationAlertAsync(string toEmail, string adminName, string workerName, string jobName, double distance, double allowedDistance);
         Task<bool> SendEmailAsync(string to, string subject, string body);
+        Task<bool> SendHtmlEmailAsync(string to, string subject, string htmlBody, string plainTextBody);
         Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName, string? companyName = null);
         Task<bool> SendWelcomeEmailAsync(string email, string firstName, string tempPassword);
         Task<bool> SendPasswordResetEmailAsync(string email, string resetCode, string firstName);
@@ -128,6 +129,11 @@ namespace JobTracker.Services
         public async Task<bool> SendEmailAsync(string to, string subject, string body)
         {
             return await SendEmailInternalAsync(to, subject, body, body);
+        }
+
+        public async Task<bool> SendHtmlEmailAsync(string to, string subject, string htmlBody, string plainTextBody)
+        {
+            return await SendEmailInternalAsync(to, subject, htmlBody, plainTextBody);
         }
 
         public async Task<bool> SendVerificationEmailAsync(string email, string verificationCode, string firstName, string? companyName = null)

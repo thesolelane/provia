@@ -891,7 +891,7 @@ This is an automated notification from the Job Tracker system.
                     {
                         if (!string.IsNullOrEmpty(admin.Email))
                         {
-                            await _emailService.SendEmailInternalAsync(admin.Email, subject, htmlBody, plainTextBody);
+                            await _emailService.SendHtmlEmailAsync(admin.Email, subject, htmlBody, plainTextBody);
                         }
                     }
                 }
