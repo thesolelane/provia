@@ -357,6 +357,15 @@
             loadJobs();
             generateCalendar();
             loadScheduleData();
+            
+            // Add event listener for report button to bypass cached onclick
+            document.getElementById('reportButton').addEventListener('click', function() {
+                if (Object.keys(scheduleData).length === 0) {
+                    showMessage('No schedule data to generate report', 'warning');
+                    return;
+                }
+                createScheduleReport();
+            });
         });
 
         async function loadWorkers() {
