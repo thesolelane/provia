@@ -1145,7 +1145,7 @@
 
         async function submitForApproval() {
             if (Object.keys(scheduleData).length === 0) {
-                alert('No schedule data to submit');
+                showMessage('No schedule data to submit', 'warning');
                 return;
             }
 
@@ -1166,28 +1166,28 @@
                 if (response.ok) {
                     isSubmittedForApproval = true;
                     document.getElementById('approvalPanel').style.display = 'block';
-                    alert('Schedule submitted for master admin approval');
+                    showMessage('Schedule submitted for master admin approval', 'success');
                 } else {
-                    alert('Failed to submit schedule');
+                    showMessage('Failed to submit schedule', 'error');
                 }
             } catch (error) {
                 console.error('Error submitting schedule:', error);
                 // Demo behavior
                 isSubmittedForApproval = true;
                 document.getElementById('approvalPanel').style.display = 'block';
-                alert('Schedule submitted for master admin approval');
+                showMessage('Schedule submitted for master admin approval', 'success');
             }
         }
 
         function withdrawSubmission() {
             isSubmittedForApproval = false;
             document.getElementById('approvalPanel').style.display = 'none';
-            alert('Submission withdrawn. You can now make changes.');
+            showMessage('Submission withdrawn. You can now make changes.', 'info');
         }
 
         function viewSubmissionDetails() {
             // Open modal or navigate to submission details
-            alert('Submission details view - to be implemented');
+            showMessage('Submission details view - to be implemented', 'info');
         }
 
         function openDayDetails(date) {
