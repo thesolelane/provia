@@ -418,6 +418,9 @@
             const currentWeekStart = getWeekStartingFriday(currentDate);
             const today = new Date().toISOString().split('T')[0];
             
+            console.log('Rendering workers list for date:', today);
+            console.log('Current worker hours:', workerHours);
+            
             container.innerHTML = workers.map(worker => {
                 const todayKey = `${worker.id}-${today}`;
                 const hoursWorked = workerHours[todayKey] || 0;
@@ -747,13 +750,19 @@
             updateScheduleSummary();
             updateWorkerAvailability();
             
+            // Force immediate update of worker availability
+            updateWorkerAvailability();
+            
             // Show success message with updated availability
             setTimeout(() => {
                 const workerKey = `${worker.id}-${date}`;
                 const updatedHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
                 const remainingHours = Math.max(0, 8 - updatedHours);
                 showMessage(`${worker.name} assigned to ${job.name} for ${getDurationLabel(hours)}. ${remainingHours}h remaining today.`, 'success');
-            }, 100);
+                
+                // Force re-render of worker list to show updated availability
+                renderWorkersList(window.workerDailyHours || {});
+            }, 200);
         }
 
         function checkWorkerConflict(workerId, date, startHour, endHour) {
