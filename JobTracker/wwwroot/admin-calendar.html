@@ -599,8 +599,13 @@
             const formattedDate = new Date(date).toLocaleDateString();
             const formattedTime = formatHour(hour);
             
+            // Calculate available hours for this worker on this date
+            const workerKey = `${worker.id}-${date}`;
+            const currentHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+            const remainingHours = Math.max(0, 8 - currentHours);
+            
             // Store assignment data globally to avoid syntax issues
-            window.pendingAssignment = { date, hour, worker, jobId };
+            window.pendingAssignment = { date, hour, worker, jobId, remainingHours };
             
             const dialogHtml = `
                 <div id="workDetailsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
@@ -609,13 +614,12 @@
                         <p><strong>Job:</strong> ${job.name}</p>
                         <p><strong>Date:</strong> ${formattedDate}</p>
                         <p><strong>Start Time:</strong> ${formattedTime}</p>
+                        <p><strong>Available Hours:</strong> ${remainingHours}h remaining today</p>
                         
                         <div class="mb-3">
                             <label class="form-label">Work Duration:</label>
                             <select id="workDuration" class="form-select">
-                                <option value="full">Full Day (8 hours)</option>
-                                <option value="half">Half Day (4 hours)</option>
-                                <option value="custom">Custom Hours</option>
+                                <!-- Dynamic options will be populated here -->
                             </select>
                         </div>
                         
@@ -639,11 +643,53 @@
             
             document.body.insertAdjacentHTML('beforeend', dialogHtml);
             
+            // Populate duration options based on remaining hours
+            populateDurationOptions(remainingHours);
+            
             // Add event listener for duration change
             document.getElementById('workDuration').addEventListener('change', function() {
                 const customDiv = document.getElementById('customHoursDiv');
                 customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
             });
+        }
+
+        function populateDurationOptions(remainingHours) {
+            const select = document.getElementById('workDuration');
+            select.innerHTML = '';
+            
+            if (remainingHours <= 0) {
+                select.innerHTML = '<option value="0">No hours available</option>';
+                return;
+            }
+            
+            // Add common duration options based on remaining hours
+            if (remainingHours >= 8) {
+                select.innerHTML += '<option value="full">Full Day (8 hours)</option>';
+            }
+            if (remainingHours >= 4) {
+                select.innerHTML += '<option value="half">Half Day (4 hours)</option>';
+            }
+            if (remainingHours >= 2) {
+                select.innerHTML += '<option value="2">Morning/Afternoon (2 hours)</option>';
+            }
+            if (remainingHours >= 1) {
+                select.innerHTML += '<option value="1">Quick Task (1 hour)</option>';
+            }
+            
+            // Add option for exact remaining hours if it's not already covered
+            if (remainingHours % 1 === 0 && remainingHours > 0 && remainingHours < 8 && ![1, 2, 4].includes(remainingHours)) {
+                select.innerHTML += `<option value="${remainingHours}">Use Remaining Time (${remainingHours} hours)</option>`;
+            }
+            
+            // Always add custom option
+            select.innerHTML += '<option value="custom">Custom Hours</option>';
+            
+            // Set max value for custom input
+            const customInput = document.getElementById('customHours');
+            if (customInput) {
+                customInput.max = remainingHours;
+                customInput.value = Math.min(1, remainingHours);
+            }
         }
 
         function closeWorkDetailsDialog() {
@@ -659,7 +705,7 @@
                 return;
             }
             
-            const { date, hour, worker, jobId } = window.pendingAssignment;
+            const { date, hour, worker, jobId, remainingHours } = window.pendingAssignment;
             const duration = document.getElementById('workDuration').value;
             const customHours = document.getElementById('customHours').value;
             const notes = document.getElementById('workNotes').value;
@@ -672,9 +718,32 @@
                 case 'half':
                     hours = 4;
                     break;
+                case '1':
+                    hours = 1;
+                    break;
+                case '2':
+                    hours = 2;
+                    break;
                 case 'custom':
                     hours = parseFloat(customHours);
                     break;
+                default:
+                    // Handle exact remaining hours option
+                    if (!isNaN(parseFloat(duration))) {
+                        hours = parseFloat(duration);
+                    } else {
+                        hours = 4;
+                    }
+            }
+            
+            if (!hours || hours <= 0) {
+                showMessage('Please enter a valid duration', 'error');
+                return;
+            }
+            
+            if (hours > remainingHours) {
+                showMessage(`Cannot assign ${hours} hours. Worker only has ${remainingHours} hours available today.`, 'error');
+                return;
             }
             
             addWorkerAssignment(date, hour, worker, jobId, hours, notes);
@@ -745,6 +814,9 @@
 
                 scheduleData[timeKey].push(assignment);
             }
+
+            // Update worker daily hours tracking
+            updateWorkerDailyHours(worker.id, date, hours);
 
             renderScheduleAssignments();
             updateScheduleSummary();
