@@ -1065,7 +1065,7 @@
 
         function removeAssignment(timeKey, assignmentId) {
             if (isSubmittedForApproval) {
-                alert('Cannot modify schedule while pending approval');
+                showMessage('Cannot modify schedule while pending approval', 'warning');
                 return;
             }
 
@@ -1103,7 +1103,7 @@
                 });
             }
             
-            alert(details);
+            showMessage(details, 'info');
         }
 
         function updateScheduleSummary() {
@@ -1202,7 +1202,7 @@
                 });
             }
             
-            alert(details);
+            showMessage(details, 'info');
         }
 
         async function loadScheduleData() {
@@ -1235,7 +1235,7 @@
 
         function generateScheduleReport() {
             if (Object.keys(scheduleData).length === 0) {
-                alert('No schedule data to generate report');
+                showMessage('No schedule data to generate report', 'warning');
                 return;
             }
 
