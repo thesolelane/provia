@@ -335,7 +335,7 @@
                     <strong>This Week:</strong> <span id="weekCount">0</span>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-info btn-sm" onclick="generateScheduleReport()">
+                    <button class="btn btn-info btn-sm" onclick="createScheduleReport()">
                         <i class="fas fa-file-pdf"></i> Generate Report
                     </button>
                 </div>
@@ -1233,8 +1233,7 @@
             }
         }
 
-        // Updated: Force refresh
-        function generateScheduleReport() {
+        function createScheduleReport() {
             if (Object.keys(scheduleData).length === 0) {
                 showMessage('No schedule data to generate report', 'warning');
                 return;
