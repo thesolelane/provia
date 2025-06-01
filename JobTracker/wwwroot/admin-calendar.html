@@ -692,6 +692,18 @@
             }
         }
 
+        function updateWorkerDailyHours(workerId, date, additionalHours) {
+            if (!window.workerDailyHours) {
+                window.workerDailyHours = {};
+            }
+            
+            const workerKey = `${workerId}-${date}`;
+            const currentHours = window.workerDailyHours[workerKey] || 0;
+            window.workerDailyHours[workerKey] = currentHours + additionalHours;
+            
+            console.log(`Worker ${workerId} on ${date}: ${currentHours}h + ${additionalHours}h = ${window.workerDailyHours[workerKey]}h total`);
+        }
+
         function closeWorkDetailsDialog() {
             const modal = document.getElementById('workDetailsModal');
             if (modal) {
