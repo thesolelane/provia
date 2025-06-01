@@ -74,11 +74,24 @@ namespace JobTracker.Controllers
                 {
                     foreach (var assignment in dateSchedules.Value)
                     {
+                        // Parse date from format like "2025-05-30-15" where the last part is the hour
+                        var dateParts = dateSchedules.Key.Split('-');
+                        var scheduleDate = new DateTime(
+                            int.Parse(dateParts[0]), // year
+                            int.Parse(dateParts[1]), // month  
+                            int.Parse(dateParts[2])  // day
+                        );
+                        
+                        // Extract hour from the key format "2025-05-30-15"
+                        var hour = dateParts.Length > 3 ? int.Parse(dateParts[3]) : assignment.Hour;
+                        
                         var schedule = new WorkSchedule
                         {
                             UserId = assignment.WorkerId,
                             JobId = assignment.JobId,
-                            ScheduledDate = DateTime.Parse(dateSchedules.Key),
+                            ScheduledDate = scheduleDate,
+                            StartTime = TimeSpan.FromHours(hour),
+                            EndTime = TimeSpan.FromHours(hour + assignment.Duration),
                             Status = 1, // Pending approval
                             Notes = assignment.Notes,
                             CreatedAt = DateTime.UtcNow,
@@ -117,6 +130,8 @@ namespace JobTracker.Controllers
         public int WorkerId { get; set; }
         public int JobId { get; set; }
         public string? Notes { get; set; }
+        public int Hour { get; set; }
+        public double Duration { get; set; }
     }
 
     public class WorkSchedule
