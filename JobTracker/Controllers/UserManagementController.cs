@@ -38,9 +38,9 @@ namespace JobTracker.Controllers
             }
 
             // Validate role assignment permissions
-            if (request.Role == UserRoles.MasterAdmin && !UserRoles.IsMasterAdmin(currentUser.Role))
+            if (request.Role == UserRoles.Admin && !UserRoles.IsHighestAdmin(currentUser.Role))
             {
-                return StatusCode(403, "Only Master Admins can create Master Admin accounts");
+                return StatusCode(403, "Only Admins can create Admin accounts");
             }
 
             try
@@ -103,9 +103,9 @@ namespace JobTracker.Controllers
                 try
                 {
                     // Validate role assignment permissions
-                    if (userRequest.Role == UserRoles.MasterAdmin && !UserRoles.IsMasterAdmin(currentUser.Role))
+                    if (userRequest.Role == UserRoles.Admin && !UserRoles.IsHighestAdmin(currentUser.Role))
                     {
-                        errors.Add($"{userRequest.FirstName} {userRequest.LastName}: Only Master Admins can create Master Admin accounts");
+                        errors.Add($"{userRequest.FirstName} {userRequest.LastName}: Only Admins can create Admin accounts");
                         continue;
                     }
 
@@ -184,13 +184,13 @@ namespace JobTracker.Controllers
             // Field Operator - all admins can create
             availableRoles.Add(new { Code = UserRoles.FieldOperator, Name = "Field Operator" });
             
-            // Admin - all admins can create
-            availableRoles.Add(new { Code = UserRoles.Admin, Name = "Admin" });
+            // Supervisor - all admins can create
+            availableRoles.Add(new { Code = UserRoles.Supervisor, Name = "Supervisor" });
 
-            // Master Admin - only master admins can create
-            if (UserRoles.IsMasterAdmin(currentUser.Role))
+            // Admin - only highest admins can create
+            if (UserRoles.IsHighestAdmin(currentUser.Role))
             {
-                availableRoles.Add(new { Code = UserRoles.MasterAdmin, Name = "Master Admin" });
+                availableRoles.Add(new { Code = UserRoles.Admin, Name = "Admin" });
             }
 
             return Ok(availableRoles);
@@ -206,9 +206,9 @@ namespace JobTracker.Controllers
             }
 
             var currentUser = await _context.Users.FindAsync(currentUserId);
-            if (currentUser == null || !UserRoles.IsMasterAdmin(currentUser.Role))
+            if (currentUser == null || !UserRoles.IsHighestAdmin(currentUser.Role))
             {
-                return StatusCode(403, "Only Master Admins can assign user codes");
+                return StatusCode(403, "Only Admins can assign user codes");
             }
 
             try
