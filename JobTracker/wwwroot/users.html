@@ -115,16 +115,16 @@
             <div class="col-md-3">
                 <div class="card stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-danger" id="masterAdminsCount">0</h5>
-                        <p class="card-text">Master Admins <small>(Max 3)</small></p>
+                        <h5 class="card-title text-danger" id="adminsCount">0</h5>
+                        <p class="card-text">Admins <small>(Max 3)</small></p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-warning" id="adminsCount">0</h5>
-                        <p class="card-text">Admins <small>(Max 10)</small></p>
+                        <h5 class="card-title text-warning" id="supervisorsCount">0</h5>
+                        <p class="card-text">Supervisors <small>(Max 10)</small></p>
                     </div>
                 </div>
             </div>
@@ -174,9 +174,9 @@
                                 <label for="userRole" class="form-label">Role *</label>
                                 <select class="form-select" id="userRole" required onchange="updateLoginFields()">
                                     <option value="">Select Role</option>
-                                    <option value="0">Master Admin (Email Login)</option>
-                                    <option value="1">Admin (Email Login)</option>
-                                    <option value="2">Worker (Phone Login)</option>
+                                    <option value="1510">Admin (Email Login)</option>
+                                    <option value="1520">Supervisor (Email Login)</option>
+                                    <option value="2001">Field Operator (Phone Login)</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -368,8 +368,8 @@
 
         function updateStats(stats) {
             document.getElementById('totalUsersCount').textContent = stats.totalUsers;
-            document.getElementById('masterAdminsCount').textContent = stats.masterAdmins;
             document.getElementById('adminsCount').textContent = stats.admins;
+            document.getElementById('supervisorsCount').textContent = stats.supervisors;
             document.getElementById('regularUsersCount').textContent = stats.regularUsers;
         }
 

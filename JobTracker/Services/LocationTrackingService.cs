@@ -253,7 +253,7 @@ namespace JobTracker.Services
                 // Notify admins
                 var admins = await _context.Users
                     .Where(u => u.CompanyId == user.CompanyId && 
-                               (u.Role == UserRoles.Admin || u.Role == UserRoles.MasterAdmin))
+                               (u.Role == UserRoles.Admin || u.Role == UserRoles.Supervisor))
                     .ToListAsync();
 
                 foreach (var admin in admins)

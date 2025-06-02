@@ -140,8 +140,8 @@ namespace JobTracker.Controllers
                         selectedUser.LastName,
                         selectedUser.Email,
                         role = selectedUser.Role == UserRoles.FieldOperator ? "FieldOperator" : 
-                               selectedUser.Role == UserRoles.Admin ? "Admin" : 
-                               selectedUser.Role == UserRoles.MasterAdmin ? "MasterAdmin" : "Unknown",
+                               selectedUser.Role == UserRoles.Supervisor ? "Supervisor" : 
+                               selectedUser.Role == UserRoles.Admin ? "Admin" : "Unknown",
                         selectedUser.LanguagePreference,
                         selectedUser.IsEmailVerified,
                         selectedUser.IsPhoneVerified

@@ -12,9 +12,9 @@ namespace JobTracker.Security
             // Authorization Policies for role-based access control
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "MasterAdmin"));
-                options.AddPolicy("MasterAdminOnly", policy => policy.RequireRole("MasterAdmin"));
-                options.AddPolicy("FieldOperatorAccess", policy => policy.RequireRole("FieldOperator", "Admin", "MasterAdmin"));
+                options.AddPolicy("SupervisorOnly", policy => policy.RequireRole("Supervisor", "Admin"));
+                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("FieldOperatorAccess", policy => policy.RequireRole("FieldOperator", "Supervisor", "Admin"));
             });
 
             // Security Services

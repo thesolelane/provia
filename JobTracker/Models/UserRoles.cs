@@ -2,16 +2,16 @@ namespace JobTracker.Models
 {
     public static class UserRoles
     {
-        public const int MasterAdmin = 1510;
-        public const int Admin = 1520;
+        public const int Admin = 1510;
+        public const int Supervisor = 1520;
         public const int FieldOperator = 2001;
 
         public static string GetRoleName(int roleCode)
         {
             return roleCode switch
             {
-                MasterAdmin => "Master Admin",
                 Admin => "Admin",
+                Supervisor => "Supervisor",
                 FieldOperator => "Field Operator",
                 _ => "Unknown"
             };
@@ -19,12 +19,12 @@ namespace JobTracker.Models
 
         public static bool IsAdmin(int roleCode)
         {
-            return roleCode == MasterAdmin || roleCode == Admin;
+            return roleCode == Admin || roleCode == Supervisor;
         }
 
-        public static bool IsMasterAdmin(int roleCode)
+        public static bool IsHighestAdmin(int roleCode)
         {
-            return roleCode == MasterAdmin;
+            return roleCode == Admin;
         }
 
         public static bool IsFieldOperator(int roleCode)
