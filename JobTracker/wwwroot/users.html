@@ -375,18 +375,18 @@
 
         function getRoleBadgeClass(role) {
             switch(role) {
-                case 'MasterAdmin': return 'bg-danger';
-                case 'Admin': return 'bg-warning';
-                case 'RegularUser': return 'bg-success';
+                case 'Admin': return 'bg-danger';
+                case 'Supervisor': return 'bg-warning';
+                case 'FieldOperator': return 'bg-success';
                 default: return 'bg-secondary';
             }
         }
 
         function getRoleDisplayName(role) {
             switch(role) {
-                case 'MasterAdmin': return 'Master Admin';
                 case 'Admin': return 'Admin';
-                case 'RegularUser': return 'Worker';
+                case 'Supervisor': return 'Supervisor';
+                case 'FieldOperator': return 'Field Operator';
                 default: return role;
             }
         }
