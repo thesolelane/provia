@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "myuAkarlbj9aexlkPx4CiUGy9fNAZtkmBWvRTDjpLNM=",
+  "Hash": "AEMQcRXzj3/QMUejw43xCcpe6AnHfcnJauH2cZTNnX0=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -134,6 +134,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/login.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/supervisor-dashboard.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "supervisor-dashboard.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/supervisor-dashboard.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/update-coordinates.html",
