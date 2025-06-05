@@ -4,6 +4,8 @@ using JobTracker.Services;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using System.Text.Json.Serialization;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 // Enable legacy timestamp behavior for PostgreSQL
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -37,16 +39,17 @@ builder.Services.AddHttpClient();
 
 // Register Authentication Service
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<DatabaseSeeder>();
 
 // Add JWT Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "JobTracker-Default-Secret-Key-2024-Super-Secure-Development";
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
             ValidIssuer = "JobTracker",
             ValidateAudience = true,
@@ -138,20 +141,24 @@ app.MapWhen(context => !context.Request.Path.StartsWithSegments("/api"), appBuil
     });
 });
 
-// Create database and tables on startup
+// Create database and seed with initial data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<JobTrackerContext>();
-        context.Database.EnsureCreated();
-        Console.WriteLine("Database and tables created successfully!");
+        var seeder = services.GetRequiredService<DatabaseSeeder>();
+        
+        await context.Database.EnsureCreatedAsync();
+        await seeder.SeedAsync();
+        
+        Console.WriteLine("Database initialized and seeded successfully!");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating the database.");
+        logger.LogError(ex, "An error occurred while initializing the database.");
     }
 }
 

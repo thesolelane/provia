@@ -27,7 +27,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] SecureLoginRequest request)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost("phone-login")]
-        public async Task<IActionResult> PhoneLogin([FromBody] PhoneLoginRequest request)
+        public async Task<IActionResult> PhoneLogin([FromBody] SecurePhoneLoginRequest request)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost("validate-token")]
-        public async Task<IActionResult> ValidateToken([FromBody] TokenValidationRequest request)
+        public async Task<IActionResult> ValidateToken([FromBody] SecureTokenValidationRequest request)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace JobTracker.Controllers
 
         [HttpPost("create-user")]
         [Authorize]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        public async Task<IActionResult> CreateUser([FromBody] SecureCreateUserRequest request)
         {
             try
             {
@@ -288,24 +288,24 @@ namespace JobTracker.Controllers
         }
     }
 
-    public class LoginRequest
+    public class SecureLoginRequest
     {
         public string Identifier { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
 
-    public class PhoneLoginRequest
+    public class SecurePhoneLoginRequest
     {
         public string PhoneNumber { get; set; } = string.Empty;
         public string Pin { get; set; } = string.Empty;
     }
 
-    public class TokenValidationRequest
+    public class SecureTokenValidationRequest
     {
         public string Token { get; set; } = string.Empty;
     }
 
-    public class CreateUserRequest
+    public class SecureCreateUserRequest
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
