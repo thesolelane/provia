@@ -335,12 +335,20 @@
                         <small class="text-muted">${user.phoneNumber ? 'Phone: ' + user.phoneNumber : 'ID: ' + user.id}</small>
                     </div>
                     <div class="col-md-2 text-end">
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})">
-                            <i class="fas fa-user-slash"></i>
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${user.phoneNumber ? `<button class="btn btn-sm btn-outline-success" onclick="verifyPhone(${user.id}, '${user.phoneNumber}')" title="Test SMS">
+                                <i class="fas fa-sms"></i>
+                            </button>` : ''}
+                            ${user.email ? `<button class="btn btn-sm btn-outline-info" onclick="verifyEmail(${user.id}, '${user.email}')" title="Test Email">
+                                <i class="fas fa-envelope"></i>
+                            </button>` : ''}
+                            <button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})" title="Deactivate User">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -509,6 +517,74 @@
                 }
             } catch (error) {
                 showNotification('Error deactivating user. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Verify phone number function
+        async function verifyPhone(userId, phoneNumber) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showNotification('Authentication required. Please log in again.', 'error');
+                    window.location.href = '/secure-login.html';
+                    return;
+                }
+
+                showNotification('Sending verification SMS...', 'info');
+
+                const response = await fetch(`/api/users/${userId}/verify-phone`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phoneNumber: phoneNumber })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`Verification SMS sent to ${phoneNumber}`, 'success');
+                } else {
+                    showNotification('Error sending SMS: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error sending verification SMS. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Verify email function
+        async function verifyEmail(userId, email) {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showNotification('Authentication required. Please log in again.', 'error');
+                    window.location.href = '/secure-login.html';
+                    return;
+                }
+
+                showNotification('Sending verification email...', 'info');
+
+                const response = await fetch(`/api/users/${userId}/verify-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`Verification email sent to ${email}`, 'success');
+                } else {
+                    showNotification('Error sending email: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error sending verification email. Please try again.', 'error');
                 console.error('Error:', error);
             }
         }
