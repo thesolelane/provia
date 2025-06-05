@@ -55,7 +55,7 @@ namespace JobTracker.Services
                         Email = "anthonycooper1967@gmail.com",
                         Username = "tony.cooper",
                         PasswordHash = "supervisor123",
-                        Role = UserRoles.Supervisor,
+                        Role = 1520,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -69,7 +69,7 @@ namespace JobTracker.Services
                         Email = "erika.silva@preferredbuildersusa.com",
                         Username = "erika.silva",
                         PasswordHash = "supervisor123",
-                        Role = UserRoles.Supervisor,
+                        Role = 1520,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -83,7 +83,7 @@ namespace JobTracker.Services
                         Email = "fabio.lago@preferredbuildersusa.com",
                         Username = "fabio.silva",
                         PasswordHash = "supervisor123",
-                        Role = UserRoles.Supervisor,
+                        Role = 1520,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -97,7 +97,7 @@ namespace JobTracker.Services
                         Email = "realestatebyawc@gmail.com",
                         Username = "anthony.cooper",
                         PasswordHash = "supervisor123",
-                        Role = UserRoles.Supervisor,
+                        Role = 1520,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -119,7 +119,7 @@ namespace JobTracker.Services
                         Email = "jackson.deaquino@preferredbuildersusa.com",
                         PhoneNumber = "(978) 320-1715",
                         PinHash = "1234",
-                        Role = UserRoles.FieldOperator,
+                        Role = 2001,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -133,7 +133,7 @@ namespace JobTracker.Services
                         Email = "cooper@preferredbuildersusa.com",
                         PhoneNumber = "(978) 320-1716",
                         PinHash = "1234",
-                        Role = UserRoles.FieldOperator,
+                        Role = 2001,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -147,7 +147,7 @@ namespace JobTracker.Services
                         Email = "mike.johnson@preferredbuildersusa.com",
                         PhoneNumber = "(978) 320-1714",
                         PinHash = "1234",
-                        Role = UserRoles.FieldOperator,
+                        Role = 2001,
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -168,6 +168,4 @@ namespace JobTracker.Services
             }
         }
     }
-
-
 }
