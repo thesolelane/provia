@@ -56,7 +56,7 @@ namespace JobTracker.Controllers
                 }
 
                 // Update last login
-                user.LastLogin = DateTime.UtcNow;
+                user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
                 // Generate simple token
@@ -121,7 +121,7 @@ namespace JobTracker.Controllers
                 }
 
                 // Update last login
-                user.LastLogin = DateTime.UtcNow;
+                user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
                 // Generate simple token
@@ -239,7 +239,7 @@ namespace JobTracker.Controllers
                                 companyId = user.CompanyId,
                                 companyName = user.Company?.CompanyName,
                                 isActive = user.IsActive,
-                                lastLogin = user.LastLogin
+                                lastLogin = user.LastLoginAt
                             });
                         }
                     }
