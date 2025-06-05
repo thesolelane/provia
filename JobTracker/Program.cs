@@ -37,27 +37,13 @@ builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Service
 builder.Services.AddScoped<JobTracker.Services.SMSService>();
 builder.Services.AddHttpClient();
 
-// Register Authentication Service
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+// Register Database Seeder
 builder.Services.AddScoped<DatabaseSeeder>();
 
-// Add JWT Authentication
-var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "JobTracker-Default-Secret-Key-2024-Super-Secure-Development";
+// Add Authentication
 builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateIssuer = true,
-            ValidIssuer = "JobTracker",
-            ValidateAudience = true,
-            ValidAudience = "JobTracker-Users",
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
-    });
+    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
+        "Bearer", options => { });
 
 builder.Services.AddAuthorization();
 
@@ -108,10 +94,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Add authentication and authorization middleware
-app.UseAuthentication();
-app.UseAuthorization();
-
 // Serve static files for the React app
 app.UseStaticFiles();
 
@@ -124,6 +106,8 @@ if (!Directory.Exists(uploadsPath))
 
 app.UseCors("AllowReactApp");
 
+// Add authentication and authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -150,7 +134,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<JobTrackerContext>();
         var seeder = services.GetRequiredService<DatabaseSeeder>();
         
-        await context.Database.EnsureCreatedAsync();
+        context.Database.EnsureCreated();
         await seeder.SeedAsync();
         
         Console.WriteLine("Database initialized and seeded successfully!");
