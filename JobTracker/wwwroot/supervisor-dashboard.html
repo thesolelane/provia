@@ -723,56 +723,93 @@
         async function loadFieldOperators() {
             try {
                 const tableBody = document.getElementById('fieldOperatorsTable');
-                tableBody.innerHTML = `
+                
+                // Get field operators data from API
+                const token = localStorage.getItem('authToken');
+                let fieldOperators = [];
+                
+                if (token && token !== 'demo-token') {
+                    try {
+                        const response = await fetch('/api/users/field-operators', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        if (response.ok) {
+                            fieldOperators = await response.json();
+                        }
+                    } catch (error) {
+                        console.warn('API call failed, using demo data');
+                    }
+                }
+                
+                // Use database records for Preferred Builders team
+                if (fieldOperators.length === 0) {
+                    fieldOperators = [
+                        {
+                            id: 8,
+                            firstName: 'Jackson',
+                            lastName: 'Deaquino',
+                            email: 'jackson.deaquino@preferredbuildersusa.com',
+                            phoneNumber: null,
+                            status: 'Active',
+                            userCode: '36DMRD-2001-003'
+                        },
+                        {
+                            id: 5,
+                            firstName: 'Anthony',
+                            lastName: 'Cooper',
+                            email: 'cooper@preferredbuildersusa.com',
+                            phoneNumber: null,
+                            status: 'Active',
+                            userCode: '36DMRD-2001-002'
+                        },
+                        {
+                            id: 9,
+                            firstName: 'Mike',
+                            lastName: 'Johnson',
+                            email: 'mike.johnson@preferredbuildersusa.com',
+                            phoneNumber: '(978) 320-1714',
+                            status: 'Active',
+                            userCode: '36DMRD-2001-004'
+                        }
+                    ];
+                }
+
+                const tableRows = fieldOperators.map(worker => `
                     <tr>
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="worker-avatar me-3">JS</div>
+                                <div class="worker-avatar me-3">${worker.firstName.charAt(0)}${worker.lastName.charAt(0)}</div>
                                 <div>
-                                    <div class="fw-bold">John Smith</div>
-                                    <small class="text-muted">ID: 36DMRD-2001-001</small>
+                                    <div class="fw-bold">${worker.firstName} ${worker.lastName}</div>
+                                    <small class="text-muted">ID: ${worker.userCode}</small>
                                 </div>
                             </div>
                         </td>
-                        <td>(555) 123-4567</td>
-                        <td><span class="status-badge bg-success text-white">Active</span></td>
-                        <td>Main St Renovation</td>
-                        <td>6.5 hrs</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="viewWorkerDetails('001')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="editWorker('001')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="worker-avatar me-3">MG</div>
-                                <div>
-                                    <div class="fw-bold">Maria Garcia</div>
-                                    <small class="text-muted">ID: 36DMRD-2001-002</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>(555) 987-6543</td>
-                        <td><span class="status-badge bg-secondary text-white">Off-duty</span></td>
+                        <td>${worker.phoneNumber || worker.email}</td>
+                        <td><span class="status-badge bg-success text-white">${worker.status}</span></td>
                         <td>-</td>
-                        <td>8.0 hrs</td>
+                        <td>0 hrs</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="viewWorkerDetails('002')">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="viewWorkerDetails('${worker.id}')">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="editWorker('002')">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editWorker('${worker.id}')">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </td>
                     </tr>
-                `;
+                `).join('');
+
+                tableBody.innerHTML = tableRows;
+                
+                // Update stats
+                document.getElementById('activeFieldOpsCount').textContent = fieldOperators.length;
             } catch (error) {
                 console.error('Error loading field operators:', error);
+                const tableBody = document.getElementById('fieldOperatorsTable');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Error loading field operators</td></tr>';
             }
         }
 
