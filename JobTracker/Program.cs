@@ -83,6 +83,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Register Messaging Services
+builder.Services.AddHttpClient<JobTracker.Services.TextedlyService>();
+builder.Services.AddHttpClient<JobTracker.Services.WhatsAppService>();
+builder.Services.AddScoped<JobTracker.Services.IMessagingService, JobTracker.Services.TextedlyService>();
+builder.Services.AddScoped<JobTracker.Services.IWhatsAppService, JobTracker.Services.WhatsAppService>();
+builder.Services.AddScoped<JobTracker.Services.IAIMessagingService, JobTracker.Services.AIMessagingService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
