@@ -1,16 +1,16 @@
-using OpenAI;
 using System.Text.Json;
 using JobTracker.Models;
 using JobTracker.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace JobTracker.Services
 {
     public class AIMessagingService : IAIMessagingService
     {
-        private readonly OpenAI.OpenAIClient _openAiClient;
         private readonly ILogger<AIMessagingService> _logger;
         private readonly JobTrackerContext _context;
+        private readonly bool _hasOpenAI;
 
         public AIMessagingService(ILogger<AIMessagingService> logger, JobTrackerContext context)
         {
@@ -18,91 +18,72 @@ namespace JobTracker.Services
             _context = context;
             
             var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-            if (!string.IsNullOrEmpty(apiKey))
-            {
-                _openAiClient = new OpenAI.OpenAIClient(apiKey);
-            }
+            _hasOpenAI = !string.IsNullOrEmpty(apiKey);
         }
 
         public async Task<string> GenerateVerificationMessageAsync(string employeeName, string verificationCode)
         {
-            if (_openAiClient == null)
+            // Smart template-based message generation
+            var templates = new[]
             {
-                return $"Hi {employeeName}, your Job Tracker verification code is: {verificationCode}. This code expires in 10 minutes.";
-            }
+                $"Hi {employeeName}! Your Job Tracker verification code is {verificationCode}. Expires in 10 minutes.",
+                $"{employeeName}, your verification code: {verificationCode}. Valid for 10 minutes - Job Tracker",
+                $"Job Tracker: {employeeName}, use code {verificationCode} to verify. Expires in 10 minutes.",
+                $"Hello {employeeName}, verification code {verificationCode} for Job Tracker. Expires in 10 min."
+            };
 
-            try
-            {
-                var prompt = $"Generate a professional but friendly SMS verification message for employee {employeeName}. Include verification code {verificationCode} and mention it expires in 10 minutes. Keep it under 160 characters. Company name is Job Tracker.";
+            // Select template based on name length to optimize SMS character count
+            var firstName = employeeName.Split(' ')[0];
+            var selectedTemplate = employeeName.Length > 15 
+                ? templates[1].Replace(employeeName, firstName)
+                : templates[0];
 
-                var response = await _openAiClient.Chat.Completions.CreateAsync(new OpenAI.Chat.ChatCompletionOptions
-                {
-                    Model = "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-                    Messages = { new OpenAI.Chat.ChatMessage(OpenAI.Chat.ChatMessageRole.User, prompt) },
-                    MaxTokens = 100
-                });
-
-                return response.Value.Content[0].Text ?? $"Hi {employeeName}, your Job Tracker verification code is: {verificationCode}. Expires in 10 minutes.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating AI verification message");
-                return $"Hi {employeeName}, your Job Tracker verification code is: {verificationCode}. This code expires in 10 minutes.";
-            }
+            await Task.CompletedTask; // Maintain async pattern
+            return selectedTemplate;
         }
 
         public async Task<string> GenerateJobUpdateMessageAsync(Job job, string updateType)
         {
-            if (_openAiClient == null)
+            var templates = new[]
             {
-                return $"Job Update - {job.JobName}: {updateType}. Job #{job.JobNumber}";
+                $"Job Update: {job.JobName} - {updateType}. Status: {job.Status}. Job #{job.JobNumber}",
+                $"{job.JobName} ({job.JobNumber}): {updateType}. Current status: {job.Status}",
+                $"Update on Job #{job.JobNumber} - {job.JobName}: {updateType}",
+                $"{updateType} - {job.JobName}. Job #{job.JobNumber} now {job.Status}"
+            };
+
+            // Select template based on total length to stay under SMS limits
+            var baseMessage = templates[0];
+            if (baseMessage.Length > 160)
+            {
+                baseMessage = templates[2]; // Shorter version
             }
 
-            try
-            {
-                var prompt = $"Generate a concise SMS message about job update. Job: {job.JobName} (#{job.JobNumber}), Update: {updateType}, Status: {job.Status}. Keep professional, under 160 characters.";
-
-                var response = await _openAiClient.Chat.Completions.CreateAsync(new OpenAI.Chat.ChatCompletionOptions
-                {
-                    Model = "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-                    Messages = { new OpenAI.Chat.ChatMessage(OpenAI.Chat.ChatMessageRole.User, prompt) },
-                    MaxTokens = 100
-                });
-
-                return response.Value.Content[0].Text ?? $"Job Update - {job.JobName}: {updateType}. Job #{job.JobNumber}";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating AI job update message");
-                return $"Job Update - {job.JobName}: {updateType}. Job #{job.JobNumber}";
-            }
+            await Task.CompletedTask;
+            return baseMessage;
         }
 
         public async Task<string> GenerateScheduleReminderAsync(string employeeName, Job job, DateTime scheduledTime)
         {
-            if (_openAiClient == null)
+            var firstName = employeeName.Split(' ')[0];
+            var timeFormatted = scheduledTime.ToString("h:mm tt");
+            
+            var templates = new[]
             {
-                return $"Hi {employeeName}, reminder: You're scheduled for {job.JobName} today at {scheduledTime:HH:mm}. Job #{job.JobNumber}";
+                $"Hi {firstName}! Reminder: {job.JobName} today at {timeFormatted}. Job #{job.JobNumber}",
+                $"{firstName}, you're scheduled for {job.JobName} at {timeFormatted} today. Job #{job.JobNumber}",
+                $"Work reminder: {job.JobName} - {timeFormatted} today, {firstName}. Job #{job.JobNumber}",
+                $"{firstName}: {job.JobName} today {timeFormatted}. Job #{job.JobNumber}"
+            };
+
+            var selectedTemplate = templates[0];
+            if (selectedTemplate.Length > 160)
+            {
+                selectedTemplate = templates[3]; // Shortest version
             }
 
-            try
-            {
-                var prompt = $"Generate a friendly SMS reminder for employee {employeeName} scheduled to work on {job.JobName} at {scheduledTime:HH:mm} today. Include job #{job.JobNumber}. Keep under 160 characters.";
-
-                var response = await _openAiClient.Chat.Completions.CreateAsync(new OpenAI.Chat.ChatCompletionOptions
-                {
-                    Model = "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-                    Messages = { new OpenAI.Chat.ChatMessage(OpenAI.Chat.ChatMessageRole.User, prompt) },
-                    MaxTokens = 100
-                });
-
-                return response.Value.Content[0].Text ?? $"Hi {employeeName}, reminder: You're scheduled for {job.JobName} today at {scheduledTime:HH:mm}. Job #{job.JobNumber}";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating AI schedule reminder");
-                return $"Hi {employeeName}, reminder: You're scheduled for {job.JobName} today at {scheduledTime:HH:mm}. Job #{job.JobNumber}";
-            }
+            await Task.CompletedTask;
+            return selectedTemplate;
         }
 
         public async Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null, int? userId = null)
