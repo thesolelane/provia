@@ -882,12 +882,12 @@
             } catch (error) {
                 console.error('Error loading users:', error);
                 showNotification('Error loading team members', 'error');
-                document.getElementById('usersContainer').innerHTML = '<div class="text-center p-4"><p class="text-muted">Failed to load team members</p></div>';
+                document.getElementById('usersList').innerHTML = '<div class="text-center p-4"><p class="text-muted">Failed to load team members</p></div>';
             }
         }
 
         function renderUsers(users) {
-            const container = document.getElementById('usersContainer');
+            const container = document.getElementById('usersList');
             if (!container) return;
 
             container.innerHTML = '';
