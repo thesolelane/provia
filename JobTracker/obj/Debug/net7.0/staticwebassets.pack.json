@@ -49,6 +49,10 @@
       "PackagePath": "staticwebassets/update-coordinates.html"
     },
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/user-management-admin.html",
+      "PackagePath": "staticwebassets/user-management-admin.html"
+    },
+    {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/user-onboarding.html",
       "PackagePath": "staticwebassets/user-onboarding.html"
     },
