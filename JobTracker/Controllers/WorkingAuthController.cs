@@ -774,20 +774,65 @@ namespace JobTracker.Controllers
                 userToVerify.PhoneVerificationCode = verificationCode;
                 userToVerify.PhoneVerificationExpiry = DateTime.UtcNow.AddMinutes(10);
 
-                var message = $"Job Tracker verification code: {verificationCode}. Expires in 10 minutes.";
-                
-                // For demonstration - shows what would be sent
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
-                    message = $"Test SMS ready for {request.PhoneNumber}",
-                    testMessage = message,
-                    details = "SMS service integration pending - provide Twilio or Textedly credentials"
-                });
+                // Try to get messaging service
+                var messagingService = HttpContext.RequestServices.GetService<JobTracker.Services.IMessagingService>();
+                var aiMessagingService = HttpContext.RequestServices.GetService<JobTracker.Services.IAIMessagingService>();
+
+                if (messagingService != null && aiMessagingService != null)
+                {
+                    try
+                    {
+                        // Generate AI-powered verification message
+                        var employeeName = $"{userToVerify.FirstName} {userToVerify.LastName}";
+                        var message = await aiMessagingService.GenerateVerificationMessageAsync(employeeName, verificationCode);
+                        
+                        // Send via Textedly
+                        var success = await messagingService.SendVerificationSmsAsync(request.PhoneNumber, verificationCode);
+                        
+                        if (success)
+                        {
+                            return Ok(new { 
+                                message = $"Verification SMS sent to {request.PhoneNumber}",
+                                details = "Message sent via Textedly"
+                            });
+                        }
+                        else
+                        {
+                            return Ok(new { 
+                                message = $"SMS service not configured - verification code generated",
+                                verificationCode = verificationCode,
+                                testMessage = message,
+                                details = "Provide Textedly credentials to enable SMS sending"
+                            });
+                        }
+                    }
+                    catch (Exception smsEx)
+                    {
+                        _logger.LogError(smsEx, "Error sending verification SMS");
+                        return Ok(new { 
+                            message = $"Verification code generated but SMS failed",
+                            verificationCode = verificationCode,
+                            details = "Check Textedly credentials and configuration"
+                        });
+                    }
+                }
+                else
+                {
+                    var message = $"Job Tracker verification code: {verificationCode}. Expires in 10 minutes.";
+                    return Ok(new { 
+                        message = $"Test SMS ready for {request.PhoneNumber}",
+                        verificationCode = verificationCode,
+                        testMessage = message,
+                        details = "Messaging services not initialized"
+                    });
+                }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error preparing verification SMS", error = ex.Message });
+                _logger.LogError(ex, "Error in phone verification process");
+                return StatusCode(500, new { message = "Error processing verification request", error = ex.Message });
             }
         }
 
@@ -824,21 +869,77 @@ namespace JobTracker.Controllers
                 userToVerify.EmailVerificationCode = verificationCode;
                 userToVerify.EmailVerificationExpiry = DateTime.UtcNow.AddMinutes(15);
 
-                var subject = "Job Tracker Email Verification";
-                var emailMessage = $"Your email verification code is: {verificationCode}. This code expires in 15 minutes.";
-                
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
-                    message = $"Test email ready for {request.Email}",
-                    testSubject = subject,
-                    testMessage = emailMessage,
-                    details = "Email service available - using SendGrid"
-                });
+                // Try to get email service
+                var emailService = HttpContext.RequestServices.GetService<IEmailService>();
+
+                if (emailService != null)
+                {
+                    try
+                    {
+                        var subject = "Job Tracker Email Verification";
+                        var employeeName = $"{userToVerify.FirstName} {userToVerify.LastName}";
+                        var emailBody = $@"
+                            <html>
+                            <body>
+                                <h2>Job Tracker Email Verification</h2>
+                                <p>Hi {employeeName},</p>
+                                <p>Your email verification code is: <strong>{verificationCode}</strong></p>
+                                <p>This code expires in 15 minutes.</p>
+                                <p>If you didn't request this verification, please contact your administrator.</p>
+                                <br>
+                                <p>Best regards,<br>Job Tracker System</p>
+                            </body>
+                            </html>";
+                        
+                        var success = await emailService.SendEmailAsync(request.Email, subject, emailBody);
+                        
+                        if (success)
+                        {
+                            return Ok(new { 
+                                message = $"Verification email sent to {request.Email}",
+                                details = "Email sent via SendGrid"
+                            });
+                        }
+                        else
+                        {
+                            return Ok(new { 
+                                message = $"Email service not configured - verification code generated",
+                                verificationCode = verificationCode,
+                                testSubject = subject,
+                                testMessage = emailBody,
+                                details = "SendGrid credentials may need configuration"
+                            });
+                        }
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogError(emailEx, "Error sending verification email");
+                        return Ok(new { 
+                            message = $"Verification code generated but email failed",
+                            verificationCode = verificationCode,
+                            details = "Check SendGrid credentials and configuration"
+                        });
+                    }
+                }
+                else
+                {
+                    var subject = "Job Tracker Email Verification";
+                    var emailMessage = $"Your email verification code is: {verificationCode}. This code expires in 15 minutes.";
+                    return Ok(new { 
+                        message = $"Test email ready for {request.Email}",
+                        verificationCode = verificationCode,
+                        testSubject = subject,
+                        testMessage = emailMessage,
+                        details = "Email service not initialized"
+                    });
+                }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error preparing verification email", error = ex.Message });
+                _logger.LogError(ex, "Error in email verification process");
+                return StatusCode(500, new { message = "Error processing verification request", error = ex.Message });
             }
         }
     }
