@@ -576,8 +576,10 @@
 
             const user = JSON.parse(userInfo);
             if (user.role !== 1510) {
-                alert('Access denied. Admin privileges required.');
-                window.location.href = '/secure-login.html';
+                showNotification('Access denied. Admin privileges required.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/secure-login.html';
+                }, 1500);
                 return;
             }
         });
@@ -955,45 +957,6 @@
             return userCard;
         }
 
-
-            const displayContact = user.role === 2001 ? user.phoneNumber : user.email;
-
-            card.innerHTML = `
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-${roleInfo.color} text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                                <strong>${initials}</strong>
-                            </div>
-                            <div>
-                                <h6 class="mb-1 user-name">${user.firstName} ${user.lastName}</h6>
-                                <small class="text-muted user-email">${displayContact || 'No contact info'}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="role-badge role-${roleInfo.class}" data-role="${user.role}">${roleInfo.name}</span>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge bg-success">Active</span>
-                    </div>
-                    <div class="col-md-3">
-                        <small class="text-muted">${roleInfo.description}</small>
-                    </div>
-                    <div class="col-md-2 text-end">
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ${user.role !== 1510 ? `<button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})">
-                            <i class="fas fa-user-slash"></i>
-                        </button>` : ''}
-                    </div>
-                </div>
-            `;
-
-            return card;
-        }
-
         function getRoleInfo(role) {
             switch (role) {
                 case 1510:
@@ -1069,10 +1032,35 @@
             }
         }
 
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (!token || !userInfo) {
+                showNotification('Authentication required. Redirecting to login...', 'error');
+                setTimeout(() => {
+                    window.location.href = '/secure-login.html';
+                }, 1500);
+                return false;
+            }
+
+            const user = JSON.parse(userInfo);
+            if (user.role !== 1510) {
+                showNotification('Access denied. Admin privileges required.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/secure-login.html';
+                }, 1500);
+                return false;
+            }
+            
+            return true;
+        }
+
         // Load users when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            loadUsers();
+            if (checkAuth()) {
+                loadUsers();
+            }
         });
     </script>
 </body>
