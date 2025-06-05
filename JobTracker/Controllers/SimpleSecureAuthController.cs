@@ -263,6 +263,121 @@ namespace JobTracker.Controllers
         {
             return Ok(new { message = "Logged out successfully" });
         }
+
+        [HttpPost("create-user")]
+        public async Task<IActionResult> CreateUser([FromBody] SimpleCreateUserRequest request)
+        {
+            try
+            {
+                // Check if current user has admin permissions
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != UserRoles.Admin) // 1510 is Admin
+                        {
+                            return Forbid("Only administrators can create users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Validate request
+                        if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName))
+                        {
+                            return BadRequest(new { message = "First name and last name are required" });
+                        }
+
+                        // Check for duplicate email or phone
+                        if (!string.IsNullOrEmpty(request.Email))
+                        {
+                            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+                            if (existingUser != null)
+                            {
+                                return BadRequest(new { message = "Email already exists" });
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(request.PhoneNumber))
+                        {
+                            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+                            if (existingUser != null)
+                            {
+                                return BadRequest(new { message = "Phone number already exists" });
+                            }
+                        }
+
+                        // Create new user
+                        var newUser = new User
+                        {
+                            FirstName = request.FirstName,
+                            LastName = request.LastName,
+                            Email = request.Email,
+                            PhoneNumber = request.PhoneNumber,
+                            Role = request.Role,
+                            CompanyId = currentUser.CompanyId, // Same company as admin
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedByUserId = currentUser.Id,
+                            LanguagePreference = request.LanguagePreference ?? "en"
+                        };
+
+                        // Set password or PIN hash (simple for demo)
+                        if (!string.IsNullOrEmpty(request.Password))
+                        {
+                            newUser.PasswordHash = request.Password; // Simple for demo
+                        }
+
+                        if (!string.IsNullOrEmpty(request.Pin))
+                        {
+                            newUser.PinHash = request.Pin; // Simple for demo
+                        }
+
+                        _context.Users.Add(newUser);
+                        await _context.SaveChangesAsync();
+
+                        return Ok(new
+                        {
+                            message = "User created successfully",
+                            user = new
+                            {
+                                id = newUser.Id,
+                                firstName = newUser.FirstName,
+                                lastName = newUser.LastName,
+                                email = newUser.Email,
+                                phoneNumber = newUser.PhoneNumber,
+                                role = newUser.Role
+                            }
+                        });
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating user");
+                return StatusCode(500, new { message = "An error occurred while creating the user" });
+            }
+        }
     }
 
     public class SimpleLoginRequest
@@ -280,5 +395,17 @@ namespace JobTracker.Controllers
     public class SimpleTokenValidationRequest
     {
         public string Token { get; set; } = string.Empty;
+    }
+
+    public class SimpleCreateUserRequest
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Password { get; set; }
+        public string? Pin { get; set; }
+        public int Role { get; set; }
+        public string? LanguagePreference { get; set; }
     }
 }
