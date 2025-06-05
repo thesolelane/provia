@@ -378,6 +378,210 @@ namespace JobTracker.Controllers
         {
             return Ok(new { message = "Logged out successfully" });
         }
+
+        [HttpDelete("/api/users/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510) // Only Admin can delete users
+                        {
+                            return Forbid("Only administrators can delete users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Find user to delete
+                        var userToDelete = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                        if (userToDelete == null)
+                        {
+                            return NotFound(new { message = "User not found" });
+                        }
+
+                        // Don't allow deleting yourself
+                        if (userToDelete.Id == currentUser.Id)
+                        {
+                            return BadRequest(new { message = "Cannot delete your own account" });
+                        }
+
+                        _context.Users.Remove(userToDelete);
+                        await _context.SaveChangesAsync();
+
+                        return Ok(new { message = "User deleted successfully" });
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user");
+                return StatusCode(500, new { message = "An error occurred while deleting the user" });
+            }
+        }
+
+        [HttpPost("/api/users/{id}/deactivate")]
+        public async Task<IActionResult> DeactivateUser(int id)
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510) // Only Admin can deactivate users
+                        {
+                            return Forbid("Only administrators can deactivate users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Find user to deactivate
+                        var userToDeactivate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                        if (userToDeactivate == null)
+                        {
+                            return NotFound(new { message = "User not found" });
+                        }
+
+                        // Don't allow deactivating yourself
+                        if (userToDeactivate.Id == currentUser.Id)
+                        {
+                            return BadRequest(new { message = "Cannot deactivate your own account" });
+                        }
+
+                        userToDeactivate.IsActive = false;
+                        userToDeactivate.UpdatedAt = DateTime.UtcNow;
+                        await _context.SaveChangesAsync();
+
+                        return Ok(new { message = "User deactivated successfully" });
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deactivating user");
+                return StatusCode(500, new { message = "An error occurred while deactivating the user" });
+            }
+        }
+
+        [HttpPut("/api/users/{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510) // Only Admin can update users
+                        {
+                            return Forbid("Only administrators can update users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Find user to update
+                        var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                        if (userToUpdate == null)
+                        {
+                            return NotFound(new { message = "User not found" });
+                        }
+
+                        // Update user properties
+                        userToUpdate.FirstName = request.FirstName?.Trim();
+                        userToUpdate.LastName = request.LastName?.Trim();
+                        userToUpdate.Email = request.Email?.Trim();
+                        userToUpdate.Role = request.Role;
+                        userToUpdate.UpdatedAt = DateTime.UtcNow;
+
+                        // Validate email uniqueness if changed
+                        if (!string.IsNullOrEmpty(request.Email))
+                        {
+                            var existingUser = await _context.Users
+                                .FirstOrDefaultAsync(u => u.Email == request.Email && u.Id != id);
+                            if (existingUser != null)
+                            {
+                                return BadRequest(new { message = "Email address is already in use" });
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+
+                        return Ok(new { message = "User updated successfully" });
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user");
+                return StatusCode(500, new { message = "An error occurred while updating the user" });
+            }
+        }
     }
 
     public class LoginRequestModel
@@ -407,5 +611,13 @@ namespace JobTracker.Controllers
         public string? Pin { get; set; }
         public int Role { get; set; }
         public string? LanguagePreference { get; set; }
+    }
+
+    public class UpdateUserRequest
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public int Role { get; set; }
     }
 }
