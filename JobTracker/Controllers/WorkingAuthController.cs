@@ -379,6 +379,72 @@ namespace JobTracker.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
+        [HttpGet("/api/users/{id}")]
+        public async Task<IActionResult> GetUser(int id)
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510) // Only Admin can view user details
+                        {
+                            return Forbid("Only administrators can view user details");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Find requested user
+                        var requestedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                        if (requestedUser == null)
+                        {
+                            return NotFound(new { message = "User not found" });
+                        }
+
+                        return Ok(new
+                        {
+                            id = requestedUser.Id,
+                            firstName = requestedUser.FirstName,
+                            lastName = requestedUser.LastName,
+                            email = requestedUser.Email,
+                            role = requestedUser.Role,
+                            phoneNumber = requestedUser.PhoneNumber,
+                            isActive = requestedUser.IsActive,
+                            createdAt = requestedUser.CreatedAt,
+                            lastLoginAt = requestedUser.LastLoginAt
+                        });
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching user");
+                return StatusCode(500, new { message = "An error occurred while fetching the user" });
+            }
+        }
+
         [HttpDelete("/api/users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

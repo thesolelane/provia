@@ -721,23 +721,27 @@
                     return;
                 }
 
-                // Find user data
-                const userCard = document.querySelector(`[data-user-id="${userId}"]`);
-                if (!userCard) {
-                    showNotification('User not found', 'error');
-                    return;
+                // Fetch user data from API
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user data');
                 }
 
-                const userName = userCard.querySelector('.user-name').textContent;
-                const userEmail = userCard.querySelector('.user-email').textContent;
-                const userRole = userCard.querySelector('.role-badge').dataset.role;
+                const userData = await response.json();
 
-                // Populate edit modal (we'll create this)
+                // Populate edit modal
                 document.getElementById('editUserId').value = userId;
-                document.getElementById('editFirstName').value = userName.split(' ')[0];
-                document.getElementById('editLastName').value = userName.split(' ').slice(1).join(' ');
-                document.getElementById('editUserEmail').value = userEmail;
-                document.getElementById('editUserRole').value = userRole;
+                document.getElementById('editFirstName').value = userData.firstName || '';
+                document.getElementById('editLastName').value = userData.lastName || '';
+                document.getElementById('editUserEmail').value = userData.email || '';
+                document.getElementById('editUserRole').value = userData.role || '';
 
                 // Show edit modal
                 new bootstrap.Modal(document.getElementById('editUserModal')).show();
