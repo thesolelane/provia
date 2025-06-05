@@ -490,8 +490,9 @@ namespace JobTracker.Controllers
                             firstName = requestedUser.FirstName,
                             lastName = requestedUser.LastName,
                             email = requestedUser.Email,
-                            role = requestedUser.Role,
                             phoneNumber = requestedUser.PhoneNumber,
+                            username = requestedUser.Username,
+                            role = requestedUser.Role,
                             isActive = requestedUser.IsActive,
                             createdAt = requestedUser.CreatedAt,
                             lastLoginAt = requestedUser.LastLoginAt
@@ -683,6 +684,8 @@ namespace JobTracker.Controllers
                         userToUpdate.FirstName = request.FirstName?.Trim();
                         userToUpdate.LastName = request.LastName?.Trim();
                         userToUpdate.Email = request.Email?.Trim();
+                        userToUpdate.PhoneNumber = request.PhoneNumber?.Trim();
+                        userToUpdate.Username = request.Username?.Trim();
                         userToUpdate.Role = request.Role;
                         userToUpdate.UpdatedAt = DateTime.UtcNow;
 
@@ -694,6 +697,28 @@ namespace JobTracker.Controllers
                             if (existingUser != null)
                             {
                                 return BadRequest(new { message = "Email address is already in use" });
+                            }
+                        }
+
+                        // Validate phone number uniqueness if changed
+                        if (!string.IsNullOrEmpty(request.PhoneNumber))
+                        {
+                            var existingUser = await _context.Users
+                                .FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber && u.Id != id);
+                            if (existingUser != null)
+                            {
+                                return BadRequest(new { message = "Phone number is already in use" });
+                            }
+                        }
+
+                        // Validate username uniqueness if changed
+                        if (!string.IsNullOrEmpty(request.Username))
+                        {
+                            var existingUser = await _context.Users
+                                .FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != id);
+                            if (existingUser != null)
+                            {
+                                return BadRequest(new { message = "Username is already in use" });
                             }
                         }
 
@@ -751,6 +776,8 @@ namespace JobTracker.Controllers
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Username { get; set; }
         public int Role { get; set; }
     }
 }

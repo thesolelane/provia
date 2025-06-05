@@ -191,6 +191,20 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editUserPhone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="editUserPhone" placeholder="(555) 123-4567">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editUserUsername" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="editUserUsername">
+                                </div>
+                            </div>
+                        </div>
                         <div class="alert alert-info">
                             <small><strong>Note:</strong> Password changes require separate security verification</small>
                         </div>
@@ -385,6 +399,8 @@
                 document.getElementById('editFirstName').value = userData.firstName || '';
                 document.getElementById('editLastName').value = userData.lastName || '';
                 document.getElementById('editUserEmail').value = userData.email || '';
+                document.getElementById('editUserPhone').value = userData.phoneNumber || '';
+                document.getElementById('editUserUsername').value = userData.username || '';
                 document.getElementById('editUserRole').value = userData.role || '';
 
                 // Show edit modal
@@ -402,6 +418,8 @@
                 const firstName = document.getElementById('editFirstName').value.trim();
                 const lastName = document.getElementById('editLastName').value.trim();
                 const email = document.getElementById('editUserEmail').value.trim();
+                const phoneNumber = document.getElementById('editUserPhone').value.trim();
+                const username = document.getElementById('editUserUsername').value.trim();
                 const role = parseInt(document.getElementById('editUserRole').value);
 
                 if (!firstName || !lastName || !role) {
@@ -411,6 +429,11 @@
 
                 if ((role === 1510 || role === 1520) && !email) {
                     showNotification('Email is required for Admin and Supervisor roles', 'error');
+                    return;
+                }
+
+                if (role === 2001 && !phoneNumber) {
+                    showNotification('Phone number is required for Field Operator role', 'error');
                     return;
                 }
 
@@ -425,6 +448,8 @@
                     firstName: firstName,
                     lastName: lastName,
                     email: email,
+                    phoneNumber: phoneNumber,
+                    username: username,
                     role: role
                 };
 
