@@ -49,6 +49,12 @@ namespace JobTracker.Models
         // For password hash storage (simplified for demo)
         public string? PasswordHash { get; set; }
 
+        // For PIN-based authentication (field operators)
+        public string? PinHash { get; set; }
+
+        // Username for login
+        public string? Username { get; set; }
+
         // For phone verification
         public string? PhoneVerificationCode { get; set; }
         public DateTime? PhoneVerificationExpiry { get; set; }
@@ -61,6 +67,7 @@ namespace JobTracker.Models
 
         // For tracking login activity
         public DateTime? LastLoginAt { get; set; }
+        public DateTime? LastLogin { get; set; }
 
         // For GPS tracking consent during work hours
         public bool LocationTrackingConsent { get; set; } = false;

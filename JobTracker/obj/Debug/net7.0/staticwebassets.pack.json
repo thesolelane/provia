@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets/admin-scheduler.html"
     },
     {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/admin-user-management.html",
+      "PackagePath": "staticwebassets/admin-user-management.html"
+    },
+    {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/auth-check.html",
       "PackagePath": "staticwebassets/auth-check.html"
     },
@@ -31,6 +35,10 @@
     {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/login.html",
       "PackagePath": "staticwebassets/login.html"
+    },
+    {
+      "Id": "/home/runner/workspace/JobTracker/wwwroot/secure-login.html",
+      "PackagePath": "staticwebassets/secure-login.html"
     },
     {
       "Id": "/home/runner/workspace/JobTracker/wwwroot/supervisor-dashboard.html",

@@ -47,3 +47,8 @@
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/Newtonsoft.Json.dll
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/SendGrid.dll
 /home/runner/workspace/JobTracker/bin/Debug/net7.0/StarkbankEcdsa.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/Microsoft.IdentityModel.Abstractions.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/Microsoft.IdentityModel.Logging.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/Microsoft.IdentityModel.Tokens.dll
+/home/runner/workspace/JobTracker/bin/Debug/net7.0/System.IdentityModel.Tokens.Jwt.dll
