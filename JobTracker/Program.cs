@@ -35,10 +35,26 @@ builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Service
 builder.Services.AddScoped<JobTracker.Services.SMSService>();
 builder.Services.AddHttpClient();
 
-// Add Authentication
+// Register Authentication Service
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+// Add JWT Authentication
+var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "JobTracker-Default-Secret-Key-2024-Super-Secure-Development";
 builder.Services.AddAuthentication("Bearer")
-    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
-        "Bearer", options => { });
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateIssuer = true,
+            ValidIssuer = "JobTracker",
+            ValidateAudience = true,
+            ValidAudience = "JobTracker-Users",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddAuthorization();
 
