@@ -892,19 +892,70 @@
 
             container.innerHTML = '';
 
+            // Update statistics
+            updateUserStats(users);
+
             users.forEach(user => {
                 const userCard = createUserCard(user);
                 container.appendChild(userCard);
             });
         }
 
-        function createUserCard(user) {
-            const card = document.createElement('div');
-            card.className = 'user-card';
-            card.setAttribute('data-user-id', user.id);
+        function updateUserStats(users) {
+            const adminCount = users.filter(u => u.role === 1510).length;
+            const supervisorCount = users.filter(u => u.role === 1520).length;
+            const fieldOperatorCount = users.filter(u => u.role === 2001).length;
 
+            document.getElementById('adminCount').textContent = adminCount;
+            document.getElementById('supervisorCount').textContent = supervisorCount;
+            document.getElementById('fieldOperatorCount').textContent = fieldOperatorCount;
+            document.getElementById('totalUsers').textContent = users.length;
+        }
+
+        function createUserCard(user) {
+            const userCard = document.createElement('div');
+            userCard.className = 'user-card';
+            
             const roleInfo = getRoleInfo(user.role);
             const initials = getInitials(user.firstName, user.lastName);
+            
+            userCard.innerHTML = `
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-${roleInfo.color} text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <strong>${initials}</strong>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">${user.firstName} ${user.lastName}</h6>
+                                <small class="text-muted">${user.email || 'No email'}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="role-badge role-${roleInfo.class}">${roleInfo.name}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-${user.isActive ? 'success' : 'secondary'}">${user.isActive ? 'Active' : 'Inactive'}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">${user.phoneNumber ? 'Phone: ' + user.phoneNumber : 'ID: ' + user.id}</small>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})">
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return userCard;
+        }
+
+
             const displayContact = user.role === 2001 ? user.phoneNumber : user.email;
 
             card.innerHTML = `
