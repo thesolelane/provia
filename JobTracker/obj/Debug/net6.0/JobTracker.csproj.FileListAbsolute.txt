@@ -1,0 +1,7 @@
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.AssemblyReference.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfoInputs.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfo.cs
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.CoreCompileInputs.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cs
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cache

@@ -46,10 +46,10 @@ namespace JobTracker.Services
         {
             var templates = new[]
             {
-                $"Job Update: {job.JobName} - {updateType}. Status: {job.Status}. Job #{job.JobNumber}",
-                $"{job.JobName} ({job.JobNumber}): {updateType}. Current status: {job.Status}",
-                $"Update on Job #{job.JobNumber} - {job.JobName}: {updateType}",
-                $"{updateType} - {job.JobName}. Job #{job.JobNumber} now {job.Status}"
+                $"Job Update: {job.Name} - {updateType}. Status: {job.Status}. Job #{job.JobNumber}",
+                $"{job.Name} ({job.JobNumber}): {updateType}. Current status: {job.Status}",
+                $"Update on Job #{job.JobNumber} - {job.Name}: {updateType}",
+                $"{updateType} - {job.Name}. Job #{job.JobNumber} now {job.Status}"
             };
 
             // Select template based on total length to stay under SMS limits
@@ -70,10 +70,10 @@ namespace JobTracker.Services
             
             var templates = new[]
             {
-                $"Hi {firstName}! Reminder: {job.JobName} today at {timeFormatted}. Job #{job.JobNumber}",
-                $"{firstName}, you're scheduled for {job.JobName} at {timeFormatted} today. Job #{job.JobNumber}",
-                $"Work reminder: {job.JobName} - {timeFormatted} today, {firstName}. Job #{job.JobNumber}",
-                $"{firstName}: {job.JobName} today {timeFormatted}. Job #{job.JobNumber}"
+                $"Hi {firstName}! Reminder: {job.Name} today at {timeFormatted}. Job #{job.JobNumber}",
+                $"{firstName}, you're scheduled for {job.Name} at {timeFormatted} today. Job #{job.JobNumber}",
+                $"Work reminder: {job.Name} - {timeFormatted} today, {firstName}. Job #{job.JobNumber}",
+                $"{firstName}: {job.Name} today {timeFormatted}. Job #{job.JobNumber}"
             };
 
             var selectedTemplate = templates[0];
@@ -88,13 +88,10 @@ namespace JobTracker.Services
 
         public async Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null, int? userId = null)
         {
-            if (_openAiClient == null)
-            {
-                return "AI assistant is not available at the moment. Please contact your supervisor for assistance.";
-            }
-
             try
             {
+                query = query.ToLowerInvariant();
+                
                 // Get relevant job data if jobId is provided
                 string contextData = "";
                 if (jobId.HasValue)
@@ -102,44 +99,60 @@ namespace JobTracker.Services
                     var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
                     if (job != null)
                     {
-                        contextData += $"Job: {job.JobName} (#{job.JobNumber}), Status: {job.Status}, Address: {job.Address}, Start: {job.StartDate:MM/dd/yyyy}";
+                        contextData = $"Job: {job.Name} (#{job.JobNumber}), Status: {job.Status}, Location: {job.Location}, Start: {job.StartDate:MM/dd/yyyy}";
                     }
                 }
 
-                var systemPrompt = @"You are a construction job tracking assistant. Help with job status, schedules, building codes, and general construction questions. 
-                Keep responses concise and professional. If asked about specific job details you don't have access to, suggest contacting the supervisor.
-                For building code questions, refer to Massachusetts building codes when relevant.";
-
-                var userPrompt = string.IsNullOrEmpty(contextData) ? query : $"Context: {contextData}\n\nQuestion: {query}";
-
-                var response = await _openAiClient.Chat.Completions.CreateAsync(new OpenAI.Chat.ChatCompletionOptions
+                // Smart pattern matching for common queries
+                if (query.Contains("status") || query.Contains("progress"))
                 {
-                    Model = "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-                    Messages = { 
-                        new OpenAI.Chat.ChatMessage(OpenAI.Chat.ChatMessageRole.System, systemPrompt),
-                        new OpenAI.Chat.ChatMessage(OpenAI.Chat.ChatMessageRole.User, userPrompt)
-                    },
-                    MaxTokens = 300
-                });
+                    if (!string.IsNullOrEmpty(contextData))
+                    {
+                        var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
+                        return $"Job {job?.Name} (#{job?.JobNumber}) is currently {job?.Status}. Started {job?.StartDate:MM/dd/yyyy}.";
+                    }
+                    return "To check job status, please specify the job number (e.g., #1234).";
+                }
 
-                return response.Value.Content[0].Text ?? "I'm unable to process that request right now. Please contact your supervisor.";
+                if (query.Contains("schedule") || query.Contains("when"))
+                {
+                    return "For schedule information, contact your supervisor or check the job board.";
+                }
+
+                if (query.Contains("building code") || query.Contains("regulation"))
+                {
+                    return "For Massachusetts building code questions, refer to the latest residential/commercial code documents or contact the building inspector.";
+                }
+
+                if (query.Contains("location") || query.Contains("address"))
+                {
+                    if (!string.IsNullOrEmpty(contextData))
+                    {
+                        var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
+                        return $"Job location: {job?.Location}";
+                    }
+                    return "Please specify which job location you need.";
+                }
+
+                // Default helpful response
+                return "I can help with job status, schedules, building codes, and locations. Please be specific about what you need or contact your supervisor.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing incoming query with AI");
-                return "I'm experiencing technical difficulties. Please contact your supervisor for assistance.";
+                _logger.LogError(ex, "Error processing query");
+                return "Please contact your supervisor for assistance.";
             }
         }
 
         public async Task<string> GenerateResponseToWhatsAppMessageAsync(string fromNumber, string messageContent)
         {
-            // Extract job number or employee info from message content
-            var jobNumberMatch = System.Text.RegularExpressions.Regex.Match(messageContent, @"#(\d+)");
+            // Extract job number from message content
+            var jobNumberMatch = Regex.Match(messageContent, @"#(\d+)");
             int? jobId = null;
             
             if (jobNumberMatch.Success && int.TryParse(jobNumberMatch.Groups[1].Value, out int jobNumber))
             {
-                var job = await _context.Jobs.FirstOrDefaultAsync(j => j.JobNumber == jobNumber);
+                var job = await _context.Jobs.FirstOrDefaultAsync(j => j.JobNumber == jobNumber.ToString());
                 jobId = job?.Id;
             }
 
