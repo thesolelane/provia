@@ -856,6 +856,112 @@
             }, 5000);
         }
 
+        async function loadUsers() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showNotification('Authentication required. Please log in again.', 'error');
+                    window.location.href = '/secure-login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load users');
+                }
+
+                const users = await response.json();
+                renderUsers(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification('Error loading team members', 'error');
+                document.getElementById('usersContainer').innerHTML = '<div class="text-center p-4"><p class="text-muted">Failed to load team members</p></div>';
+            }
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('usersContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            users.forEach(user => {
+                const userCard = createUserCard(user);
+                container.appendChild(userCard);
+            });
+        }
+
+        function createUserCard(user) {
+            const card = document.createElement('div');
+            card.className = 'user-card';
+            card.setAttribute('data-user-id', user.id);
+
+            const roleInfo = getRoleInfo(user.role);
+            const initials = getInitials(user.firstName, user.lastName);
+            const displayContact = user.role === 2001 ? user.phoneNumber : user.email;
+
+            card.innerHTML = `
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-${roleInfo.color} text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <strong>${initials}</strong>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 user-name">${user.firstName} ${user.lastName}</h6>
+                                <small class="text-muted user-email">${displayContact || 'No contact info'}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="role-badge role-${roleInfo.class}" data-role="${user.role}">${roleInfo.name}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">${roleInfo.description}</small>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${user.role !== 1510 ? `<button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})">
+                            <i class="fas fa-user-slash"></i>
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function getRoleInfo(role) {
+            switch (role) {
+                case 1510:
+                    return { name: 'Admin', class: 'admin', color: 'danger', description: 'System Administrator' };
+                case 1520:
+                    return { name: 'Supervisor', class: 'supervisor', color: 'warning', description: 'Project Supervisor' };
+                case 2001:
+                    return { name: 'Field Op', class: 'field', color: 'success', description: 'Field Operator' };
+                default:
+                    return { name: 'Unknown', class: 'secondary', color: 'secondary', description: 'Unknown Role' };
+            }
+        }
+
+        function getInitials(firstName, lastName) {
+            const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+            const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+            return first + last;
+        }
+
         async function updateUser() {
             try {
                 const userId = document.getElementById('editUserId').value;
@@ -902,7 +1008,7 @@
                 if (response.ok) {
                     showNotification('Team member updated successfully!', 'success');
                     bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => loadUsers(), 1500);
                 } else {
                     showNotification('Error updating user: ' + data.message, 'error');
                 }
@@ -911,6 +1017,12 @@
                 console.error('Error:', error);
             }
         }
+
+        // Load users when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadUsers();
+        });
     </script>
 </body>
 </html>

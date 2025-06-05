@@ -379,6 +379,73 @@ namespace JobTracker.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
+        [HttpGet("/api/users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510) // Only Admin can view all users
+                        {
+                            return Forbid("Only administrators can view all users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Get all users
+                        var users = await _context.Users
+                            .Where(u => u.IsActive)
+                            .OrderBy(u => u.Role)
+                            .ThenBy(u => u.FirstName)
+                            .Select(u => new
+                            {
+                                id = u.Id,
+                                firstName = u.FirstName,
+                                lastName = u.LastName,
+                                email = u.Email,
+                                role = u.Role,
+                                phoneNumber = u.PhoneNumber,
+                                isActive = u.IsActive,
+                                createdAt = u.CreatedAt,
+                                lastLoginAt = u.LastLoginAt
+                            })
+                            .ToListAsync();
+
+                        return Ok(users);
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching users");
+                return StatusCode(500, new { message = "An error occurred while fetching users" });
+            }
+        }
+
         [HttpGet("/api/users/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
