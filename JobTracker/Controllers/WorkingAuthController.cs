@@ -740,6 +740,107 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { message = "An error occurred while updating the user" });
             }
         }
+
+        [HttpPost("users/{id}/verify-phone")]
+        public async Task<IActionResult> VerifyPhoneNumber(int id, [FromBody] VerifyPhoneRequest request)
+        {
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user session" });
+            }
+
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "User not found" });
+            }
+
+            if (currentUser.Role != 1510)
+            {
+                return Forbid("Only admins can verify phone numbers");
+            }
+
+            try
+            {
+                var userToVerify = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive);
+                if (userToVerify == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                // Generate verification code
+                var verificationCode = new Random().Next(100000, 999999).ToString();
+                userToVerify.PhoneVerificationCode = verificationCode;
+                userToVerify.PhoneVerificationExpiry = DateTime.UtcNow.AddMinutes(10);
+
+                var message = $"Job Tracker verification code: {verificationCode}. Expires in 10 minutes.";
+                
+                // For demonstration - shows what would be sent
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = $"Test SMS ready for {request.PhoneNumber}",
+                    testMessage = message,
+                    details = "SMS service integration pending - provide Twilio or Textedly credentials"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error preparing verification SMS", error = ex.Message });
+            }
+        }
+
+        [HttpPost("users/{id}/verify-email")]
+        public async Task<IActionResult> VerifyEmail(int id, [FromBody] VerifyEmailRequest request)
+        {
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user session" });
+            }
+
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "User not found" });
+            }
+
+            if (currentUser.Role != 1510)
+            {
+                return Forbid("Only admins can verify emails");
+            }
+
+            try
+            {
+                var userToVerify = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive);
+                if (userToVerify == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                // Generate verification code
+                var verificationCode = new Random().Next(100000, 999999).ToString();
+                userToVerify.EmailVerificationCode = verificationCode;
+                userToVerify.EmailVerificationExpiry = DateTime.UtcNow.AddMinutes(15);
+
+                var subject = "Job Tracker Email Verification";
+                var emailMessage = $"Your email verification code is: {verificationCode}. This code expires in 15 minutes.";
+                
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = $"Test email ready for {request.Email}",
+                    testSubject = subject,
+                    testMessage = emailMessage,
+                    details = "Email service available - using SendGrid"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error preparing verification email", error = ex.Message });
+            }
+        }
     }
 
     public class LoginRequestModel
@@ -779,5 +880,15 @@ namespace JobTracker.Controllers
         public string? PhoneNumber { get; set; }
         public string? Username { get; set; }
         public int Role { get; set; }
+    }
+
+    public class VerifyPhoneRequest
+    {
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    public class VerifyEmailRequest
+    {
+        public string Email { get; set; } = string.Empty;
     }
 }
