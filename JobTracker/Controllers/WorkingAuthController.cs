@@ -872,7 +872,7 @@ namespace JobTracker.Controllers
                 await _context.SaveChangesAsync();
 
                 // Try to get email service
-                var emailService = HttpContext.RequestServices.GetService<IEmailService>();
+                var emailService = HttpContext.RequestServices.GetService<JobTracker.Services.IEmailService>();
 
                 if (emailService != null)
                 {
