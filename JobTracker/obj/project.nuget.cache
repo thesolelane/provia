@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "WsYouuncRdqIizKCObW1oLK1Um0EtHBijLzp1/h0t4p2RWh0SR6e/FGnAEqtCAmvQJeOjw2XawpmeCNJ0r0GvQ==",
-  "success": false,
+  "dgSpecHash": "S17UIvJLeGSCV3rVFlFP2Lqch2Ypp7lPaJOnV75ZmFo/UaDxzT9yat7Deb1Y1q3MFBxZLpk+3Jf82szLyGWA4Q==",
+  "success": true,
   "projectFilePath": "/home/runner/workspace/JobTracker/JobTracker.csproj",
   "expectedPackageFiles": [
     "/home/runner/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/home/runner/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.aspnetcore.openapi/7.0.20/microsoft.aspnetcore.openapi.7.0.20.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore/7.0.5/microsoft.entityframeworkcore.7.0.5.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.abstractions/7.0.5/microsoft.entityframeworkcore.abstractions.7.0.5.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.analyzers/7.0.5/microsoft.entityframeworkcore.analyzers.7.0.5.nupkg.sha512",
@@ -44,15 +43,5 @@
     "/home/runner/.nuget/packages/system.text.encodings.web/7.0.0/system.text.encodings.web.7.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/system.text.json/7.0.0/system.text.json.7.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1202",
-      "level": "Error",
-      "message": "Package Microsoft.AspNetCore.OpenApi 7.0.20 is not compatible with net6.0 (.NETCoreApp,Version=v6.0). Package Microsoft.AspNetCore.OpenApi 7.0.20 supports: net7.0 (.NETCoreApp,Version=v7.0)",
-      "libraryId": "Microsoft.AspNetCore.OpenApi",
-      "targetGraphs": [
-        "net6.0"
-      ]
-    }
-  ]
+  "logs": []
 }
