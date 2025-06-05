@@ -3,27 +3,25 @@ using System.Text.Json;
 
 namespace JobTracker.Services
 {
-    public class TextedlyService : IMessagingService
+    public class TwilioSmsService : IMessagingService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<TextedlyService> _logger;
-        private readonly string? _apiKey;
-        private readonly string? _apiSecret;
+        private readonly ILogger<TwilioSmsService> _logger;
+        private readonly string? _accountSid;
+        private readonly string? _authToken;
         private readonly string? _fromNumber;
 
-        public TextedlyService(HttpClient httpClient, ILogger<TextedlyService> logger, IConfiguration configuration)
+        public TwilioSmsService(HttpClient httpClient, ILogger<TwilioSmsService> logger, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
-            _apiKey = configuration["TEXTEDLY_API_KEY"];
-            _apiSecret = configuration["TEXTEDLY_API_SECRET"];
-            _fromNumber = configuration["TEXTEDLY_FROM_NUMBER"];
+            _accountSid = configuration["TWILIO_ACCOUNT_SID"];
+            _authToken = configuration["TWILIO_AUTH_TOKEN"];
+            _fromNumber = configuration["TWILIO_PHONE_NUMBER"];
 
-            _httpClient.BaseAddress = new Uri("https://app.textedly.com/api/v1/");
-            
-            if (!string.IsNullOrEmpty(_apiKey) && !string.IsNullOrEmpty(_apiSecret))
+            if (!string.IsNullOrEmpty(_accountSid) && !string.IsNullOrEmpty(_authToken))
             {
-                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_apiKey}:{_apiSecret}"));
+                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_accountSid}:{_authToken}"));
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
             }
         }
