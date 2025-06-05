@@ -35,7 +35,7 @@ namespace JobTracker.Services
                 {
                     CompanyName = "Preferred Builders USA, LLC",
                     AccountNumber = "36DMRD",
-                    ContactEmail = "admin@preferredbuildersusa.com",
+                    ContactEmail = "contact@preferredbuildersusa.com",
                     ContactPhone = "(978) 320-1714",
                     Address = "Massachusetts, USA",
                     IsActive = true,
@@ -43,24 +43,6 @@ namespace JobTracker.Services
                 };
 
                 _context.Companies.Add(company);
-                await _context.SaveChangesAsync();
-
-                // Create admin user
-                var adminUser = new User
-                {
-                    FirstName = "Admin",
-                    LastName = "User",
-                    Email = "admin@preferredbuildersusa.com",
-                    Username = "admin",
-                    PasswordHash = "admin123", // Simple for demo - will be hashed in production
-                    Role = UserRoles.Admin,
-                    CompanyId = company.Id,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    LanguagePreference = "en"
-                };
-
-                _context.Users.Add(adminUser);
                 await _context.SaveChangesAsync();
 
                 // Create supervisors
@@ -77,7 +59,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     },
                     new User
@@ -91,7 +73,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     },
                     new User
@@ -105,7 +87,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     },
                     new User
@@ -119,7 +101,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     }
                 };
@@ -141,7 +123,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     },
                     new User
@@ -155,7 +137,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     },
                     new User
@@ -169,7 +151,7 @@ namespace JobTracker.Services
                         CompanyId = company.Id,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = adminUser.Id,
+                        CreatedByUserId = null,
                         LanguagePreference = "en"
                     }
                 };
@@ -186,4 +168,6 @@ namespace JobTracker.Services
             }
         }
     }
+
+
 }
