@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Login - Smart Job Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .demo-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-card">
+        <div class="text-center mb-4">
+            <h2>Demo Access</h2>
+            <p class="text-muted">Select your role to access the dashboard</p>
+        </div>
+        
+        <div class="d-grid gap-3">
+            <button class="btn btn-danger btn-lg" onclick="loginAsAdmin()">
+                <i class="fas fa-crown me-2"></i>Login as Admin
+            </button>
+            <button class="btn btn-warning btn-lg" onclick="loginAsSupervisor()">
+                <i class="fas fa-clipboard-list me-2"></i>Login as Supervisor
+            </button>
+            <button class="btn btn-success btn-lg" onclick="loginAsFieldOp()">
+                <i class="fas fa-hard-hat me-2"></i>Login as Field Operator
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function loginAsAdmin() {
+            setDemoAuth({
+                id: 1,
+                firstName: 'Admin',
+                lastName: 'User',
+                email: 'admin@preferredbuildersusa.com',
+                role: 'Admin'
+            }, {
+                id: 1,
+                companyName: 'Preferred Builders USA, LLC',
+                accountNumber: '002025-0501-36DMRD-01420'
+            });
+            window.location.href = '/dashboard.html';
+        }
+
+        function loginAsSupervisor() {
+            setDemoAuth({
+                id: 3,
+                firstName: 'Anthony',
+                lastName: 'Cooper',
+                email: 'realestatebyawc@gmail.com',
+                role: 'Supervisor'
+            }, {
+                id: 1,
+                companyName: 'Preferred Builders USA, LLC',
+                accountNumber: '002025-0501-36DMRD-01420'
+            });
+            window.location.href = '/supervisor-dashboard.html';
+        }
+
+        function loginAsFieldOp() {
+            setDemoAuth({
+                id: 9,
+                firstName: 'Mike',
+                lastName: 'Johnson',
+                email: 'mike.johnson@preferredbuildersusa.com',
+                role: 'FieldOperator'
+            }, {
+                id: 1,
+                companyName: 'Preferred Builders USA, LLC',
+                accountNumber: '002025-0501-36DMRD-01420'
+            });
+            window.location.href = '/field-operator-dashboard.html';
+        }
+
+        function setDemoAuth(user, company) {
+            localStorage.setItem('authToken', 'demo-token-' + Date.now());
+            localStorage.setItem('userInfo', JSON.stringify(user));
+            localStorage.setItem('companyInfo', JSON.stringify(company));
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>
