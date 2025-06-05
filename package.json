@@ -11,6 +11,9 @@
   "description": "",
   "dependencies": {
     "@sendgrid/mail": "^8.1.5",
-    "openai": "^4.103.0"
+    "@types/memoizee": "^0.4.12",
+    "memoizee": "^0.4.17",
+    "openai": "^4.103.0",
+    "openid-client": "^6.5.0"
   }
 }
