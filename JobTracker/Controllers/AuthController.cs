@@ -9,7 +9,7 @@ using System.Text;
 namespace JobTracker.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/oldauth")]
     public class AuthController : ControllerBase
     {
         private readonly JobTrackerContext _context;

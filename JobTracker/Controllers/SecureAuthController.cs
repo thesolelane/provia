@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace JobTracker.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+    [Route("api/secureauth")]
     public class SecureAuthController : ControllerBase
     {
         private readonly JobTrackerContext _context;
