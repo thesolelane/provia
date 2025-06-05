@@ -532,15 +532,20 @@
         }
 
         function updateLoginFields() {
+            console.log('updateLoginFields called');
             const role = document.getElementById('userRole').value;
+            console.log('Selected role:', role);
+            
             const emailFields = document.getElementById('emailLoginFields');
             const phoneFields = document.getElementById('phoneLoginFields');
             const description = document.getElementById('roleDescription');
 
+            // Hide both field sets first
             emailFields.style.display = 'none';
             phoneFields.style.display = 'none';
 
             if (role === '1510' || role === '1520') {
+                console.log('Showing email fields');
                 emailFields.style.display = 'block';
                 if (role === '1510') {
                     description.innerHTML = '<small><strong>Admin:</strong> Full system access with email login</small>';
@@ -548,6 +553,7 @@
                     description.innerHTML = '<small><strong>Supervisor:</strong> Manage field operators and locations with email login</small>';
                 }
             } else if (role === '2001') {
+                console.log('Showing phone fields');
                 phoneFields.style.display = 'block';
                 description.innerHTML = '<small><strong>Field Operator:</strong> Field work access with phone and PIN login</small>';
             } else {
