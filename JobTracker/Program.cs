@@ -40,7 +40,7 @@ builder.Services.AddHttpClient();
 // Register Database Seeder
 builder.Services.AddScoped<DatabaseSeeder>();
 
-// Add Authentication
+// Add Simple Authentication
 builder.Services.AddAuthentication("Bearer")
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
         "Bearer", options => { });

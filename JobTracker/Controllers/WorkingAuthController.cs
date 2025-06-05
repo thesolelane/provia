@@ -8,19 +8,19 @@ namespace JobTracker.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class SimpleSecureAuthController : ControllerBase
+    public class WorkingAuthController : ControllerBase
     {
         private readonly JobTrackerContext _context;
-        private readonly ILogger<SimpleSecureAuthController> _logger;
+        private readonly ILogger<WorkingAuthController> _logger;
 
-        public SimpleSecureAuthController(JobTrackerContext context, ILogger<SimpleSecureAuthController> logger)
+        public WorkingAuthController(JobTrackerContext context, ILogger<WorkingAuthController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] SimpleLoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
             try
             {
@@ -55,7 +55,7 @@ namespace JobTracker.Controllers
                     return Unauthorized(new { message = "Invalid credentials" });
                 }
 
-                // Update last login
+                // Update last login using correct property
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
@@ -87,7 +87,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost("phone-login")]
-        public async Task<IActionResult> PhoneLogin([FromBody] SimplePhoneLoginRequest request)
+        public async Task<IActionResult> PhoneLogin([FromBody] PhoneLoginRequestModel request)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace JobTracker.Controllers
                     return Unauthorized(new { message = "Invalid phone number or PIN" });
                 }
 
-                // Update last login
+                // Update last login using correct property
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
@@ -152,7 +152,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpPost("validate-token")]
-        public async Task<IActionResult> ValidateToken([FromBody] SimpleTokenValidationRequest request)
+        public async Task<IActionResult> ValidateToken([FromBody] TokenValidationRequestModel request)
         {
             try
             {
@@ -258,18 +258,12 @@ namespace JobTracker.Controllers
             }
         }
 
-        [HttpPost("logout")]
-        public IActionResult Logout()
-        {
-            return Ok(new { message = "Logged out successfully" });
-        }
-
         [HttpPost("create-user")]
-        public async Task<IActionResult> CreateUser([FromBody] SimpleCreateUserRequest request)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestModel request)
         {
             try
             {
-                // Check if current user has admin permissions
+                // Get current user from token
                 var authHeader = Request.Headers["Authorization"].FirstOrDefault();
                 if (authHeader == null || !authHeader.StartsWith("Bearer "))
                 {
@@ -329,7 +323,7 @@ namespace JobTracker.Controllers
                             Email = request.Email,
                             PhoneNumber = request.PhoneNumber,
                             Role = request.Role,
-                            CompanyId = currentUser.CompanyId, // Same company as admin
+                            CompanyId = currentUser.CompanyId,
                             IsActive = true,
                             CreatedAt = DateTime.UtcNow,
                             CreatedByUserId = currentUser.Id,
@@ -339,12 +333,12 @@ namespace JobTracker.Controllers
                         // Set password or PIN hash (simple for demo)
                         if (!string.IsNullOrEmpty(request.Password))
                         {
-                            newUser.PasswordHash = request.Password; // Simple for demo
+                            newUser.PasswordHash = request.Password;
                         }
 
                         if (!string.IsNullOrEmpty(request.Pin))
                         {
-                            newUser.PinHash = request.Pin; // Simple for demo
+                            newUser.PinHash = request.Pin;
                         }
 
                         _context.Users.Add(newUser);
@@ -378,26 +372,32 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { message = "An error occurred while creating the user" });
             }
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            return Ok(new { message = "Logged out successfully" });
+        }
     }
 
-    public class SimpleLoginRequest
+    public class LoginRequestModel
     {
         public string Identifier { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
 
-    public class SimplePhoneLoginRequest
+    public class PhoneLoginRequestModel
     {
         public string PhoneNumber { get; set; } = string.Empty;
         public string Pin { get; set; } = string.Empty;
     }
 
-    public class SimpleTokenValidationRequest
+    public class TokenValidationRequestModel
     {
         public string Token { get; set; } = string.Empty;
     }
 
-    public class SimpleCreateUserRequest
+    public class CreateUserRequestModel
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
