@@ -46,32 +46,6 @@ namespace JobTracker.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetUsers()
-        {
-            try
-            {
-                var users = await _context.Users
-                    .Where(u => u.IsActive)
-                    .Select(u => new
-                    {
-                        id = u.Id,
-                        name = u.FirstName + " " + u.LastName,
-                        role = u.Role == 1510 ? "MasterAdmin" : 
-                               u.Role == 1520 ? "Admin" : 
-                               u.Role == 2001 ? "FieldOperator" : "Unknown",
-                        email = u.Email,
-                        phone = u.PhoneNumber
-                    })
-                    .ToListAsync();
 
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving users");
-                return StatusCode(500, "Error retrieving users");
-            }
-        }
     }
 }
