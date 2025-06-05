@@ -295,8 +295,8 @@
             }
         });
 
-        // Check if user is already logged in
-        window.addEventListener('load', function() {
+        // Check if user is already logged in (only on initial page load)
+        document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('authToken');
             const userInfo = localStorage.getItem('userInfo');
             
@@ -304,7 +304,7 @@
                 const user = JSON.parse(userInfo);
                 // Redirect based on role
                 if (user.role === 1510) { // Admin
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/admin-user-management.html';
                 } else if (user.role === 1520) { // Supervisor
                     window.location.href = '/supervisor-dashboard.html';
                 } else {
