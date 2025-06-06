@@ -393,7 +393,7 @@
 
         async function performAuthenticationCheck() {
             try {
-                const token = localStorage.getItem('authToken');
+                const token = sessionStorage.getItem('authToken');
                 const userInfo = localStorage.getItem('userInfo');
                 const companyInfo = localStorage.getItem('companyInfo');
 
@@ -437,7 +437,7 @@
                 });
 
                 if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
                     localStorage.removeItem('userInfo');
                     localStorage.removeItem('companyInfo');
                     
@@ -481,7 +481,7 @@
         }
 
         function checkAuthentication() {
-            const token = localStorage.getItem('authToken');
+            const token = sessionStorage.getItem('authToken');
             const userInfo = localStorage.getItem('userInfo');
             const companyInfo = localStorage.getItem('companyInfo');
 
@@ -784,7 +784,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
             localStorage.removeItem('userInfo');
             localStorage.removeItem('companyInfo');
             window.location.href = '/';
