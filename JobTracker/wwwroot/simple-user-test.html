@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Members - SMS Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .user-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .role-badge {
+            font-size: 0.8em;
+            padding: 4px 8px;
+        }
+        .btn-sms { background-color: #28a745; border-color: #28a745; }
+        .btn-sms:hover { background-color: #218838; border-color: #1e7e34; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-users me-2"></i>Team Members - SMS Verification Test</h1>
+                    <button class="btn btn-primary" onclick="loadUsers()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Click the SMS buttons next to team members with phone numbers to test the Twilio SMS verification system.
+                </div>
+
+                <div id="usersList">
+                    <div class="text-center p-4">
+                        <div class="spinner-border" role="status"></div>
+                        <p class="mt-2">Loading team members...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadUsers() {
+            try {
+                console.log('Loading users...');
+                
+                const response = await fetch('/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const users = await response.json();
+                console.log('Users loaded:', users);
+                renderUsers(users);
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading team members: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('usersList');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-users me-2"></i>No team members found
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            users.forEach(user => {
+                const userCard = createUserCard(user);
+                container.appendChild(userCard);
+            });
+        }
+
+        function createUserCard(user) {
+            const div = document.createElement('div');
+            div.className = 'user-card';
+            
+            const roleName = getRoleName(user.role);
+            const roleClass = getRoleClass(user.role);
+            
+            div.innerHTML = `
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h5 class="mb-1">${user.firstName} ${user.lastName}</h5>
+                        <span class="badge ${roleClass} role-badge">${roleName}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Email</small><br>
+                        <span>${user.email}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Phone</small><br>
+                        <span>${user.phoneNumber || 'Not provided'}</span>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        ${user.phoneNumber ? `
+                            <button class="btn btn-sms btn-sm me-2" onclick="sendSmsVerification('${user.phoneNumber}', '${user.firstName}')">
+                                <i class="fas fa-sms me-1"></i>Send SMS
+                            </button>
+                        ` : `
+                            <span class="text-muted">No phone number</span>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function getRoleName(role) {
+            switch(role) {
+                case 1510: return 'Admin';
+                case 1520: return 'Supervisor';
+                case 2001: return 'Field Operator';
+                default: return 'Unknown';
+            }
+        }
+
+        function getRoleClass(role) {
+            switch(role) {
+                case 1510: return 'bg-danger';
+                case 1520: return 'bg-warning';
+                case 2001: return 'bg-success';
+                default: return 'bg-secondary';
+            }
+        }
+
+        async function sendSmsVerification(phoneNumber, firstName) {
+            try {
+                showNotification(`Sending verification SMS to ${firstName}...`, 'info');
+                
+                const response = await fetch('/api/WorkingAuth/send-phone-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`SMS sent to ${firstName} at ${phoneNumber}`, 'success');
+                } else {
+                    showNotification(`Failed to send SMS: ${result.message}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error sending SMS:', error);
+                showNotification('Error sending SMS verification', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const existing = document.querySelector('.app-notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = `app-notification alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Load users when page loads
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</body>
+</html>
