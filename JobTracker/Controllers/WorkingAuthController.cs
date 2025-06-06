@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace JobTracker.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     public class WorkingAuthController : ControllerBase
     {
         private readonly JobTrackerContext _context;
