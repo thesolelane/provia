@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api/Auth';
+const API_URL = '/api/QuickAuth';
 
 export const authService = {
   login,
@@ -14,7 +14,7 @@ export const authService = {
 
 async function login(username, password) {
   try {
-    const response = await axios.post(`${API_URL}/login`, { username, password });
+    const response = await axios.post(`${API_URL}/login`, { identifier: username, password });
     
     if (response.data.token) {
       // Store user data and token in local storage
