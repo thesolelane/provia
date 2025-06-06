@@ -81,7 +81,7 @@ namespace JobTracker.Services
 
         public async Task<bool> SendScheduleReminderAsync(string phoneNumber, string employeeName, JobTracker.Models.Job job, DateTime scheduledTime)
         {
-            var message = $"Hi {employeeName}, reminder: You're scheduled for {job.JobName} today at {scheduledTime:HH:mm}. Job #{job.JobNumber}";
+            var message = $"Hi {employeeName}, reminder: You're scheduled for {job.Name} today at {scheduledTime:HH:mm}. Job #{job.JobNumber}";
             return await SendSmsAsync(phoneNumber, message);
         }
     }
