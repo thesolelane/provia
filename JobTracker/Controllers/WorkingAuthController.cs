@@ -29,12 +29,31 @@ namespace JobTracker.Controllers
                     return BadRequest(new { message = "Email/username and password are required" });
                 }
 
-                // Find user by email or username
-                var user = await _context.Users
-                    .Include(u => u.Company)
-                    .FirstOrDefaultAsync(u => 
-                        u.Email == request.Identifier || 
-                        u.Username == request.Identifier);
+                // Retry logic for database connection issues
+                User user = null;
+                int retries = 3;
+                while (retries > 0)
+                {
+                    try
+                    {
+                        // Find user by email or username
+                        user = await _context.Users
+                            .Include(u => u.Company)
+                            .FirstOrDefaultAsync(u => 
+                                u.Email == request.Identifier || 
+                                u.Username == request.Identifier);
+                        break;
+                    }
+                    catch (Exception dbEx) when (retries > 1)
+                    {
+                        _logger.LogWarning($"Database connection retry {4 - retries}/3: {dbEx.Message}");
+                        retries--;
+                        await Task.Delay(1000); // Wait 1 second before retry
+                        
+                        // Ensure fresh context
+                        await _context.Database.EnsureCreatedAsync();
+                    }
+                }
 
                 if (user == null)
                 {
