@@ -83,12 +83,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register Messaging Services
-builder.Services.AddHttpClient<JobTracker.Services.ZapierSmsService>();
-builder.Services.AddHttpClient<JobTracker.Services.WhatsAppService>();
-builder.Services.AddScoped<JobTracker.Services.IMessagingService, JobTracker.Services.ZapierSmsService>();
-builder.Services.AddScoped<JobTracker.Services.IWhatsAppService, JobTracker.Services.WhatsAppService>();
-builder.Services.AddScoped<JobTracker.Services.IAIMessagingService, JobTracker.Services.AIMessagingService>();
+// Register SMS Service for Twilio
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<JobTracker.Services.IMessagingService, JobTracker.Services.SimpleSmsService>();
 
 var app = builder.Build();
 

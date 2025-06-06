@@ -776,26 +776,21 @@ namespace JobTracker.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Try to get messaging service
+                // Try to send SMS via Twilio
                 var messagingService = HttpContext.RequestServices.GetService<JobTracker.Services.IMessagingService>();
-                var aiMessagingService = HttpContext.RequestServices.GetService<JobTracker.Services.IAIMessagingService>();
 
-                if (messagingService != null && aiMessagingService != null)
+                if (messagingService != null)
                 {
                     try
                     {
-                        // Generate AI-powered verification message
                         var employeeName = $"{userToVerify.FirstName} {userToVerify.LastName}";
-                        var message = await aiMessagingService.GenerateVerificationMessageAsync(employeeName, verificationCode);
-                        
-                        // Send via Textedly
                         var success = await messagingService.SendVerificationSmsAsync(request.PhoneNumber, verificationCode);
                         
                         if (success)
                         {
                             return Ok(new { 
                                 message = $"Verification SMS sent to {request.PhoneNumber}",
-                                details = "Message sent via Textedly"
+                                details = "Message sent via Twilio"
                             });
                         }
                         else
@@ -803,8 +798,7 @@ namespace JobTracker.Controllers
                             return Ok(new { 
                                 message = $"SMS service not configured - verification code generated",
                                 verificationCode = verificationCode,
-                                testMessage = message,
-                                details = "Provide Textedly credentials to enable SMS sending"
+                                details = "Check Twilio credentials"
                             });
                         }
                     }
@@ -814,7 +808,7 @@ namespace JobTracker.Controllers
                         return Ok(new { 
                             message = $"Verification code generated but SMS failed",
                             verificationCode = verificationCode,
-                            details = "Check Textedly credentials and configuration"
+                            details = "Check Twilio configuration"
                         });
                     }
                 }
@@ -825,7 +819,7 @@ namespace JobTracker.Controllers
                         message = $"Test SMS ready for {request.PhoneNumber}",
                         verificationCode = verificationCode,
                         testMessage = message,
-                        details = "Messaging services not initialized"
+                        details = "SMS service not available"
                     });
                 }
             }
