@@ -314,9 +314,18 @@
                     
                     showAlert('success', `Welcome ${result.user.firstName}! Redirecting to dashboard...`);
                     
-                    // Redirect to main application
+                    // Redirect based on user role
                     setTimeout(() => {
-                        window.location.href = '/main-dashboard.html';
+                        const role = result.user.role;
+                        if (role === 1510) { // Admin
+                            window.location.href = '/admin-user-management.html';
+                        } else if (role === 1520) { // Supervisor
+                            window.location.href = '/supervisor-dashboard.html';
+                        } else if (role === 2001) { // Field Operator
+                            window.location.href = '/field-operator-dashboard.html';
+                        } else {
+                            window.location.href = '/main-dashboard.html';
+                        }
                     }, 1500);
                 } else {
                     const error = await response.json();
