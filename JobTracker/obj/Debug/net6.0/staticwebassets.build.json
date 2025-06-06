@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "MIfQkG+IA2RFGHRNPJxSuD3xhAuSuMy8D0Oxd9tGsmc=",
+  "Hash": "B6GNXqWCHJYGBeHHJw8PzkkNuCsDwKoGrN4kWsBrLG4=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -185,6 +185,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/secure-login.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/simple-user-test.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "simple-user-test.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/simple-user-test.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/sms-test.html",

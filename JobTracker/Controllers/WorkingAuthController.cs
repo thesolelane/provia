@@ -379,7 +379,7 @@ namespace JobTracker.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
-        [HttpGet("/api/users")]
+        [HttpGet("/api/auth/users")]
         public async Task<IActionResult> GetAllUsers()
         {
             try
