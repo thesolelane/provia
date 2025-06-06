@@ -75,7 +75,7 @@ namespace JobTracker.Services
 
         public async Task<bool> SendJobUpdateSmsAsync(string phoneNumber, JobTracker.Models.Job job, string updateMessage)
         {
-            var message = $"Job Update - {job.JobName}: {updateMessage}. Job #{job.JobNumber}";
+            var message = $"Job Update - {job.Name}: {updateMessage}. Job #{job.JobNumber}";
             return await SendSmsAsync(phoneNumber, message);
         }
 
