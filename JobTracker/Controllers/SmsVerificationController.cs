@@ -87,5 +87,8 @@ namespace JobTracker.Controllers
         }
     }
 
-
+    public class PhoneVerificationRequest
+    {
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
 }
