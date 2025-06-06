@@ -379,6 +379,78 @@ namespace JobTracker.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
+        [HttpPost("send-phone-verification")]
+        public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.PhoneNumber))
+                {
+                    return BadRequest(new { message = "Phone number is required" });
+                }
+
+                // Generate verification code
+                var verificationCode = new Random().Next(100000, 999999).ToString();
+
+                // Try to send SMS via Twilio
+                var messagingService = HttpContext.RequestServices.GetService<JobTracker.Services.IMessagingService>();
+
+                if (messagingService != null)
+                {
+                    try
+                    {
+                        var success = await messagingService.SendVerificationSmsAsync(request.PhoneNumber, verificationCode);
+                        
+                        if (success)
+                        {
+                            return Ok(new { 
+                                message = $"Verification SMS sent to {request.PhoneNumber}",
+                                details = "Message sent via Twilio",
+                                success = true
+                            });
+                        }
+                        else
+                        {
+                            return Ok(new { 
+                                message = "SMS service not configured properly",
+                                verificationCode = verificationCode,
+                                details = "Check Twilio credentials",
+                                success = false
+                            });
+                        }
+                    }
+                    catch (Exception smsEx)
+                    {
+                        _logger.LogError(smsEx, "Error sending verification SMS");
+                        return Ok(new { 
+                            message = "SMS sending failed",
+                            verificationCode = verificationCode,
+                            details = smsEx.Message,
+                            success = false
+                        });
+                    }
+                }
+                else
+                {
+                    return Ok(new { 
+                        message = "SMS service not available",
+                        verificationCode = verificationCode,
+                        details = "Messaging service not initialized",
+                        success = false
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in phone verification process");
+                return StatusCode(500, new { 
+                    message = "Internal server error",
+                    details = ex.Message,
+                    success = false
+                });
+            }
+        }
+
         [HttpGet("/api/auth/users")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -978,6 +1050,11 @@ namespace JobTracker.Controllers
     }
 
     public class VerifyPhoneRequest
+    {
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    public class SendPhoneVerificationRequest
     {
         public string PhoneNumber { get; set; } = string.Empty;
     }
