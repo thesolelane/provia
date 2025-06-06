@@ -310,7 +310,11 @@
                     
                     // Store user info and token in session
                     sessionStorage.setItem('authToken', result.token);
-                    sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+                    localStorage.setItem('userInfo', JSON.stringify(result.user));
+                    localStorage.setItem('companyInfo', JSON.stringify({
+                        id: result.user.companyId,
+                        name: result.user.companyName
+                    }));
                     
                     showAlert('success', `Welcome ${result.user.firstName}! Redirecting to dashboard...`);
                     
