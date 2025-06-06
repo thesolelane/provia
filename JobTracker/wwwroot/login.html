@@ -294,7 +294,7 @@
             const languagePreference = document.getElementById(isAdmin ? 'adminLanguage' : 'userLanguage').value;
 
             try {
-                const response = await fetch('/api/WorkingAuth/login', {
+                const response = await fetch('/api/QuickAuth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
