@@ -230,7 +230,7 @@
             if (!token || !userInfo) {
                 showNotification('Authentication required. Redirecting to login...', 'error');
                 setTimeout(() => {
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                 }, 1500);
                 return false;
             }
@@ -239,7 +239,7 @@
             if (user.role !== 1510) {
                 showNotification('Access denied. Admin privileges required.', 'error');
                 setTimeout(() => {
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                 }, 1500);
                 return false;
             }
@@ -253,7 +253,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -383,7 +383,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -448,7 +448,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -495,7 +495,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -527,7 +527,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
@@ -561,7 +561,7 @@
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/secure-login.html';
+                    window.location.href = '/login.html';
                     return;
                 }
 
