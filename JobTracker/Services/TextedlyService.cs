@@ -15,9 +15,9 @@ namespace JobTracker.Services
         {
             _httpClient = httpClient;
             _logger = logger;
-            _accountSid = configuration["TWILIO_ACCOUNT_SID"];
-            _authToken = configuration["TWILIO_AUTH_TOKEN"];
-            _fromNumber = configuration["TWILIO_PHONE_NUMBER"];
+            _accountSid = Environment.GetEnvironmentVariable("TWILIO_ACCOUNT_SID");
+            _authToken = Environment.GetEnvironmentVariable("TWILIO_AUTH_TOKEN");
+            _fromNumber = Environment.GetEnvironmentVariable("TWILIO_PHONE_NUMBER");
 
             if (!string.IsNullOrEmpty(_accountSid) && !string.IsNullOrEmpty(_authToken))
             {
@@ -28,29 +28,29 @@ namespace JobTracker.Services
 
         public async Task<bool> SendSmsAsync(string phoneNumber, string message)
         {
-            if (string.IsNullOrEmpty(_apiKey) || string.IsNullOrEmpty(_apiSecret) || string.IsNullOrEmpty(_fromNumber))
+            if (string.IsNullOrEmpty(_accountSid) || string.IsNullOrEmpty(_authToken) || string.IsNullOrEmpty(_fromNumber))
             {
-                _logger.LogWarning("Textedly credentials not configured. Cannot send SMS.");
+                _logger.LogWarning("Twilio credentials not configured. Cannot send SMS.");
                 return false;
             }
 
             try
             {
-                var payload = new
+                var payload = new Dictionary<string, string>
                 {
-                    to = phoneNumber,
-                    from = _fromNumber,
-                    body = message
+                    {"From", _fromNumber},
+                    {"To", phoneNumber},
+                    {"Body", message}
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var encodedContent = new FormUrlEncodedContent(payload);
+                var apiUrl = $"https://api.twilio.com/2010-04-01/Accounts/{_accountSid}/Messages.json";
 
-                var response = await _httpClient.PostAsync("messages", content);
+                var response = await _httpClient.PostAsync(apiUrl, encodedContent);
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation($"SMS sent successfully to {phoneNumber}");
+                    _logger.LogInformation($"SMS sent successfully to {phoneNumber} via Twilio");
                     return true;
                 }
                 else
