@@ -7,23 +7,42 @@
 </head>
 <body>
     <script>
+        // Clear any old session data that might reference deleted pages
+        const clearOldData = () => {
+            const keys = Object.keys(sessionStorage);
+            keys.forEach(key => {
+                const value = sessionStorage.getItem(key);
+                if (value && value.includes('secure-login')) {
+                    sessionStorage.removeItem(key);
+                }
+            });
+        };
+        
+        clearOldData();
+        
         // Check if user is already logged in
         const authToken = sessionStorage.getItem('authToken');
         const currentUser = sessionStorage.getItem('currentUser');
         
         if (authToken && currentUser) {
-            // User is logged in, redirect to appropriate dashboard
-            const user = JSON.parse(currentUser);
-            const role = user.role;
-            
-            if (role === 1510) { // Admin
-                window.location.href = '/admin-user-management.html';
-            } else if (role === 1520) { // Supervisor
-                window.location.href = '/supervisor-dashboard.html';
-            } else if (role === 2001) { // Field Operator
-                window.location.href = '/field-operator-dashboard.html';
-            } else {
-                window.location.href = '/main-dashboard.html';
+            try {
+                // User is logged in, redirect to appropriate dashboard
+                const user = JSON.parse(currentUser);
+                const role = user.role;
+                
+                if (role === 1510) { // Admin
+                    window.location.href = '/admin-user-management.html';
+                } else if (role === 1520) { // Supervisor
+                    window.location.href = '/supervisor-dashboard.html';
+                } else if (role === 2001) { // Field Operator
+                    window.location.href = '/field-operator-dashboard.html';
+                } else {
+                    window.location.href = '/main-dashboard.html';
+                }
+            } catch (e) {
+                // Clear corrupted session data
+                sessionStorage.clear();
+                window.location.href = '/login.html';
             }
         } else {
             // User not logged in, redirect to login page
