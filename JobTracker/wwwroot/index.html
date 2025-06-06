@@ -22,12 +22,12 @@
         
         // Check if user is already logged in
         const authToken = sessionStorage.getItem('authToken');
-        const currentUser = sessionStorage.getItem('currentUser');
+        const userInfo = localStorage.getItem('userInfo');
         
-        if (authToken && currentUser) {
+        if (authToken && userInfo) {
             try {
                 // User is logged in, redirect to appropriate dashboard
-                const user = JSON.parse(currentUser);
+                const user = JSON.parse(userInfo);
                 const role = user.role;
                 
                 if (role === 1510) { // Admin
