@@ -100,7 +100,7 @@
 
         async function checkAuthentication() {
             try {
-                const token = localStorage.getItem('authToken');
+                const token = sessionStorage.getItem('authToken');
                 const userInfo = localStorage.getItem('userInfo');
                 
                 if (!token || !userInfo) {
@@ -122,7 +122,7 @@
                 });
 
                 if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
                     localStorage.removeItem('userInfo');
                     showError('Your session has expired. Please log in again.');
                     setTimeout(() => {
