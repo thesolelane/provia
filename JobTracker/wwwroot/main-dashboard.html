@@ -91,7 +91,7 @@
             const userInfo = localStorage.getItem('userInfo');
             
             if (!token || !userInfo) {
-                window.location.href = '/secure-login.html';
+                window.location.href = '/login.html';
                 return false;
             }
             
@@ -240,7 +240,7 @@
         function logout() {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userInfo');
-            window.location.href = '/secure-login.html';
+            window.location.href = '/login.html';
         }
 
         // Initialize dashboard
