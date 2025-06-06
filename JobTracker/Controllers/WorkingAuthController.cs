@@ -379,8 +379,8 @@ namespace JobTracker.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
-        [HttpPost("send-phone-verification")]
-        public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequest request)
+        [HttpPost("send-verification-sms")]
+        public async Task<IActionResult> SendVerificationSms([FromBody] SendPhoneVerificationRequest request)
         {
             try
             {
