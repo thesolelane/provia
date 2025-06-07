@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .debug-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .debug-item.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h2>Authentication Debug Information</h2>
+        <div id="debug-info"></div>
+        <button onclick="checkStorage()">Refresh Storage Info</button>
+        <button onclick="clearStorage()">Clear All Storage</button>
+        <button onclick="testLogin()">Test Login</button>
+    </div>
+
+    <script>
+        function checkStorage() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML = '';
+
+            const items = [
+                'authToken',
+                'userInfo',
+                'companyInfo'
+            ];
+
+            items.forEach(item => {
+                const localValue = localStorage.getItem(item);
+                const sessionValue = sessionStorage.getItem(item);
+                
+                const div = document.createElement('div');
+                div.className = 'debug-item';
+                
+                if (localValue || sessionValue) {
+                    div.className += ' success';
+                    div.innerHTML = `
+                        <strong>${item}:</strong><br>
+                        LocalStorage: ${localValue ? 'Present' : 'Missing'}<br>
+                        SessionStorage: ${sessionValue ? 'Present' : 'Missing'}<br>
+                        ${localValue ? `Content: ${localValue.substring(0, 100)}...` : ''}
+                    `;
+                } else {
+                    div.className += ' error';
+                    div.innerHTML = `<strong>${item}:</strong> Missing from both storages`;
+                }
+                
+                debugDiv.appendChild(div);
+            });
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('All storage cleared');
+            checkStorage();
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/QuickAuth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        identifier: 'cooper@preferredbuildersusa.com',
+                        password: '12345678'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('userInfo', JSON.stringify(result.user));
+                    
+                    alert('Test login successful!');
+                    checkStorage();
+                } else {
+                    alert('Test login failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Check storage on page load
+        document.addEventListener('DOMContentLoaded', checkStorage);
+    </script>
+</body>
+</html>
