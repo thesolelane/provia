@@ -341,14 +341,17 @@
                         }
                         
                         const role = result.user.role;
+                        // Use URL parameters as backup for authentication data
+                        const authParams = `?token=${encodeURIComponent(result.token)}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
+                        
                         if (role === 1510) { // Admin
-                            window.location.href = '/admin-user-management.html';
+                            window.location.href = '/admin-user-management.html' + authParams;
                         } else if (role === 1520) { // Supervisor
-                            window.location.href = '/supervisor-dashboard.html';
+                            window.location.href = '/supervisor-dashboard.html' + authParams;
                         } else if (role === 2001) { // Field Operator
-                            window.location.href = '/field-operator-dashboard.html';
+                            window.location.href = '/field-operator-dashboard.html' + authParams;
                         } else {
-                            window.location.href = '/main-dashboard.html';
+                            window.location.href = '/main-dashboard.html' + authParams;
                         }
                     }, 2000);
                 } else {
