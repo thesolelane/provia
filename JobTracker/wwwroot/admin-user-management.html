@@ -1070,6 +1070,7 @@
                     return false;
                 }
                 
+                console.error('SPECIFIC ERROR: No token or userInfo found in any storage location');
                 showNotification('Authentication required. Redirecting to login...', 'error');
                 setTimeout(() => {
                     window.location.href = '/login.html';
