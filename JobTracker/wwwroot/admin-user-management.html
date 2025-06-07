@@ -1033,11 +1033,29 @@
         }
 
         function checkAuth() {
-            const token = localStorage.getItem('authToken');
-            const userInfo = localStorage.getItem('userInfo');
+            let token = localStorage.getItem('authToken');
+            let userInfo = localStorage.getItem('userInfo');
             
             console.log('Auth check - Token:', token ? 'exists' : 'missing');
             console.log('Auth check - UserInfo:', userInfo ? 'exists' : 'missing');
+            
+            // Check URL parameters if localStorage is empty
+            if (!token || !userInfo) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlToken = urlParams.get('token');
+                const urlUser = urlParams.get('user');
+                
+                if (urlToken && urlUser) {
+                    console.log('Found auth data in URL parameters, storing to localStorage');
+                    token = urlToken;
+                    userInfo = urlUser;
+                    localStorage.setItem('authToken', token);
+                    localStorage.setItem('userInfo', userInfo);
+                    
+                    // Clean URL after storing data
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
             
             if (!token || !userInfo) {
                 console.log('Authentication failed - missing token or userInfo');
