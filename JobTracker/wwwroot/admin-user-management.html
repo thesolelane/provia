@@ -844,7 +844,11 @@
                     return;
                 }
 
-                const response = await fetch('/api/users', {
+                const userInfo = localStorage.getItem('userInfo');
+                const user = JSON.parse(userInfo);
+                const companyId = user.companyId || 1;
+
+                const response = await fetch(`/api/users/company/${companyId}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -853,11 +857,17 @@
                 });
 
                 if (!response.ok) {
+                    if (response.status === 401) {
+                        console.error('Authentication failed, redirecting to login');
+                        window.location.href = '/login.html';
+                        return;
+                    }
                     throw new Error('Failed to load users');
                 }
 
-                const users = await response.json();
-                renderUsers(users);
+                const data = await response.json();
+                renderUsers(data.users);
+                updateUserStats(data.users);
             } catch (error) {
                 console.error('Error loading users:', error);
                 showNotification('Error loading team members', 'error');
