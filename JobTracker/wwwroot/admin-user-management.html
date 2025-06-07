@@ -1075,11 +1075,16 @@
                 
                 console.error('SPECIFIC ERROR: No token or userInfo found in any storage location');
                 authCheckInProgress = false;
-                if (!authCheckPassed) {
-                    console.error("No token available for this operation");
+                // Don't redirect immediately on first failed auth check - wait for potential retry
+                if (!authCheckPassed && !window.authRetryAttempted) {
+                    window.authRetryAttempted = true;
+                    console.log('Scheduling auth retry in 2 seconds...');
                     setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 1500);
+                        if (!authCheckPassed) {
+                            console.error("Final auth failure, redirecting to login");
+                            window.location.href = '/login.html';
+                        }
+                    }, 2000);
                 }
                 return false;
             }
@@ -1121,31 +1126,55 @@
         let authCheckInProgress = false;
         let authCheckPassed = false;
 
+        // Initialize authentication state
+        function initializeAuth() {
+            console.log('Initializing authentication...');
+            
+            // Check URL parameters first (from login redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            const urlUser = urlParams.get('user');
+            
+            if (urlToken && urlUser) {
+                console.log('Found URL auth parameters, storing to localStorage');
+                localStorage.setItem('authToken', urlToken);
+                localStorage.setItem('userInfo', urlUser);
+                localStorage.setItem('companyInfo', JSON.stringify({
+                    id: JSON.parse(urlUser).companyId,
+                    name: JSON.parse(urlUser).companyName
+                }));
+                
+                // Clean URL after storing
+                window.history.replaceState({}, document.title, window.location.pathname);
+                console.log('Auth data stored, URL cleaned');
+            }
+            
+            // Perform authentication check
+            if (checkAuth()) {
+                authCheckPassed = true;
+                loadUsers();
+            }
+        }
+
         // Load users when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Add longer delay to ensure localStorage is fully written from login redirect
-            setTimeout(() => {
-                if (!authCheckInProgress && !authCheckPassed) {
-                    if (checkAuth()) {
-                        authCheckPassed = true;
-                        loadUsers();
+            // Use multiple retry attempts with progressive delays
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            function attemptAuth() {
+                if (!authCheckPassed && retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`Authentication attempt ${retryCount}/${maxRetries}`);
+                    initializeAuth();
+                    
+                    if (!authCheckPassed) {
+                        setTimeout(attemptAuth, retryCount * 1000); // Progressive delay
                     }
                 }
-            }, 500);
-            
-            // Also check immediately for URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('token') && urlParams.get('user')) {
-                console.log('URL parameters detected, processing authentication');
-                setTimeout(() => {
-                    if (!authCheckPassed) {
-                        if (checkAuth()) {
-                            authCheckPassed = true;
-                            loadUsers();
-                        }
-                    }
-                }, 100);
             }
+            
+            attemptAuth();
         });
     </script>
 </body>
