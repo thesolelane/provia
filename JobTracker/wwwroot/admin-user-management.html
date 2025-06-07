@@ -642,8 +642,7 @@
                 // Get auth token from localStorage
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    alert('Authentication required. Please log in again.');
-                    window.location.href = '/login.html';
+                    console.error('No token available for this operation');
                     return;
                 }
 
@@ -700,8 +699,7 @@
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/login.html';
+                    console.error("No token available for this operation")');
                     return;
                 }
 
@@ -743,8 +741,7 @@
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/login.html';
+                    console.error("No token available for this operation")');
                     return;
                 }
 
@@ -778,8 +775,7 @@
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/login.html';
+                    console.error("No token available for this operation")');
                     return;
                 }
 
@@ -844,8 +840,7 @@
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/login.html';
+                    console.error('No token available for loadUsers, but authentication should have been checked already');
                     return;
                 }
 
@@ -978,8 +973,7 @@
 
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    showNotification('Authentication required. Please log in again.', 'error');
-                    window.location.href = '/login.html';
+                    console.error("No token available for this operation")');
                     return;
                 }
 
@@ -1066,9 +1060,8 @@
                 console.error('SPECIFIC ERROR: No token or userInfo found in any storage location');
                 authCheckInProgress = false;
                 if (!authCheckPassed) {
-                    showNotification('Authentication required. Redirecting to login...', 'error');
+                    console.error("No token available for this operation")');
                     setTimeout(() => {
-                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
@@ -1083,7 +1076,6 @@
                 if (!authCheckPassed) {
                     showNotification('Invalid user data. Redirecting to login...', 'error');
                     setTimeout(() => {
-                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
@@ -1095,7 +1087,6 @@
                 if (!authCheckPassed) {
                     showNotification('Access denied. Admin privileges required.', 'error');
                     setTimeout(() => {
-                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
