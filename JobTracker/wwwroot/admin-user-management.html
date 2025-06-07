@@ -1036,7 +1036,11 @@
             const token = localStorage.getItem('authToken');
             const userInfo = localStorage.getItem('userInfo');
             
+            console.log('Auth check - Token:', token ? 'exists' : 'missing');
+            console.log('Auth check - UserInfo:', userInfo ? 'exists' : 'missing');
+            
             if (!token || !userInfo) {
+                console.log('Authentication failed - missing token or userInfo');
                 showNotification('Authentication required. Redirecting to login...', 'error');
                 setTimeout(() => {
                     window.location.href = '/login.html';
@@ -1058,9 +1062,12 @@
 
         // Load users when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            if (checkAuth()) {
-                loadUsers();
-            }
+            // Add a small delay to allow browser to complete redirect and storage operations
+            setTimeout(() => {
+                if (checkAuth()) {
+                    loadUsers();
+                }
+            }, 100);
         });
     </script>
 </body>
