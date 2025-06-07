@@ -52,6 +52,47 @@ namespace JobTracker.Controllers
             }
         }
 
+        [HttpGet("company/{companyId}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<object>> GetUsersByCompany(int companyId)
+        {
+            try
+            {
+                var users = await _context.Users
+                    .Where(u => u.CompanyId == companyId && u.IsActive)
+                    .OrderBy(u => u.Role)
+                    .ThenBy(u => u.FirstName)
+                    .Select(u => new
+                    {
+                        id = u.Id,
+                        firstName = u.FirstName,
+                        lastName = u.LastName,
+                        email = u.Email,
+                        role = u.Role,
+                        phoneNumber = u.PhoneNumber,
+                        isActive = u.IsActive,
+                        createdAt = u.CreatedAt,
+                        lastLoginAt = u.LastLoginAt
+                    })
+                    .ToListAsync();
+
+                var stats = new
+                {
+                    total = users.Count,
+                    admins = users.Count(u => u.role == 1510),
+                    supervisors = users.Count(u => u.role == 1520),
+                    fieldOperators = users.Count(u => u.role == 2001)
+                };
+
+                return Ok(new { users, stats });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving users for company {CompanyId}", companyId);
+                return StatusCode(500, new { message = "Error retrieving users" });
+            }
+        }
+
         [HttpGet("field-operators")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<object>>> GetFieldOperators()
