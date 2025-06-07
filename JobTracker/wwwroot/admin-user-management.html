@@ -1030,8 +1030,14 @@
             let token = localStorage.getItem('authToken');
             let userInfo = localStorage.getItem('userInfo');
             
-            console.log('Auth check - Token:', token ? 'exists' : 'missing');
+            console.log('Auth check - Token:', token ? 'exists (length: ' + token.length + ')' : 'missing');
             console.log('Auth check - UserInfo:', userInfo ? 'exists' : 'missing');
+            
+            // Also check sessionStorage
+            if (!token) {
+                token = sessionStorage.getItem('authToken');
+                console.log('Fallback - SessionStorage Token:', token ? 'exists' : 'missing');
+            }
             
             // Check URL parameters if localStorage is empty
             if (!token || !userInfo) {
@@ -1095,6 +1101,7 @@
             
             if (user.role !== 1510) {
                 console.log('Access denied - user role:', user.role, 'required: 1510');
+                console.log('User object:', JSON.stringify(user));
                 authCheckInProgress = false;
                 if (!authCheckPassed) {
                     showNotification('Access denied. Admin privileges required.', 'error');
@@ -1116,7 +1123,7 @@
 
         // Load users when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Add a small delay to allow browser to complete redirect and storage operations
+            // Add longer delay to ensure localStorage is fully written from login redirect
             setTimeout(() => {
                 if (!authCheckInProgress && !authCheckPassed) {
                     if (checkAuth()) {
@@ -1124,7 +1131,21 @@
                         loadUsers();
                     }
                 }
-            }, 100);
+            }, 500);
+            
+            // Also check immediately for URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('token') && urlParams.get('user')) {
+                console.log('URL parameters detected, processing authentication');
+                setTimeout(() => {
+                    if (!authCheckPassed) {
+                        if (checkAuth()) {
+                            authCheckPassed = true;
+                            loadUsers();
+                        }
+                    }
+                }, 100);
+            }
         });
     </script>
 </body>
