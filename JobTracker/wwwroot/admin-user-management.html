@@ -564,25 +564,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            const token = localStorage.getItem('authToken');
-            const userInfo = localStorage.getItem('userInfo');
-            
-            if (!token || !userInfo) {
-                window.location.href = '/login.html';
-                return;
-            }
-
-            const user = JSON.parse(userInfo);
-            if (user.role !== 1510) {
-                showNotification('Access denied. Admin privileges required.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 1500);
-                return;
-            }
-        });
+        // Authentication check handled by checkAuth() function below
 
         function showAddUserModal() {
             // Clear form first
@@ -1033,6 +1015,14 @@
         }
 
         function checkAuth() {
+            if (authCheckInProgress) {
+                console.log('Auth check already in progress, skipping');
+                return false;
+            }
+            
+            authCheckInProgress = true;
+            console.log('Starting authentication check...');
+            
             let token = localStorage.getItem('authToken');
             let userInfo = localStorage.getItem('userInfo');
             
@@ -1062,19 +1052,25 @@
                 
                 // Check sessionStorage as fallback
                 const sessionToken = sessionStorage.getItem('authToken');
-                if (sessionToken) {
+                if (sessionToken && !authCheckPassed) {
                     console.log('Found token in sessionStorage, copying to localStorage');
                     localStorage.setItem('authToken', sessionToken);
+                    authCheckInProgress = false;
                     // Retry auth check in a moment
-                    setTimeout(checkAuth, 100);
+                    setTimeout(() => {
+                        if (!authCheckPassed) checkAuth();
+                    }, 100);
                     return false;
                 }
                 
                 console.error('SPECIFIC ERROR: No token or userInfo found in any storage location');
-                showNotification('Authentication required. Redirecting to login...', 'error');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 1500);
+                authCheckInProgress = false;
+                if (!authCheckPassed) {
+                    showNotification('Authentication required. Redirecting to login...', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1500);
+                }
                 return false;
             }
 
@@ -1083,32 +1079,46 @@
                 user = JSON.parse(userInfo);
             } catch (e) {
                 console.error('Failed to parse user info:', e);
-                showNotification('Invalid user data. Redirecting to login...', 'error');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 1500);
+                authCheckInProgress = false;
+                if (!authCheckPassed) {
+                    showNotification('Invalid user data. Redirecting to login...', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1500);
+                }
                 return false;
             }
             
             if (user.role !== 1510) {
                 console.log('Access denied - user role:', user.role, 'required: 1510');
-                showNotification('Access denied. Admin privileges required.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 1500);
+                authCheckInProgress = false;
+                if (!authCheckPassed) {
+                    showNotification('Access denied. Admin privileges required.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1500);
+                }
                 return false;
             }
             
             console.log('Authentication successful for user:', user.firstName, user.lastName);
+            authCheckInProgress = false;
+            authCheckPassed = true;
             return true;
         }
+
+        let authCheckInProgress = false;
+        let authCheckPassed = false;
 
         // Load users when page loads
         document.addEventListener('DOMContentLoaded', function() {
             // Add a small delay to allow browser to complete redirect and storage operations
             setTimeout(() => {
-                if (checkAuth()) {
-                    loadUsers();
+                if (!authCheckInProgress && !authCheckPassed) {
+                    if (checkAuth()) {
+                        authCheckPassed = true;
+                        loadUsers();
+                    }
                 }
             }, 100);
         });
