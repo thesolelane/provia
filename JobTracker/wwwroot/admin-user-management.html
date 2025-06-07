@@ -1060,8 +1060,9 @@
                 console.error('SPECIFIC ERROR: No token or userInfo found in any storage location');
                 authCheckInProgress = false;
                 if (!authCheckPassed) {
-                    console.error("No token available for this operation")');
+                    console.error("No token available for this operation");
                     setTimeout(() => {
+                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
@@ -1076,6 +1077,7 @@
                 if (!authCheckPassed) {
                     showNotification('Invalid user data. Redirecting to login...', 'error');
                     setTimeout(() => {
+                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
@@ -1087,6 +1089,7 @@
                 if (!authCheckPassed) {
                     showNotification('Access denied. Admin privileges required.', 'error');
                     setTimeout(() => {
+                        window.location.href = '/login.html';
                     }, 1500);
                 }
                 return false;
