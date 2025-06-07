@@ -26,8 +26,8 @@ namespace JobTracker.Controllers
                 // Simple hardcoded validation for demo purposes
                 if (request.Identifier == "cooper@preferredbuildersusa.com" && request.Password == "12345678")
                 {
-                    // Generate simple token
-                    var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"7:{DateTime.UtcNow.Ticks}:1510"));
+                    // Generate simple token - format: userId:email:role:timestamp
+                    var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"7:cooper@preferredbuildersusa.com:1510:{DateTime.UtcNow.Ticks}"));
 
                     _logger.LogInformation($"User logged in successfully");
 
