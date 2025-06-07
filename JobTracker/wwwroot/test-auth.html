@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h2>Authentication Test</h2>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="checkStorage()">Check Storage</button>
+    <button onclick="clearAll()">Clear All</button>
+    <div id="results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+
+        async function testLogin() {
+            document.getElementById('results').innerHTML = '';
+            log('Starting login test...');
+            
+            try {
+                const response = await fetch('/api/QuickAuth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        identifier: 'cooper@preferredbuildersusa.com',
+                        password: '12345678'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log('Login successful!', 'success');
+                    log(`Token: ${result.token.substring(0, 20)}...`);
+                    log(`User: ${result.user.firstName} ${result.user.lastName} (Role: ${result.user.role})`);
+                    
+                    // Store in both storages
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('userInfo', JSON.stringify(result.user));
+                    sessionStorage.setItem('authToken', result.token);
+                    
+                    log('Data stored in localStorage and sessionStorage', 'success');
+                    checkStorage();
+                } else {
+                    log('Login failed: ' + response.status, 'error');
+                }
+            } catch (error) {
+                log('Login error: ' + error.message, 'error');
+            }
+        }
+
+        function checkStorage() {
+            log('--- Storage Check ---');
+            
+            const localToken = localStorage.getItem('authToken');
+            const localUser = localStorage.getItem('userInfo');
+            const sessionToken = sessionStorage.getItem('authToken');
+            
+            log(`localStorage authToken: ${localToken ? 'Present' : 'Missing'}`);
+            log(`localStorage userInfo: ${localUser ? 'Present' : 'Missing'}`);
+            log(`sessionStorage authToken: ${sessionToken ? 'Present' : 'Missing'}`);
+            
+            if (localUser) {
+                try {
+                    const user = JSON.parse(localUser);
+                    log(`User role: ${user.role} (Admin=1510)`);
+                    if (user.role === 1510) {
+                        log('Admin role confirmed!', 'success');
+                    } else {
+                        log('Not admin role', 'error');
+                    }
+                } catch (e) {
+                    log('Failed to parse user data: ' + e.message, 'error');
+                }
+            }
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('All storage cleared');
+        }
+
+        // Auto-check on load
+        checkStorage();
+    </script>
+</body>
+</html>
