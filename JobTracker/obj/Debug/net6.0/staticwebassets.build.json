@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "nIb84DL2vyvhExUMasEfkH1CXAv3l+eOokXIGRI8t+U=",
+  "Hash": "POjFpNVRaG2/to1PJHojciftV4EOFzUWLkSaMU2B2So=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -117,6 +117,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/dashboard.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/debug-auth.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "debug-auth.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/debug-auth.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/field-operator-dashboard.html",

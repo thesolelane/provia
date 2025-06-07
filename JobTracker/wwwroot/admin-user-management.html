@@ -1041,6 +1041,17 @@
             
             if (!token || !userInfo) {
                 console.log('Authentication failed - missing token or userInfo');
+                
+                // Check sessionStorage as fallback
+                const sessionToken = sessionStorage.getItem('authToken');
+                if (sessionToken) {
+                    console.log('Found token in sessionStorage, copying to localStorage');
+                    localStorage.setItem('authToken', sessionToken);
+                    // Retry auth check in a moment
+                    setTimeout(checkAuth, 100);
+                    return false;
+                }
+                
                 showNotification('Authentication required. Redirecting to login...', 'error');
                 setTimeout(() => {
                     window.location.href = '/login.html';
@@ -1048,8 +1059,20 @@
                 return false;
             }
 
-            const user = JSON.parse(userInfo);
+            let user;
+            try {
+                user = JSON.parse(userInfo);
+            } catch (e) {
+                console.error('Failed to parse user info:', e);
+                showNotification('Invalid user data. Redirecting to login...', 'error');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500);
+                return false;
+            }
+            
             if (user.role !== 1510) {
+                console.log('Access denied - user role:', user.role, 'required: 1510');
                 showNotification('Access denied. Admin privileges required.', 'error');
                 setTimeout(() => {
                     window.location.href = '/login.html';
@@ -1057,6 +1080,7 @@
                 return false;
             }
             
+            console.log('Authentication successful for user:', user.firstName, user.lastName);
             return true;
         }
 

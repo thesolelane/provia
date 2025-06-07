@@ -320,10 +320,26 @@
                     console.log('Login successful - Token stored:', result.token ? 'yes' : 'no');
                     console.log('Login successful - User stored:', result.user ? 'yes' : 'no');
                     
+                    // Verify storage was successful
+                    const verifyToken = localStorage.getItem('authToken');
+                    const verifyUser = localStorage.getItem('userInfo');
+                    console.log('Storage verification - Token:', verifyToken ? 'confirmed' : 'failed');
+                    console.log('Storage verification - User:', verifyUser ? 'confirmed' : 'failed');
+                    
                     showAlert('success', `Welcome ${result.user.firstName}! Redirecting to dashboard...`);
                     
-                    // Redirect based on user role
+                    // Ensure storage operations complete before redirect
                     setTimeout(() => {
+                        // Double-check storage before redirect
+                        const finalToken = localStorage.getItem('authToken');
+                        const finalUser = localStorage.getItem('userInfo');
+                        
+                        if (!finalToken || !finalUser) {
+                            console.error('Storage failed, attempting to re-store');
+                            localStorage.setItem('authToken', result.token);
+                            localStorage.setItem('userInfo', JSON.stringify(result.user));
+                        }
+                        
                         const role = result.user.role;
                         if (role === 1510) { // Admin
                             window.location.href = '/admin-user-management.html';
@@ -334,7 +350,7 @@
                         } else {
                             window.location.href = '/main-dashboard.html';
                         }
-                    }, 1500);
+                    }, 2000);
                 } else {
                     const error = await response.json();
                     showAlert('danger', error.message || 'Login failed');
