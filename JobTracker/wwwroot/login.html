@@ -317,6 +317,9 @@
                         name: result.user.companyName
                     }));
                     
+                    console.log('Login successful - Token stored:', result.token ? 'yes' : 'no');
+                    console.log('Login successful - User stored:', result.user ? 'yes' : 'no');
+                    
                     showAlert('success', `Welcome ${result.user.firstName}! Redirecting to dashboard...`);
                     
                     // Redirect based on user role
