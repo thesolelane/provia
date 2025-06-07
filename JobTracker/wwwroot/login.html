@@ -310,6 +310,7 @@
                     
                     // Store user info and token in session
                     sessionStorage.setItem('authToken', result.token);
+                    localStorage.setItem('authToken', result.token);
                     localStorage.setItem('userInfo', JSON.stringify(result.user));
                     localStorage.setItem('companyInfo', JSON.stringify({
                         id: result.user.companyId,
