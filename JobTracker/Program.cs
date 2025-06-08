@@ -31,6 +31,9 @@ builder.Services.AddScoped<JobTracker.Services.JobLocationService>();
 builder.Services.AddScoped<JobTracker.Services.UserCodeService>();
 builder.Services.AddScoped<JobTracker.Services.LocationTrackingService>();
 
+// Add user deactivation service
+builder.Services.AddScoped<JobTracker.Services.IUserDeactivationService, JobTracker.Services.UserDeactivationService>();
+
 // Add security services
 builder.Services.AddScoped<JobTracker.Security.ISecurityAuditService, JobTracker.Security.SecurityAuditService>();
 builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Services.EmailService>();
