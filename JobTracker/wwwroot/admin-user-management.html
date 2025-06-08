@@ -831,11 +831,10 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             `;
             
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-            `;
+            notification.innerHTML = 
+                '<i class="fas fa-' + (type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' +
+                message +
+                '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
 
             document.body.appendChild(notification);
 
