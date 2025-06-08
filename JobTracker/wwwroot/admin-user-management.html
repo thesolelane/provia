@@ -194,10 +194,10 @@
         }
 
         function updateLoginFields() {
-            const role = document.getElementById('userRole').value;
-            const emailFields = document.getElementById('emailLoginFields');
-            const phoneFields = document.getElementById('phoneLoginFields');
-            const description = document.getElementById('roleDescription');
+            var role = document.getElementById('userRole').value;
+            var emailFields = document.getElementById('emailLoginFields');
+            var phoneFields = document.getElementById('phoneLoginFields');
+            var description = document.getElementById('roleDescription');
 
             emailFields.style.display = 'none';
             phoneFields.style.display = 'none';
@@ -235,15 +235,15 @@
             alert('Deactivate user function called for user ID: ' + userId + '\nReason: ' + (reason || 'None') + '\nNotes: ' + (notes || 'None'));
         }
 
-        async function createUser() {
-            const formData = {
+        function createUser() {
+            var formData = {
                 firstName: document.getElementById('firstName').value,
                 lastName: document.getElementById('lastName').value,
                 role: parseInt(document.getElementById('userRole').value),
                 languagePreference: document.getElementById('languagePreference').value
             };
 
-            const role = document.getElementById('userRole').value;
+            var role = document.getElementById('userRole').value;
             if (role === '1510' || role === '1520') {
                 formData.email = document.getElementById('email').value;
                 formData.password = document.getElementById('password').value;
@@ -256,42 +256,41 @@
         }
 
         function loadUsers() {
-            setTimeout(() => {
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = `
-                    <div class="user-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                                        <strong>AD</strong>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1">Admin User</h6>
-                                        <small class="text-muted">admin@example.com</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="role-badge role-admin">Admin</span>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="badge bg-success">Active</span>
-                            </div>
-                            <div class="col-md-3">
-                                <small class="text-muted">ID: 36DMRD-1520-001</small>
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(1)">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(1)">
-                                    <i class="fas fa-user-slash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            setTimeout(function() {
+                var usersList = document.getElementById('usersList');
+                usersList.innerHTML = 
+                    '<div class="user-card">' +
+                        '<div class="row align-items-center">' +
+                            '<div class="col-md-3">' +
+                                '<div class="d-flex align-items-center">' +
+                                    '<div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">' +
+                                        '<strong>AD</strong>' +
+                                    '</div>' +
+                                    '<div>' +
+                                        '<h6 class="mb-1">Admin User</h6>' +
+                                        '<small class="text-muted">admin@example.com</small>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="col-md-2">' +
+                                '<span class="role-badge role-admin">Admin</span>' +
+                            '</div>' +
+                            '<div class="col-md-2">' +
+                                '<span class="badge bg-success">Active</span>' +
+                            '</div>' +
+                            '<div class="col-md-3">' +
+                                '<small class="text-muted">ID: 36DMRD-1520-001</small>' +
+                            '</div>' +
+                            '<div class="col-md-2 text-end">' +
+                                '<button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(1)">' +
+                                    '<i class="fas fa-edit"></i>' +
+                                '</button>' +
+                                '<button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(1)">' +
+                                    '<i class="fas fa-user-slash"></i>' +
+                                '</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
 
                 document.getElementById('totalUsers').textContent = '1';
                 document.getElementById('adminCount').textContent = '1';
