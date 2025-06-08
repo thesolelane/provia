@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "4pNdC+iTJCi9jMCcnisxxhG9tpl14uVk04PywYZcfco=",
+  "Hash": "tYbl0DLbX+wp1W6YrjhkvMl8UTzUbUY5ZbfBe2DPe4I=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -304,6 +304,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/test-auth.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/test-buttons.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "test-buttons.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/test-buttons.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/update-coordinates.html",
