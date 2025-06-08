@@ -30,6 +30,7 @@ namespace JobTracker.Data
         public DbSet<LocationVerificationRequest> LocationVerificationRequests { get; set; } = null!;
         public DbSet<LunchBreak> LunchBreaks { get; set; } = null!;
         public DbSet<IssueReport> IssueReports { get; set; } = null!;
+        public DbSet<DeactivatedUser> DeactivatedUsers { get; set; } = null!;
         public DbSet<JobTracker.Security.SecurityAuditLog> SecurityAuditLogs { get; set; } = null!;
         public DbSet<JobTracker.Controllers.WorkSchedule> WorkSchedules { get; set; } = null!;
 
@@ -147,6 +148,25 @@ namespace JobTracker.Data
             modelBuilder.Entity<LocationTracker>().HasIndex(lt => lt.NextLocationCheckAt);
             modelBuilder.Entity<LocationPing>().HasIndex(lp => lp.PingTime);
             modelBuilder.Entity<LocationVerificationRequest>().HasIndex(lvr => new { lvr.UserId, lvr.Status });
+
+            // Configure DeactivatedUser relationships
+            modelBuilder.Entity<DeactivatedUser>()
+                .HasOne(du => du.DeactivatedBy)
+                .WithMany()
+                .HasForeignKey(du => du.DeactivatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            modelBuilder.Entity<DeactivatedUser>()
+                .HasOne(du => du.Company)
+                .WithMany()
+                .HasForeignKey(du => du.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Add indexes for deactivated users
+            modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.OriginalUserId);
+            modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.DeactivatedAt);
+            modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.CanBeReactivated);
+            modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.CompanyId);
         }
 
         public override int SaveChanges()
