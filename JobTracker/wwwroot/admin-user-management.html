@@ -821,15 +821,14 @@
 
             // Create notification
             const notification = document.createElement('div');
-            notification.className = `app-notification alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 9999;
-                min-width: 300px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            `;
+            notification.className = 'app-notification alert alert-' + (type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info') + ' alert-dismissible';
+            notification.style.cssText = 
+                'position: fixed;' +
+                'top: 20px;' +
+                'right: 20px;' +
+                'z-index: 9999;' +
+                'min-width: 300px;' +
+                'box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
             
             notification.innerHTML = 
                 '<i class="fas fa-' + (type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' +
