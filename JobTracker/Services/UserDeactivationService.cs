@@ -8,7 +8,7 @@ namespace JobTracker.Services
     {
         Task<bool> DeactivateUserAsync(int userId, int deactivatedByUserId, string? reason = null, string? notes = null);
         Task<DeactivatedUser?> GetDeactivatedUserAsync(int originalUserId);
-        Task<bool> ReactivateUserAsync(int deactivatedUserId, int reactivatedByUserId);
+
         Task<List<DeactivatedUser>> GetDeactivatedUsersAsync(int companyId);
     }
 
@@ -50,8 +50,8 @@ namespace JobTracker.Services
                     return false;
                 }
 
-                // Generate shortened user ID for account reuse
-                var shortenedId = GenerateShortenedUserId(user.Id);
+                // Generate shortened user ID for archive reference
+                var shortenedId = $"DEL-{user.Id.ToString().Substring(Math.Max(0, user.Id.ToString().Length - 4)).PadLeft(4, '0')}";
 
                 // Create the deactivated user record (NO PASSWORDS STORED)
                 var deactivatedUser = new DeactivatedUser
@@ -74,7 +74,7 @@ namespace JobTracker.Services
                     // Store original username for reference only (no passwords)
                     OriginalUsername = user.Username,
                     
-                    // Generate shortened ID for potential account reuse
+                    // Generate shortened ID for archive reference
                     ShortenedUserId = shortenedId,
                     
                     // Archive verification and status information
@@ -86,19 +86,23 @@ namespace JobTracker.Services
                     // Deactivation details
                     DeactivationReason = reason,
                     DeactivationNotes = notes,
-                    CanBeReactivated = true
+                    CanBeReactivated = false // Account cannot be reused but remains searchable in archive
                 };
 
                 // Add the deactivated user record
                 _context.DeactivatedUsers.Add(deactivatedUser);
 
-                // Mark the original user as inactive and clear sensitive data
+                // Mark the original user as inactive and clear ALL sensitive data
                 user.IsActive = false;
                 user.PasswordHash = null;
                 user.PinHash = null;
-                user.Username = null;
+                user.Username = shortenedId; // Set username to shortened ID for archive reference
+                user.Email = $"deleted_{shortenedId}@archive.local"; // Modify email to prevent conflicts
+                user.PhoneNumber = null; // Clear phone number
                 user.PhoneVerificationCode = null;
                 user.EmailVerificationCode = null;
+                user.IsPhoneVerified = false;
+                user.IsEmailVerified = false;
                 user.UpdatedAt = DateTime.UtcNow;
 
                 // Save changes
@@ -124,62 +128,6 @@ namespace JobTracker.Services
                 .Include(du => du.DeactivatedBy)
                 .Include(du => du.Company)
                 .FirstOrDefaultAsync(du => du.OriginalUserId == originalUserId);
-        }
-
-        public async Task<bool> ReactivateUserAsync(int deactivatedUserId, int reactivatedByUserId)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            
-            try
-            {
-                // Find the deactivated user record
-                var deactivatedUser = await _context.DeactivatedUsers
-                    .Include(du => du.Company)
-                    .FirstOrDefaultAsync(du => du.Id == deactivatedUserId && du.CanBeReactivated);
-
-                if (deactivatedUser == null)
-                {
-                    _logger.LogWarning("Deactivated user with ID {DeactivatedUserId} not found or cannot be reactivated", deactivatedUserId);
-                    return false;
-                }
-
-                // Find the original user record
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Id == deactivatedUser.OriginalUserId);
-
-                if (user == null)
-                {
-                    _logger.LogWarning("Original user with ID {OriginalUserId} not found", deactivatedUser.OriginalUserId);
-                    return false;
-                }
-
-                // Restore the user with archived credentials
-                user.IsActive = true;
-                user.PasswordHash = deactivatedUser.ArchivedPasswordHash;
-                user.PinHash = deactivatedUser.ArchivedPinHash;
-                user.Username = deactivatedUser.ArchivedUsername;
-                user.IsPhoneVerified = deactivatedUser.WasPhoneVerified;
-                user.IsEmailVerified = deactivatedUser.WasEmailVerified;
-                user.LocationTrackingConsent = deactivatedUser.HadLocationTrackingConsent;
-                user.UpdatedAt = DateTime.UtcNow;
-
-                // Mark the deactivated record as no longer able to be reactivated
-                deactivatedUser.CanBeReactivated = false;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                _logger.LogInformation("User {UserId} ({UserName}) successfully reactivated by user {ReactivatedByUserId}", 
-                    user.Id, user.GetDisplayName(), reactivatedByUserId);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error reactivating user from deactivated user ID {DeactivatedUserId}", deactivatedUserId);
-                return false;
-            }
         }
 
         public async Task<List<DeactivatedUser>> GetDeactivatedUsersAsync(int companyId)

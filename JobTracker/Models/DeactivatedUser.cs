@@ -64,11 +64,11 @@ namespace JobTracker.Models
         [StringLength(1000)]
         public string? DeactivationNotes { get; set; }
 
-        // Shortened user ID for account reuse
+        // Shortened user ID for archive reference (account cannot be reused)
         public string? ShortenedUserId { get; set; }
         
-        // Allows for potential reactivation
-        public bool CanBeReactivated { get; set; } = true;
+        // Account is permanently deactivated but searchable in archive
+        public bool CanBeReactivated { get; set; } = false;
 
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch

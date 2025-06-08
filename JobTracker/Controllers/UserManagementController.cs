@@ -1,241 +1,178 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
 using JobTracker.Services;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobTracker.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UserManagementController : ControllerBase
     {
         private readonly JobTrackerContext _context;
-        private readonly UserCodeService _userCodeService;
+        private readonly IUserDeactivationService _deactivationService;
+        private readonly ILogger<UserManagementController> _logger;
 
-        public UserManagementController(JobTrackerContext context, UserCodeService userCodeService)
+        public UserManagementController(
+            JobTrackerContext context, 
+            IUserDeactivationService deactivationService,
+            ILogger<UserManagementController> logger)
         {
             _context = context;
-            _userCodeService = userCodeService;
+            _deactivationService = deactivationService;
+            _logger = logger;
         }
 
-        [HttpPost("create-user")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        [HttpPost("{userId}/deactivate")]
+        public async Task<IActionResult> DeactivateUser(int userId, [FromBody] DeactivationRequest request)
         {
-            var currentUserIdClaim = User.FindFirst("UserId")?.Value;
-            if (!int.TryParse(currentUserIdClaim, out int currentUserId))
-            {
-                return Unauthorized("Invalid user token");
-            }
-
-            var currentUser = await _context.Users.FindAsync(currentUserId);
-            if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
-            {
-                return StatusCode(403, "Only admins can create users");
-            }
-
-            // Validate role assignment permissions
-            if (request.Role == UserRoles.Admin && !UserRoles.IsHighestAdmin(currentUser.Role))
-            {
-                return StatusCode(403, "Only Admins can create Admin accounts");
-            }
-
             try
             {
-                // Generate user code
-                var userCode = await _userCodeService.GenerateUserCodeAsync(currentUser.CompanyId, request.Role);
-
-                var newUser = new User
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
                 {
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    Role = request.Role,
-                    CompanyId = currentUser.CompanyId,
-                    UserCode = userCode,
-                    IsActive = true,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.TemporaryPassword),
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUserId,
-                    LocationTrackingConsent = request.Role == UserRoles.FieldOperator,
-                    LanguagePreference = request.LanguagePreference ?? "en"
-                };
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
 
-                _context.Users.Add(newUser);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { 
-                    UserId = newUser.Id,
-                    UserCode = newUser.UserCode,
-                    Message = "User created successfully"
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error creating user: {ex.Message}");
-            }
-        }
-
-        [HttpPost("batch-create-users")]
-        public async Task<IActionResult> BatchCreateUsers([FromBody] BatchCreateUsersRequest request)
-        {
-            var currentUserIdClaim = User.FindFirst("UserId")?.Value;
-            if (!int.TryParse(currentUserIdClaim, out int currentUserId))
-            {
-                return Unauthorized("Invalid user token");
-            }
-
-            var currentUser = await _context.Users.FindAsync(currentUserId);
-            if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
-            {
-                return StatusCode(403, "Only admins can create users");
-            }
-
-            var results = new List<object>();
-            var errors = new List<string>();
-
-            foreach (var userRequest in request.Users)
-            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
                 try
                 {
-                    // Validate role assignment permissions
-                    if (userRequest.Role == UserRoles.Admin && !UserRoles.IsHighestAdmin(currentUser.Role))
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int currentUserId) && int.TryParse(parts[2], out int userRole))
                     {
-                        errors.Add($"{userRequest.FirstName} {userRequest.LastName}: Only Admins can create Admin accounts");
-                        continue;
+                        if (userRole != 1510 && userRole != 1520) // Only Admin/Master Admin can deactivate users
+                        {
+                            return Forbid("Only administrators can deactivate users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Don't allow deactivating yourself
+                        if (userId == currentUserId)
+                        {
+                            return BadRequest(new { message = "Cannot deactivate your own account" });
+                        }
+
+                        // Find user to deactivate
+                        var userToDeactivate = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        if (userToDeactivate == null)
+                        {
+                            return NotFound(new { message = "User not found or already deactivated" });
+                        }
+
+                        // Use the deactivation service to properly archive credentials
+                        var success = await _deactivationService.DeactivateUserAsync(
+                            userId, 
+                            currentUserId, 
+                            request.Reason, 
+                            request.Notes
+                        );
+
+                        if (success)
+                        {
+                            return Ok(new { message = "User deactivated successfully and credentials archived" });
+                        }
+                        else
+                        {
+                            return StatusCode(500, new { message = "Failed to deactivate user" });
+                        }
                     }
-
-                    // Check if email already exists
-                    var existingUser = await _context.Users
-                        .FirstOrDefaultAsync(u => u.Email == userRequest.Email && u.CompanyId == currentUser.CompanyId);
-                    
-                    if (existingUser != null)
-                    {
-                        errors.Add($"{userRequest.FirstName} {userRequest.LastName}: Email already exists");
-                        continue;
-                    }
-
-                    // Generate user code
-                    var userCode = await _userCodeService.GenerateUserCodeAsync(currentUser.CompanyId, userRequest.Role);
-
-                    var newUser = new User
-                    {
-                        FirstName = userRequest.FirstName,
-                        LastName = userRequest.LastName,
-                        Email = userRequest.Email,
-                        PhoneNumber = userRequest.PhoneNumber,
-                        Role = userRequest.Role,
-                        CompanyId = currentUser.CompanyId,
-                        UserCode = userCode,
-                        IsActive = true,
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(userRequest.TemporaryPassword ?? "TempPass123!"),
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedByUserId = currentUserId,
-                        LocationTrackingConsent = userRequest.Role == UserRoles.FieldOperator,
-                        LanguagePreference = userRequest.LanguagePreference ?? "en"
-                    };
-
-                    _context.Users.Add(newUser);
-                    await _context.SaveChangesAsync();
-
-                    results.Add(new {
-                        UserId = newUser.Id,
-                        UserCode = newUser.UserCode,
-                        Name = $"{newUser.FirstName} {newUser.LastName}",
-                        Email = newUser.Email,
-                        Role = UserRoles.GetRoleName(newUser.Role)
-                    });
                 }
-                catch (Exception ex)
+                catch
                 {
-                    errors.Add($"{userRequest.FirstName} {userRequest.LastName}: {ex.Message}");
+                    return Unauthorized(new { message = "Invalid token" });
                 }
-            }
 
-            return Ok(new { 
-                CreatedUsers = results,
-                Errors = errors,
-                TotalProcessed = request.Users.Count,
-                SuccessfullyCreated = results.Count
-            });
-        }
-
-        [HttpGet("available-roles")]
-        public IActionResult GetAvailableRoles()
-        {
-            var currentUserIdClaim = User.FindFirst("UserId")?.Value;
-            if (!int.TryParse(currentUserIdClaim, out int currentUserId))
-            {
-                return Unauthorized("Invalid user token");
-            }
-
-            var currentUser = _context.Users.Find(currentUserId);
-            if (currentUser == null || !UserRoles.IsAdmin(currentUser.Role))
-            {
-                return StatusCode(403, "Only admins can access role information");
-            }
-
-            var availableRoles = new List<object>();
-
-            // Field Operator - all admins can create
-            availableRoles.Add(new { Code = UserRoles.FieldOperator, Name = "Field Operator" });
-            
-            // Supervisor - all admins can create
-            availableRoles.Add(new { Code = UserRoles.Supervisor, Name = "Supervisor" });
-
-            // Admin - only highest admins can create
-            if (UserRoles.IsHighestAdmin(currentUser.Role))
-            {
-                availableRoles.Add(new { Code = UserRoles.Admin, Name = "Admin" });
-            }
-
-            return Ok(availableRoles);
-        }
-
-        [HttpPost("assign-user-codes")]
-        public async Task<IActionResult> AssignUserCodes()
-        {
-            var currentUserIdClaim = User.FindFirst("UserId")?.Value;
-            if (!int.TryParse(currentUserIdClaim, out int currentUserId))
-            {
-                return Unauthorized("Invalid user token");
-            }
-
-            var currentUser = await _context.Users.FindAsync(currentUserId);
-            if (currentUser == null || !UserRoles.IsHighestAdmin(currentUser.Role))
-            {
-                return StatusCode(403, "Only Admins can assign user codes");
-            }
-
-            try
-            {
-                await _userCodeService.AssignUserCodesAsync();
-                return Ok(new { Message = "User codes assigned successfully" });
+                return Unauthorized(new { message = "Invalid token" });
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error assigning user codes: {ex.Message}");
+                _logger.LogError(ex, "Error deactivating user {UserId}", userId);
+                return StatusCode(500, new { message = "An error occurred while deactivating the user" });
+            }
+        }
+
+        [HttpGet("deactivated")]
+        public async Task<IActionResult> GetDeactivatedUsers()
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                // Validate current user is admin
+                try
+                {
+                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+                    var parts = tokenData.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[0], out int currentUserId) && int.TryParse(parts[2], out int userRole))
+                    {
+                        if (userRole != 1510 && userRole != 1520) // Only Admin/Master Admin can view deactivated users
+                        {
+                            return Forbid("Only administrators can view deactivated users");
+                        }
+
+                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId && u.IsActive);
+                        if (currentUser == null)
+                        {
+                            return Unauthorized(new { message = "Invalid token" });
+                        }
+
+                        // Get deactivated users for the company
+                        var deactivatedUsers = await _deactivationService.GetDeactivatedUsersAsync(currentUser.CompanyId);
+                        
+                        var result = deactivatedUsers.Select(du => new
+                        {
+                            id = du.Id,
+                            originalUserId = du.OriginalUserId,
+                            firstName = du.FirstName,
+                            lastName = du.LastName,
+                            email = du.Email,
+                            phoneNumber = du.PhoneNumber,
+                            role = du.Role,
+                            userCode = du.UserCode,
+                            shortenedUserId = du.ShortenedUserId,
+                            deactivatedAt = du.DeactivatedAt,
+                            deactivatedBy = du.DeactivatedBy?.GetDisplayName(),
+                            deactivationReason = du.DeactivationReason,
+                            deactivationNotes = du.DeactivationNotes,
+                            canBeReactivated = du.CanBeReactivated
+                        });
+
+                        return Ok(result);
+                    }
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving deactivated users");
+                return StatusCode(500, new { message = "An error occurred while retrieving deactivated users" });
             }
         }
     }
 
-    public class CreateUserRequest
+    public class DeactivationRequest
     {
-        public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string? PhoneNumber { get; set; }
-        public int Role { get; set; }
-        public string TemporaryPassword { get; set; } = "";
-        public string? LanguagePreference { get; set; }
-    }
-
-    public class BatchCreateUsersRequest
-    {
-        public List<CreateUserRequest> Users { get; set; } = new();
+        public string? Reason { get; set; }
+        public string? Notes { get; set; }
     }
 }
