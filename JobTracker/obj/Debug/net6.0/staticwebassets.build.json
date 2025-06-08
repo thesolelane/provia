@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "5e6At2+WFk/og/5MDCQZw4W/wzaOYPlCJRvvsGSIQ0Q=",
+  "Hash": "4pNdC+iTJCi9jMCcnisxxhG9tpl14uVk04PywYZcfco=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -168,6 +168,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/field-operator-dashboard.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/fixed-admin-user-management.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "fixed-admin-user-management.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/fixed-admin-user-management.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/index.html",
