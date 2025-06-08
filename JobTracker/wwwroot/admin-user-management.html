@@ -734,7 +734,14 @@
         }
 
         async function deactivateUser(userId) {
-            if (!confirm('Are you sure you want to deactivate this user? This action can be reversed later.')) {
+            // Get deactivation reason and notes
+            const reason = prompt('Please provide a reason for deactivation (optional):');
+            if (reason === null) return; // User cancelled
+            
+            const notes = prompt('Additional notes (optional):');
+            if (notes === null) return; // User cancelled
+
+            if (!confirm('Are you sure you want to permanently deactivate this user? Their credentials will be archived and the account cannot be reused.')) {
                 return;
             }
 
@@ -745,19 +752,23 @@
                     return;
                 }
 
-                const response = await fetch(`/api/users/${userId}/deactivate`, {
+                const response = await fetch(`/api/UserManagement/${userId}/deactivate`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        reason: reason || null,
+                        notes: notes || null
+                    })
                 });
 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showNotification('User deactivated successfully', 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    showNotification('User deactivated successfully and credentials archived', 'success');
+                    setTimeout(() => loadUsers(), 1500);
                 } else {
                     showNotification('Error deactivating user: ' + data.message, 'error');
                 }
@@ -983,7 +994,7 @@
 
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    console.error("No token available for this operation")');
+                    console.error("No token available for this operation");
                     return;
                 }
 

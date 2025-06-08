@@ -44,7 +44,7 @@ namespace JobTracker.Controllers
                     var parts = tokenData.Split(':');
                     if (parts.Length >= 3 && int.TryParse(parts[0], out int currentUserId) && int.TryParse(parts[2], out int userRole))
                     {
-                        if (userRole != 1510 && userRole != 1520) // Only Admin/Master Admin can deactivate users
+                        if (userRole != 1510) // Only Master Admin can deactivate users
                         {
                             return Forbid("Only administrators can deactivate users");
                         }
@@ -120,7 +120,7 @@ namespace JobTracker.Controllers
                     var parts = tokenData.Split(':');
                     if (parts.Length >= 3 && int.TryParse(parts[0], out int currentUserId) && int.TryParse(parts[2], out int userRole))
                     {
-                        if (userRole != 1510 && userRole != 1520) // Only Admin/Master Admin can view deactivated users
+                        if (userRole != 1510) // Only Master Admin can view deactivated users archive
                         {
                             return Forbid("Only administrators can view deactivated users");
                         }
