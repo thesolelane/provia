@@ -650,7 +650,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify(formData)
                 });
@@ -704,10 +704,10 @@
                 }
 
                 // Fetch user data from API
-                const response = await fetch(`/api/users/${userId}`, {
+                const response = await fetch('/api/users/' + userId, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -752,10 +752,10 @@
                     return;
                 }
 
-                const response = await fetch(`/api/UserManagement/${userId}/deactivate`, {
+                const response = await fetch('/api/UserManagement/' + userId + '/deactivate', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
@@ -790,10 +790,10 @@
                     return;
                 }
 
-                const response = await fetch(`/api/users/${userId}`, {
+                const response = await fetch('/api/users/' + userId, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -857,10 +857,10 @@
                 const user = JSON.parse(userInfo);
                 const companyId = user.companyId || 1;
 
-                const response = await fetch(`/api/users/company/${companyId}`, {
+                const response = await fetch('/api/users/company/' + companyId, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -1003,11 +1003,11 @@
                     role: role
                 };
 
-                const response = await fetch(`/api/users/${userId}`, {
+                const response = await fetch('/api/users/' + userId, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify(updateData)
                 });
