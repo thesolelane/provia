@@ -36,6 +36,7 @@ namespace JobTracker.Data
         public DbSet<SyncQueueItem> SyncQueueItems { get; set; } = null!;
         public DbSet<SyncDevice> SyncDevices { get; set; } = null!;
         public DbSet<SyncConflict> SyncConflicts { get; set; } = null!;
+        public DbSet<SubContractorCompany> SubContractorCompanies { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -125,6 +126,29 @@ namespace JobTracker.Data
                 .WithMany()
                 .HasForeignKey(ir => ir.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure SubContractorCompany relationships (multi-company support for subs)
+            modelBuilder.Entity<SubContractorCompany>()
+                .HasOne(sc => sc.SubContractorUser)
+                .WithMany()
+                .HasForeignKey(sc => sc.SubContractorUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SubContractorCompany>()
+                .HasOne(sc => sc.Company)
+                .WithMany()
+                .HasForeignKey(sc => sc.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SubContractorCompany>()
+                .HasIndex(sc => new { sc.SubContractorUserId, sc.CompanyId })
+                .IsUnique(); // Prevent duplicate sub-contractor entries per company
+
+            modelBuilder.Entity<SubContractorCompany>()
+                .HasIndex(sc => sc.Status);
+
+            modelBuilder.Entity<SubContractorCompany>()
+                .HasIndex(sc => sc.CompanyId);
 
             // Configure MaterialStore relationships with Company
             modelBuilder.Entity<MaterialStore>()
