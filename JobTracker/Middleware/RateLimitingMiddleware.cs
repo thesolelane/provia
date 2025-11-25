@@ -33,7 +33,8 @@ namespace JobTracker.Middleware
                     }
                 }
 
-                _memoryCache.Set(cacheKey, (attempts ?? 0) + 1, TimeSpan.FromSeconds(LockoutDurationSeconds));
+                var currentAttempts = attempts > 0 ? attempts : 0;
+                _memoryCache.Set(cacheKey, currentAttempts + 1, TimeSpan.FromSeconds(LockoutDurationSeconds));
             }
 
             await _next(context);
