@@ -42,7 +42,7 @@ namespace JobTracker.Controllers
                             var companyId = _tenantContext.GetCurrentCompanyId();
                             jobs = await _context.Jobs.Where(j => j.CompanyId == companyId).ToListAsync();
                         }
-                        catch (JobTracker.Services.InvalidOperationException)
+                        catch (InvalidOperationException)
                         {
                             jobs = new List<Job>();
                         }
