@@ -97,12 +97,13 @@ builder.Services.AddDbContext<JobTrackerContext>(options =>
     });
 });
 
-// Add CORS for the frontend - RESTRICTED
+// Add CORS for the frontend - RESTRICTED (from environment variable)
+var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS") ?? "http://localhost:3000,http://localhost:5000,http://0.0.0.0:5000";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", builder =>
     {
-        builder.WithOrigins("http://localhost:3000", "http://localhost:5000", "http://0.0.0.0:5000")
+        builder.WithOrigins(allowedOrigins.Split(","))
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials();
