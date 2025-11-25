@@ -33,12 +33,13 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 37879
-externalPort = 3002
-
-[[ports]]
 localPort = 40043
 externalPort = 3001
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET_KEY = "PROVIA-Production-SecureKey-MinimumLength-32Chars"

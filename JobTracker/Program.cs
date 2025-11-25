@@ -46,10 +46,30 @@ builder.Services.AddScoped<DatabaseSeeder>();
 // Add Tenant Context for multi-tenancy
 builder.Services.AddScoped<JobTracker.Services.ITenantContext, JobTracker.Services.TenantContext>();
 
-// Add Simple Authentication
-builder.Services.AddAuthentication("Bearer")
-    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
-        "Bearer", options => { });
+// Add JWT Token Service
+builder.Services.AddScoped<JobTracker.Services.IJwtTokenService, JobTracker.Services.JwtTokenService>();
+
+// SECURITY: Configure JWT Authentication
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 builder.Services.AddAuthorization();
 
