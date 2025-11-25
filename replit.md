@@ -220,6 +220,25 @@ SubContractorCompany Junction Table:
   - GET `/api/jobbid/job/{jobId}` - View all bids for a job
   - GET `/api/jobbid/my-bids` - Sub-contractor views their bids
 
+### Multi-Stage Inspection & Permit System ✅ (November 25, 2025)
+- **Inspection Stages**: ROUGH → SECOND → FINISH → FINAL_SIGNOFF
+- **Rough Inspection**: Initial stage (e.g., electrician: wires to box/plugs/fixtures, not connected)
+- **Second Inspection**: All connections complete and installed
+- **Finish Inspection**: In-house final walkthrough
+- **Final Master Permit Signoff**: City/municipal approval required to complete
+- **Permit Tracking**: Sub uploads signed permits as proof of completion
+- **Permit Types**: ELECTRICAL, PLUMBING, HVAC, SAFETY, MASTER, etc.
+- **Permit Status**: PENDING_REVIEW, APPROVED, REJECTED, EXPIRED
+- **Checklist Support**: Each stage can have checklist items (JSON)
+- **Advanced Payment**: X% paid at bid acceptance, rest after final inspection passes
+- **API Endpoints**:
+  - POST `/api/inspection/create` - Create inspection for a stage
+  - POST `/api/inspection/submit/{inspectionId}` - Inspector submits results
+  - POST `/api/inspection/upload-permit` - Sub uploads signed permit
+  - POST `/api/inspection/approve-permit/{permitId}` - Admin/foreman approves permit
+  - GET `/api/inspection/bid/{jobBidId}` - View all inspections for a bid
+  - GET `/api/inspection/can-advance/{jobBidId}` - Check if ready to advance
+
 ## Next Steps (Future Development)
 1. Job progress tracking/photo uploads for accepted jobs
 2. Call/response messaging system (admin/foreman ↔ sub)

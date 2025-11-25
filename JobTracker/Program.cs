@@ -61,6 +61,9 @@ builder.Services.AddScoped<JobTracker.Services.IClientInfoService, JobTracker.Se
 // Add Job Bid Service for sub-contractor bidding
 builder.Services.AddScoped<JobTracker.Services.IJobBidService, JobTracker.Services.JobBidService>();
 
+// Add Inspection Service for multi-stage inspections
+builder.Services.AddScoped<JobTracker.Services.IInspectionService, JobTracker.Services.InspectionService>();
+
 // SECURITY: Configure JWT Authentication
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
 var key = Encoding.ASCII.GetBytes(jwtSecret);
