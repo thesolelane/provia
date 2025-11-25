@@ -13,12 +13,14 @@ namespace JobTracker.Controllers
         private readonly JobTrackerContext _context;
         private readonly IEmailService _emailService;
         private readonly ILogger<IssuesController> _logger;
+        private readonly JobTracker.Services.ITenantContext _tenantContext;
 
-        public IssuesController(JobTrackerContext context, IEmailService emailService, ILogger<IssuesController> logger)
+        public IssuesController(JobTrackerContext context, IEmailService emailService, ILogger<IssuesController> logger, JobTracker.Services.ITenantContext tenantContext)
         {
             _context = context;
             _emailService = emailService;
             _logger = logger;
+            _tenantContext = tenantContext;
         }
 
         [HttpPost("report")]
@@ -42,9 +44,10 @@ namespace JobTracker.Controllers
                     job = await _context.Jobs.FindAsync(request.JobId.Value);
                 }
 
-                // Create issue report record
+                // Create issue report record with company ID for tenant isolation
                 var issueReport = new IssueReport
                 {
+                    CompanyId = user.CompanyId,
                     UserId = userId,
                     JobId = request.JobId,
                     IssueType = request.IssueType,
