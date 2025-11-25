@@ -85,9 +85,10 @@ namespace JobTracker.Controllers
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // SECURITY: Generate JWT token with 1-hour expiration
+                // SECURITY: Generate JWT token with 1-hour expiration using environment variable
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes("PROVIA-SecureKeyChangeThisInProduction-32CharsMin");
+                var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                var key = Encoding.ASCII.GetBytes(jwtSecret);
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new[]
