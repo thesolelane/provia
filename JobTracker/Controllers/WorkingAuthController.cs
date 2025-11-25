@@ -3,6 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using BCrypt.Net;
 
 namespace JobTracker.Controllers
 {
@@ -69,8 +74,8 @@ namespace JobTracker.Controllers
                     return Unauthorized(new { message = "Account is inactive" });
                 }
 
-                // Simple password check for demo
-                if (user.PasswordHash != request.Password)
+                // SECURITY: Use BCrypt for password verification
+                if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 {
                     _logger.LogWarning($"Login attempt failed: Invalid password for user {user.Id}");
                     return Unauthorized(new { message = "Invalid credentials" });
@@ -80,8 +85,23 @@ namespace JobTracker.Controllers
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Generate simple token
-                var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Id}:{DateTime.UtcNow.Ticks}:{user.Role}"));
+                // SECURITY: Generate JWT token with 1-hour expiration
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes("PROVIA-SecureKeyChangeThisInProduction-32CharsMin");
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", user.Id.ToString()),
+                        new Claim("email", user.Email ?? ""),
+                        new Claim("role", user.Role.ToString()),
+                        new Claim("companyId", user.CompanyId.ToString())
+                    }),
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+                var token = tokenHandler.WriteToken(securityToken);
 
                 _logger.LogInformation($"User {user.Id} logged in successfully");
 
@@ -351,10 +371,10 @@ namespace JobTracker.Controllers
                             LanguagePreference = request.LanguagePreference ?? "en"
                         };
 
-                        // Set password or PIN hash (simple for demo)
+                        // SECURITY: Hash password using BCrypt
                         if (!string.IsNullOrEmpty(request.Password))
                         {
-                            newUser.PasswordHash = request.Password;
+                            newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
                         }
 
                         if (!string.IsNullOrEmpty(request.Pin))

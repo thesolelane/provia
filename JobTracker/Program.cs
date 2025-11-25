@@ -58,7 +58,7 @@ builder.Services.AddSwaggerGen();
 
 // Configure PostgreSQL connection
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-Console.WriteLine($"Database URL: {connectionString}");
+// SECURITY: Do not log database URL or credentials
 
 // Configure database using environment variables directly
 builder.Services.AddDbContext<JobTrackerContext>(options =>
@@ -70,7 +70,6 @@ builder.Services.AddDbContext<JobTrackerContext>(options =>
     var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
     
     var connectionStr = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Prefer;Trust Server Certificate=true;Connection Idle Lifetime=300;Command Timeout=60;Timeout=30";
-    Console.WriteLine("Using environment variable configuration for database");
     
     options.UseNpgsql(connectionStr, npgsqlOptions => 
     {
@@ -78,16 +77,21 @@ builder.Services.AddDbContext<JobTrackerContext>(options =>
     });
 });
 
-// Add CORS for the frontend
+// Add CORS for the frontend - RESTRICTED
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:3000", "http://localhost:5000", "http://0.0.0.0:5000")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
+
+// Add rate limiting for brute force protection
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<JobTracker.Middleware.RateLimitingMiddleware>();
 
 // Register SMS Service for Twilio
 builder.Services.AddHttpClient();
@@ -103,6 +107,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Add rate limiting middleware
+app.UseMiddleware<JobTracker.Middleware.RateLimitingMiddleware>();
 
 // Disable caching for static HTML files to prevent preview cache issues
 app.Use(async (context, next) =>
