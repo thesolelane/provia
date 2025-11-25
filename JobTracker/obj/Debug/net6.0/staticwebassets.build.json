@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "tYbl0DLbX+wp1W6YrjhkvMl8UTzUbUY5ZbfBe2DPe4I=",
+  "Hash": "xa4iFEwd/+UfLmW0XhBiOszvlKd9dGmL740qcKrkQa0=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -117,6 +117,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/clear-session.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/company-signup.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "company-signup.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/company-signup.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/dashboard.html",
