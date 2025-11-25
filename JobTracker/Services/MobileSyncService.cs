@@ -295,7 +295,7 @@ namespace JobTracker.Services
                 _context.SyncQueueItems.RemoveRange(itemsToDelete);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Cleared {itemsToDelete.Count} old sync items for company {companyId}");
+                _logger.LogInformation("Cleared {Count} old sync items for company {CompanyId}", itemsToDelete.Count, companyId);
                 return true;
             }
             catch (Exception ex)

@@ -33,6 +33,9 @@ namespace JobTracker.Data
         public DbSet<DeactivatedUser> DeactivatedUsers { get; set; } = null!;
         public DbSet<JobTracker.Security.SecurityAuditLog> SecurityAuditLogs { get; set; } = null!;
         public DbSet<JobTracker.Controllers.WorkSchedule> WorkSchedules { get; set; } = null!;
+        public DbSet<SyncQueueItem> SyncQueueItems { get; set; } = null!;
+        public DbSet<SyncDevice> SyncDevices { get; set; } = null!;
+        public DbSet<SyncConflict> SyncConflicts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

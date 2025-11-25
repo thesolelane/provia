@@ -3,6 +3,14 @@ namespace JobTracker.Services
     public class TenantContext : ITenantContext
     {
         private int _currentCompanyId;
+        private int _userId;
+
+        public int CompanyId => GetCurrentCompanyId();
+        public int UserId 
+        { 
+            get => _userId;
+            set => _userId = value;
+        }
 
         public int GetCurrentCompanyId()
         {
