@@ -14,13 +14,15 @@ namespace JobTracker.Controllers
         private readonly JobTrackerContext _context;
         private readonly ILogger<TimeTrackingController> _logger;
         private readonly IEmailService _emailService;
+        private readonly JobTracker.Services.ITenantContext _tenantContext;
 
-        public TimeTrackingController(GeoFencingService geoFencingService, JobTrackerContext context, ILogger<TimeTrackingController> logger, IEmailService emailService)
+        public TimeTrackingController(GeoFencingService geoFencingService, JobTrackerContext context, ILogger<TimeTrackingController> logger, IEmailService emailService, JobTracker.Services.ITenantContext tenantContext)
         {
             _geoFencingService = geoFencingService;
             _context = context;
             _logger = logger;
             _emailService = emailService;
+            _tenantContext = tenantContext;
         }
 
         private int? GetUserIdFromToken()
@@ -59,9 +61,17 @@ namespace JobTracker.Controllers
                     _logger.LogInformation($"Distance to job site: {distance:F2} feet");
                 }
                 
+                // Get user to get company ID
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return BadRequest(new { message = "User not found" });
+                }
+
                 // Create a temporary TimeEntry that shows user as clocked in
                 var timeEntry = new TimeEntry
                 {
+                    CompanyId = user.CompanyId,
                     UserId = userId,
                     JobId = request.JobId,
                     ClockInTime = DateTime.UtcNow,
@@ -431,9 +441,20 @@ namespace JobTracker.Controllers
         {
             try
             {
+                // Get current company from tenant context
+                int companyId;
+                try
+                {
+                    companyId = _tenantContext.GetCurrentCompanyId();
+                }
+                catch
+                {
+                    return Unauthorized(new { message = "User company not found" });
+                }
+
                 var query = _context.TimeEntries
                     .Include(t => t.Job)
-                    .Where(t => t.UserId == userId);
+                    .Where(t => t.UserId == userId && t.CompanyId == companyId);
 
                 if (startDate.HasValue)
                     query = query.Where(t => t.ClockInTime >= startDate.Value);
