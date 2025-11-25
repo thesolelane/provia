@@ -37,6 +37,7 @@ namespace JobTracker.Data
         public DbSet<SyncDevice> SyncDevices { get; set; } = null!;
         public DbSet<SyncConflict> SyncConflicts { get; set; } = null!;
         public DbSet<SubContractorCompany> SubContractorCompanies { get; set; } = null!;
+        public DbSet<ClientInfo> ClientInfos { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
