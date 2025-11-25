@@ -69,6 +69,12 @@ namespace JobTracker.Data
                 .HasForeignKey(r => r.JobSectionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<InspectionReminder>()
+                .HasOne(r => r.Company)
+                .WithMany()
+                .HasForeignKey(r => r.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configure User relationships
             modelBuilder.Entity<User>()
                 .HasOne(u => u.CreatedBy)
@@ -89,6 +95,48 @@ namespace JobTracker.Data
                 .HasForeignKey(j => j.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
+            // Configure TimeEntry relationships with Company
+            modelBuilder.Entity<TimeEntry>()
+                .HasOne(te => te.Company)
+                .WithMany()
+                .HasForeignKey(te => te.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure MaterialRun relationships with Company
+            modelBuilder.Entity<MaterialRun>()
+                .HasOne(mr => mr.Company)
+                .WithMany()
+                .HasForeignKey(mr => mr.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure LunchBreak relationships with Company
+            modelBuilder.Entity<LunchBreak>()
+                .HasOne(lb => lb.Company)
+                .WithMany()
+                .HasForeignKey(lb => lb.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure IssueReport relationships with Company
+            modelBuilder.Entity<IssueReport>()
+                .HasOne(ir => ir.Company)
+                .WithMany()
+                .HasForeignKey(ir => ir.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure MaterialStore relationships with Company
+            modelBuilder.Entity<MaterialStore>()
+                .HasOne(ms => ms.Company)
+                .WithMany()
+                .HasForeignKey(ms => ms.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure JobSection relationships with Company
+            modelBuilder.Entity<JobSection>()
+                .HasOne(js => js.Company)
+                .WithMany()
+                .HasForeignKey(js => js.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
             modelBuilder.Entity<JobSection>().HasIndex(js => js.Status);
@@ -103,6 +151,13 @@ namespace JobTracker.Data
             modelBuilder.Entity<Company>().HasIndex(c => c.IsActive);
             modelBuilder.Entity<Job>().HasIndex(j => j.CompanyId);
             modelBuilder.Entity<User>().HasIndex(u => u.CompanyId);
+            modelBuilder.Entity<TimeEntry>().HasIndex(te => te.CompanyId);
+            modelBuilder.Entity<MaterialRun>().HasIndex(mr => mr.CompanyId);
+            modelBuilder.Entity<LunchBreak>().HasIndex(lb => lb.CompanyId);
+            modelBuilder.Entity<IssueReport>().HasIndex(ir => ir.CompanyId);
+            modelBuilder.Entity<MaterialStore>().HasIndex(ms => ms.CompanyId);
+            modelBuilder.Entity<JobSection>().HasIndex(js => js.CompanyId);
+            modelBuilder.Entity<InspectionReminder>().HasIndex(ir => ir.CompanyId);
 
             // Configure LocationTracker relationships
             modelBuilder.Entity<LocationTracker>()
