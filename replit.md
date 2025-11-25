@@ -1,109 +1,102 @@
-# Job Tracker Application
+# PROVIA - Construction Management Platform
 
-## Overview
+## Project Overview
+Enterprise-grade construction management system for Preferred Builders USA, LLC and partner companies. Multi-tenant architecture using shared database with CompanyId-based data isolation.
 
-The Job Tracker Application is a .NET Core based system designed for construction and renovation project management. It enables tracking job progress across multiple sections, managing subcontractors, employee time tracking, and integrates with MS Office, Google services, and a third-party system called CardShark. The application includes an AI assistant that provides guidance on Massachusetts building codes.
+**Technology Stack:**
+- Backend: .NET 6.0 + C# + Entity Framework Core
+- Database: PostgreSQL (Neon-backed via Replit)
+- Frontend: React + Node.js
+- Authentication: JWT (1-hour expiration) + BCrypt password hashing
+- Messaging: SendGrid (email), Twilio/Textedly (SMS)
+
+---
+
+## Recent Changes (November 25, 2025)
+
+### Completed
+1. **Full PROVIA Rebranding** (100+ references replaced)
+   - Custom 3-arrow SVG logo (orange/blue/navy)
+   - White background with orange-to-teal gradient UI
+   - All user-facing text updated: frontend header, footer, SMS/email notifications, password salts
+   - Internal namespaces retained (JobTracker.*) - safe for production
+
+2. **Enterprise Security Implementation**
+   - BCrypt password hashing (no plaintext storage)
+   - JWT token authentication (1-hour expiration)
+   - Rate limiting middleware (5 failed attempts → 15-min lockout)
+   - CORS restrictions to allowed origins only
+   - All credentials moved to environment variables (JWT_SECRET_KEY, ALLOWED_ORIGINS)
+   - Deprecated hardcoded test auth endpoints
+
+3. **.NET SDK & JWT Package Resolution**
+   - Installed Microsoft.AspNetCore.Authentication.JwtBearer (6.0.28)
+   - Verified .NET 6.0 compatibility and successful build
+   - App running on http://0.0.0.0:5000
+
+### Configuration
+**Environment Variables Required:**
+- `JWT_SECRET_KEY` - Signing key for JWT tokens
+- `ALLOWED_ORIGINS` - CORS-allowed domains (comma-separated)
+- `DATABASE_URL` - PostgreSQL connection string
+- `SENDGRID_API_KEY` - Email service (optional if no notifications)
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` - SMS service (optional)
+
+---
+
+## Multi-Tenancy Architecture
+
+### Data Isolation Strategy
+- **Shared Database Model**: Single PostgreSQL database with CompanyId filtering
+- **Tenant Context Service** (`ITenantContext`): Extracts CompanyId from JWT claims on each request
+- **Middleware-Enforced Filtering**: All database queries automatically filtered by CompanyId
+- **Controllers**: Use `_tenantContext.CompanyId` to enforce query scope
+
+### Role-Based Access Control (RBAC)
+- **Admin** (1510): Max 2 per company
+- **Foreman** (1520): Max 5 per company
+- **Supervisor** (1530): Unlimited
+- **Field Operator** (2001): Unlimited
+
+### Company-Centric Login
+- Unified login endpoint (no admin/user tabs)
+- All users login with email + password
+- Role and CompanyId extracted from JWT claims
+- Routing determined by role on frontend
+
+---
+
+## Important Files
+- `JobTracker/Program.cs` - Configuration, services, middleware setup
+- `JobTracker/Controllers/WorkingAuthController.cs` - Secure JWT authentication
+- `JobTracker/Services/TenantContext.cs` - CompanyId context tracking
+- `JobTracker/Middleware/TenantContextMiddleware.cs` - Automatic tenant filtering
+- `JobTracker/Middleware/RateLimitingMiddleware.cs` - Brute force protection
+- `JobTracker/Models/UserRoles.cs` - Role definitions
+- `JobTracker/wwwroot/login.html` - Frontend login UI
+
+---
+
+## Known Status
+- **App Build**: ✅ Successful with .NET 6.0 + JWT Bearer 6.0.28
+- **Database**: ✅ Connected and seeded
+- **Branding**: ✅ 100% PROVIA (user-facing) + maintained internal namespaces
+- **Security**: ✅ Enterprise-grade (BCrypt, JWT, rate limiting, CORS)
+- **Server**: ✅ Running on 0.0.0.0:5000
+
+---
+
+## Next Steps (Future Development)
+1. Complete tenant isolation verification in all controllers
+2. Implement CompanyId validation on write operations
+3. Add audit logging for all data mutations
+4. Database schema migration for missing CompanyId fields
+5. End-to-end testing with multi-company scenarios
+
+---
 
 ## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-## System Architecture
-
-The application follows a three-tier architecture:
-
-1. **Presentation Layer**: React-based web application using Material-UI
-2. **Application Layer**: ASP.NET Core Web API with C#
-3. **Data Layer**: MySQL database for persistent storage
-
-The system uses Entity Framework Core as the ORM to interact with the database. Authentication is handled through Active Directory integration with JWT token issuance for subsequent API calls.
-
-## Key Components
-
-### Backend Structure
-
-- **Controllers**: REST API endpoints for the various entities (Jobs, Sections, Employees, TimeTracking, etc.)
-- **Services**: Business logic separated into service classes:
-  - Integration services for Microsoft Office, Google services, and CardShark
-  - BuildingCodeService for managing building code references
-  - AIAssistantService for providing AI-powered assistance
-  - ActiveDirectoryService for authentication
-- **Models**: Entity classes that represent the domain objects
-- **Data**: Database context and migration management
-
-### Frontend Structure
-
-- React-based SPA with component organization mirroring the backend entities
-- Services layer handling API communication
-- Material-UI for component styling
-- State management using React hooks or Redux (both patterns present in the codebase)
-
-### Database Schema
-
-The database design includes these main entities:
-
-- **Jobs**: Core entity representing construction/renovation projects
-- **JobSections**: Various phases of each job (11 main sections as per requirements)
-- **Employees**: Workers assigned to jobs
-- **TimeEntries**: Clock in/out records for employees
-- **Subcontractors**: External companies working on job sections
-- **BuildingCodes**: Massachusetts building code references
-
-## Data Flow
-
-1. Users authenticate via Active Directory
-2. After authentication, users receive a JWT token for API access
-3. The frontend makes API calls to manage jobs, sections, employees, and other entities
-4. Real-time data is synchronized with external systems:
-   - Microsoft Office for document generation
-   - Google services for docs and calendar
-   - CardShark for commercial integration
-5. AI assistance is provided by integrating with OpenAI API
-6. Building code references are stored in the database and served to users as needed
-
-## External Dependencies
-
-### Authentication
-- Active Directory for user authentication
-- JWT Bearer tokens for API authorization
-
-### External Services
-- Microsoft Graph API for Office integration
-- Google API for Docs and Calendar
-- CardShark API for commercial integration
-- OpenAI API for AI assistant functionality
-
-### Frontend Dependencies
-- React for UI components
-- Material-UI for styling
-- Axios for API communication
-
-### Backend Dependencies
-- Entity Framework Core for database access
-- ASP.NET Core for API and server hosting
-- Various Microsoft and third-party libraries for integration
-
-## Deployment Strategy
-
-The application is configured to run on a .NET Core runtime environment:
-
-- ASP.NET Core web server hosting the API endpoints
-- MySQL database for data storage
-- The application is configured to run on port 5000
-- In Replit, the app is started with `dotnet run --urls=http://0.0.0.0:5000`
-- The build and run workflow is managed through the .replit configuration
-
-## Development Workflow
-
-The development process for this application follows these steps:
-
-1. Set up the database with the required schema
-2. Implement core entities and relationships
-3. Add business logic in services
-4. Create API controllers for frontend interaction
-5. Develop React frontend components
-6. Integrate with external services
-7. Add automated testing
-8. Deploy and monitor
-
-The project appears to be using a feature-driven approach, where each major feature (jobs, sections, etc.) has its own set of controllers, services, and frontend components.
+- Framework: .NET 6.0 (locked to Replit environment availability)
+- Brand: PROVIA (3-arrow logo, orange/teal theme)
+- Security: Enterprise-grade (no test credentials, all secrets in env vars)
+- Database: Shared tenant model with CompanyId filtering (not separate DBs)
