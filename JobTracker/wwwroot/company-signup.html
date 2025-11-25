@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Your Company - PROVIA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #ffffff;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .signup-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .signup-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+            color: #FF9500;
+            margin-bottom: 1rem;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .app-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #FF9500;
+            box-shadow: 0 0 0 0.2rem rgba(255, 149, 0, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF9500 0%, #2F5A7E 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 149, 0, 0.4);
+            color: white;
+        }
+        
+        .form-section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #333;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #FF9500;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .alert {
+            border-radius: 15px;
+            margin-bottom: 1rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #FF9500;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #2F5A7E;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-card">
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+            
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="80" height="80" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="26">
+                            <path d="M80 48 L176 128 L80 208" stroke="#FF9500"/>
+                            <path d="M176 48 L272 128 L176 208" stroke="#2E8CCF"/>
+                            <path d="M272 48 L368 128 L272 208" stroke="#163853"/>
+                        </g>
+                    </svg>
+                </div>
+                <h1 class="app-title">PROVIA</h1>
+                <p class="app-subtitle">Register Your Company</p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="companyRegisterForm">
+                <!-- Company Information -->
+                <div class="form-section-title">
+                    <i class="fas fa-building me-2"></i>Company Information
+                </div>
+                
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="companyName" placeholder="Your Company Name" required>
+                    <label for="companyName"><i class="fas fa-briefcase me-2"></i>Company Name</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="contactEmail" placeholder="company@example.com" required>
+                    <label for="contactEmail"><i class="fas fa-envelope me-2"></i>Company Email</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="tel" class="form-control" id="contactPhone" placeholder="(555) 123-4567">
+                    <label for="contactPhone"><i class="fas fa-phone me-2"></i>Company Phone</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="address" placeholder="Street Address">
+                    <label for="address"><i class="fas fa-map-pin me-2"></i>Address</label>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="city" placeholder="City">
+                            <label for="city">City</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="state" placeholder="State" maxlength="2">
+                            <label for="state">State</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="zipCode" placeholder="Zip">
+                            <label for="zipCode">Zip Code</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Information -->
+                <div class="form-section-title">
+                    <i class="fas fa-user-tie me-2"></i>Admin Account
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="adminFirstName" placeholder="First Name" required>
+                            <label for="adminFirstName">First Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="adminLastName" placeholder="Last Name" required>
+                            <label for="adminLastName">Last Name</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Password" required>
+                    <label for="adminPassword"><i class="fas fa-lock me-2"></i>Password (at least 8 characters)</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
+                    <label for="confirmPassword"><i class="fas fa-lock me-2"></i>Confirm Password</label>
+                </div>
+
+                <!-- Plan Selection -->
+                <div class="form-section-title">
+                    <i class="fas fa-chart-line me-2"></i>Subscription Plan
+                </div>
+                
+                <div class="mb-3">
+                    <select class="form-select" id="subscriptionType" required>
+                        <option value="">Select a plan...</option>
+                        <option value="Trial">Trial (30 days, up to 10 users)</option>
+                        <option value="Starter">Starter (10 users, 5 jobs)</option>
+                        <option value="Professional">Professional (50 users, 25 jobs, advanced features)</option>
+                        <option value="Enterprise">Enterprise (unlimited users, unlimited jobs)</option>
+                    </select>
+                </div>
+
+                <!-- Language Preference -->
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-globe me-2"></i>Language Preference</label>
+                    <select class="form-select" id="languagePreference">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="pt">Português</option>
+                    </select>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary mt-4">
+                    <i class="fas fa-building me-2"></i>Register Company
+                </button>
+            </form>
+
+            <div class="login-link">
+                <p class="mb-2">Already registered?</p>
+                <a href="/login.html" class="text-decoration-none">
+                    <i class="fas fa-sign-in-alt me-2"></i>Employee Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('companyRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleCompanyRegistration();
+        });
+
+        async function handleCompanyRegistration() {
+            const adminPassword = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (adminPassword !== confirmPassword) {
+                showAlert('danger', 'Passwords do not match');
+                return;
+            }
+
+            if (adminPassword.length < 8) {
+                showAlert('danger', 'Password must be at least 8 characters');
+                return;
+            }
+
+            const registrationData = {
+                companyName: document.getElementById('companyName').value,
+                contactEmail: document.getElementById('contactEmail').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zipCode: document.getElementById('zipCode').value,
+                adminFirstName: document.getElementById('adminFirstName').value,
+                adminLastName: document.getElementById('adminLastName').value,
+                adminPassword: adminPassword,
+                requestedSubscription: document.getElementById('subscriptionType').value,
+                languagePreference: document.getElementById('languagePreference').value
+            };
+
+            try {
+                const response = await fetch('/api/Company/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registrationData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('success', 'Company registered successfully! Redirecting to login...');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    showAlert('danger', error.message || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('danger', 'Connection error. Please try again.');
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
