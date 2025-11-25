@@ -13,7 +13,7 @@ function Layout({ children }) {
       <header className="app-header">
         <div className="header-container">
           <h1>
-            <Link to="/" className="logo">Job Tracker</Link>
+            <Link to="/" className="logo">PROVIA</Link>
           </h1>
           <nav className="main-nav">
             <ul>
@@ -37,7 +37,7 @@ function Layout({ children }) {
       
       <footer className="app-footer">
         <div className="footer-container">
-          <p>&copy; {new Date().getFullYear()} Job Tracker Application</p>
+          <p>&copy; {new Date().getFullYear()} PROVIA Application</p>
         </div>
       </footer>
     </div>
