@@ -69,7 +69,7 @@ namespace JobTracker.Services
 
         public async Task<bool> SendVerificationSmsAsync(string phoneNumber, string verificationCode)
         {
-            var message = $"Job Tracker verification code: {verificationCode}. This code expires in 10 minutes.";
+            var message = $"PROVIA verification code: {verificationCode}. This code expires in 10 minutes.";
             return await SendSmsAsync(phoneNumber, message);
         }
 

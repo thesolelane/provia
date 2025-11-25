@@ -26,10 +26,10 @@ namespace JobTracker.Services
             // Smart template-based message generation
             var templates = new[]
             {
-                $"Hi {employeeName}! Your Job Tracker verification code is {verificationCode}. Expires in 10 minutes.",
-                $"{employeeName}, your verification code: {verificationCode}. Valid for 10 minutes - Job Tracker",
-                $"Job Tracker: {employeeName}, use code {verificationCode} to verify. Expires in 10 minutes.",
-                $"Hello {employeeName}, verification code {verificationCode} for Job Tracker. Expires in 10 min."
+                $"Hi {employeeName}! Your PROVIA verification code is {verificationCode}. Expires in 10 minutes.",
+                $"{employeeName}, your verification code: {verificationCode}. Valid for 10 minutes - PROVIA",
+                $"PROVIA: {employeeName}, use code {verificationCode} to verify. Expires in 10 minutes.",
+                $"Hello {employeeName}, verification code {verificationCode} for PROVIA. Expires in 10 min."
             };
 
             // Select template based on name length to optimize SMS character count

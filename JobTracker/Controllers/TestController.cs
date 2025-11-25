@@ -46,7 +46,7 @@ Start Time: {materialRun.StartTime:MM/dd/yyyy HH:mm}
 Materials Needed:
 {materialRun.Materials}
 
-This is an automated notification from the Job Tracker system.
+This is an automated notification from the PROVIA system.
 ";
 
                 var result = await _emailService.SendEmailAsync("erika.silva@preferredbuildersusa.com", subject, body);

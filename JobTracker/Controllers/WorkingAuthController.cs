@@ -928,7 +928,7 @@ namespace JobTracker.Controllers
                 }
                 else
                 {
-                    var message = $"Job Tracker verification code: {verificationCode}. Expires in 10 minutes.";
+                    var message = $"PROVIA verification code: {verificationCode}. Expires in 10 minutes.";
                     return Ok(new { 
                         message = $"Test SMS ready for {request.PhoneNumber}",
                         verificationCode = verificationCode,
@@ -986,18 +986,18 @@ namespace JobTracker.Controllers
                 {
                     try
                     {
-                        var subject = "Job Tracker Email Verification";
+                        var subject = "PROVIA Email Verification";
                         var employeeName = $"{userToVerify.FirstName} {userToVerify.LastName}";
                         var emailBody = $@"
                             <html>
                             <body>
-                                <h2>Job Tracker Email Verification</h2>
+                                <h2>PROVIA Email Verification</h2>
                                 <p>Hi {employeeName},</p>
                                 <p>Your email verification code is: <strong>{verificationCode}</strong></p>
                                 <p>This code expires in 15 minutes.</p>
                                 <p>If you didn't request this verification, please contact your administrator.</p>
                                 <br>
-                                <p>Best regards,<br>Job Tracker System</p>
+                                <p>Best regards,<br>PROVIA System</p>
                             </body>
                             </html>";
                         
@@ -1033,7 +1033,7 @@ namespace JobTracker.Controllers
                 }
                 else
                 {
-                    var subject = "Job Tracker Email Verification";
+                    var subject = "PROVIA Email Verification";
                     var emailMessage = $"Your email verification code is: {verificationCode}. This code expires in 15 minutes.";
                     return Ok(new { 
                         message = $"Test email ready for {request.Email}",

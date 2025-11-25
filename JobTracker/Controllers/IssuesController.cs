@@ -221,7 +221,7 @@ namespace JobTracker.Controllers
       </div>
 
       <div class=""footer"">
-        This is an automated notification from the <strong>Job Tracker</strong> system.<br>
+        This is an automated notification from the <strong>PROVIA</strong> system.<br>
         Report ID: #{report.Id} | Status: Open
         {(changeOrderRequired ? "<br><strong>Action Required:</strong> Review for change order processing" : "")}
       </div>
@@ -245,7 +245,7 @@ Issue Description:
 {report.Description}
 
 ---
-This is an automated notification from the Job Tracker system.
+This is an automated notification from the PROVIA system.
 Report ID: #{report.Id} | Status: Open
 ";
 

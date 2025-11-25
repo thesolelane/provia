@@ -72,7 +72,7 @@ namespace JobTracker.Services
                             <li>Contact your supervisor if you need assistance</li>
                         </ul>
                         
-                        <p>This is an automated message from the Job Tracker system.</p>
+                        <p>This is an automated message from the PROVIA system.</p>
                     </div>";
 
                 var plainTextContent = $"Location Alert: You have been automatically clocked out. You were {distance} feet from {jobName} (allowed: {allowedDistance} feet). Return to the job site or select a different location to continue working.";
@@ -140,7 +140,7 @@ namespace JobTracker.Services
         {
             try
             {
-                var subject = "Email Verification - Job Tracker";
+                var subject = "Email Verification - PROVIA";
                 var body = $"Hello {firstName}, your verification code is: {verificationCode}";
                 _logger.LogInformation($"Verification email would be sent to {email} with code: {verificationCode}");
                 return true;
@@ -156,8 +156,8 @@ namespace JobTracker.Services
         {
             try
             {
-                var subject = "Welcome to Job Tracker";
-                var body = $"Hello {firstName}, welcome to Job Tracker. Your temporary password is: {tempPassword}";
+                var subject = "Welcome to PROVIA";
+                var body = $"Hello {firstName}, welcome to PROVIA. Your temporary password is: {tempPassword}";
                 _logger.LogInformation($"Welcome email would be sent to {email}");
                 return true;
             }
@@ -172,7 +172,7 @@ namespace JobTracker.Services
         {
             try
             {
-                var subject = "Password Reset - Job Tracker";
+                var subject = "Password Reset - PROVIA";
                 var body = $"Hello {firstName}, your password reset code is: {resetCode}";
                 _logger.LogInformation($"Password reset email would be sent to {email} with code: {resetCode}");
                 return true;

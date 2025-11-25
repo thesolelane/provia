@@ -391,7 +391,7 @@ namespace JobTracker.Controllers
         private static string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "JobTracker_Password_Salt"));
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "PROVIA_Password_Salt"));
             return Convert.ToBase64String(hashedBytes);
         }
     }
