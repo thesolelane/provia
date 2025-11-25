@@ -12,11 +12,13 @@ namespace JobTracker.Controllers
     {
         private readonly JobTrackerContext _context;
         private readonly ILogger<WorkingAuthController> _logger;
+        private readonly JobTracker.Services.ITenantContext _tenantContext;
 
-        public WorkingAuthController(JobTrackerContext context, ILogger<WorkingAuthController> logger)
+        public WorkingAuthController(JobTrackerContext context, ILogger<WorkingAuthController> logger, JobTracker.Services.ITenantContext tenantContext)
         {
             _context = context;
             _logger = logger;
+            _tenantContext = tenantContext;
         }
 
         [HttpPost("login")]
@@ -501,9 +503,9 @@ namespace JobTracker.Controllers
                             return Unauthorized(new { message = "Invalid token" });
                         }
 
-                        // Get all users
+                        // Get all users for current company only - TENANT ISOLATION
                         var users = await _context.Users
-                            .Where(u => u.IsActive)
+                            .Where(u => u.IsActive && u.CompanyId == currentUser.CompanyId)
                             .OrderBy(u => u.Role)
                             .ThenBy(u => u.FirstName)
                             .Select(u => new

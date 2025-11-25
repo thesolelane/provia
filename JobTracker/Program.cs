@@ -43,6 +43,9 @@ builder.Services.AddHttpClient();
 // Register Database Seeder
 builder.Services.AddScoped<DatabaseSeeder>();
 
+// Add Tenant Context for multi-tenancy
+builder.Services.AddScoped<JobTracker.Services.ITenantContext, JobTracker.Services.TenantContext>();
+
 // Add Simple Authentication
 builder.Services.AddAuthentication("Bearer")
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, SimpleAuthenticationHandler>(
@@ -116,6 +119,9 @@ app.UseCors("AllowReactApp");
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add tenant context middleware
+app.UseMiddleware<JobTracker.Middleware.TenantContextMiddleware>();
 
 app.MapControllers();
 
