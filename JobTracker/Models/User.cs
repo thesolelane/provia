@@ -23,7 +23,7 @@ namespace JobTracker.Models
         public string? PhoneNumber { get; set; }
 
         [Required]
-        public int Role { get; set; } = 2001; // Using new role codes: 1510, 1520, 2001
+        public int Role { get; set; } = 2001; // Using new role codes: 1510 (Admin), 1520 (Foreman), 1530 (Supervisor), 2001 (Field Operator)
 
         [StringLength(50)]
         public string? UserCode { get; set; } // Format: 36DMRD-1520-001
@@ -74,8 +74,9 @@ namespace JobTracker.Models
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch
         {
-            1510 => "Master Admin",
-            1520 => "Admin", 
+            1510 => "Admin",
+            1520 => "Foreman", 
+            1530 => "Supervisor",
             2001 => "Field Operator",
             _ => "Unknown"
         };
