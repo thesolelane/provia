@@ -12,11 +12,13 @@ namespace JobTracker.Controllers
     {
         private readonly JobTrackerContext _context;
         private readonly ILogger<JobsController> _logger;
+        private readonly JobTracker.Services.ITenantContext _tenantContext;
 
-        public JobsController(JobTrackerContext context, ILogger<JobsController> logger)
+        public JobsController(JobTrackerContext context, ILogger<JobsController> logger, JobTracker.Services.ITenantContext tenantContext)
         {
             _context = context;
             _logger = logger;
+            _tenantContext = tenantContext;
         }
 
         // GET: api/Jobs
@@ -35,7 +37,15 @@ namespace JobTracker.Controllers
                 {
                     try
                     {
-                        jobs = await _context.Jobs.ToListAsync();
+                        try
+                        {
+                            var companyId = _tenantContext.GetCurrentCompanyId();
+                            jobs = await _context.Jobs.Where(j => j.CompanyId == companyId).ToListAsync();
+                        }
+                        catch (JobTracker.Services.InvalidOperationException)
+                        {
+                            jobs = new List<Job>();
+                        }
                         break;
                     }
                     catch (Exception dbEx) when (retryCount < maxRetries - 1)
@@ -56,8 +66,13 @@ namespace JobTracker.Controllers
                     }
                 }
                 
-                // If no jobs exist, create sample jobs
+                // If no jobs exist, return empty list (don't create sample jobs for security)
                 if (jobs.Count == 0)
+                {
+                    return Ok(jobs);
+                }
+                
+                if (false) // Disabled sample job creation for multi-tenant security
                 {
                     var sampleJobs = new List<Job>
                     {
