@@ -206,15 +206,29 @@ SubContractorCompany Junction Table:
 
 ---
 
+### Job Bidding System ✅ (November 25, 2025)
+- **JobBid Table**: Sub-contractors bid on available jobs
+- **Bidding Workflow**: Sub bids → Foreman accepts/rejects → Sub selects payment method
+- **Payment Structure**: X% advance at acceptance, rest after inspection passes
+- **Supervisor Approval**: Supervisors verify work completion & inspection status
+- **Payment Methods**: Direct Deposit, Check, ACH (selected at bid acceptance)
+- **API Endpoints**:
+  - POST `/api/jobbid/place-bid` - Sub places bid on job
+  - POST `/api/jobbid/accept-bid` - Foreman accepts with payment terms
+  - POST `/api/jobbid/reject-bid/{bidId}` - Foreman rejects bid
+  - POST `/api/jobbid/approve-work` - Supervisor approves completion
+  - GET `/api/jobbid/job/{jobId}` - View all bids for a job
+  - GET `/api/jobbid/my-bids` - Sub-contractor views their bids
+
 ## Next Steps (Future Development)
-1. Create JobBid table for formal bidding system
-2. Implement progress tracking/photo uploads for accepted jobs
-3. Add call/response messaging system
-4. Create mobile app (iOS/Android) with local SQLite sync
-5. Add contractor profile verification system
-6. Implement contractor rating/review system
-7. Add payment processing for completed jobs
-8. Create analytics dashboard for bid acceptance rates
+1. Job progress tracking/photo uploads for accepted jobs
+2. Call/response messaging system (admin/foreman ↔ sub)
+3. Mobile app (iOS/Android) with local SQLite sync + offline bidding
+4. Contractor profile verification system
+5. Contractor rating/review system
+6. Payment processing integration (Stripe for contractor payouts)
+7. Analytics dashboard (bid acceptance rates, payment tracking)
+8. Customer-facing payment portal (future phase)
 
 ---
 
