@@ -5,6 +5,10 @@ namespace JobTracker.Models
     public class InspectionReminder
     {
         public int Id { get; set; }
+
+        [Required]
+        public int CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
         
         [Required]
         public int JobSectionId { get; set; }

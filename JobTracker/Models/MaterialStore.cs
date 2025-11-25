@@ -8,6 +8,10 @@ namespace JobTracker.Models
         public int Id { get; set; }
 
         [Required]
+        public int CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
+
+        [Required]
         [StringLength(200)]
         public string StoreName { get; set; } = string.Empty;
 

@@ -9,6 +9,10 @@ namespace JobTracker.Models
         public int Id { get; set; }
 
         [Required]
+        public int CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
+
+        [Required]
         public int UserId { get; set; }
         public User User { get; set; } = null!;
 
