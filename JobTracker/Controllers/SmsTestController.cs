@@ -87,7 +87,7 @@ namespace JobTracker.Controllers
             {
                 // Generate verification code
                 var verificationCode = new Random().Next(100000, 999999).ToString();
-                var message = $"Job Tracker verification code: {verificationCode}. This code expires in 10 minutes.";
+                var message = $"PROVIA verification code: {verificationCode}. This code expires in 10 minutes.";
 
                 var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{accountSid}:{authToken}"));
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);

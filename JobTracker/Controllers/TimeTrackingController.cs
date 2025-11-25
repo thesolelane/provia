@@ -890,7 +890,7 @@ namespace JobTracker.Controllers
       </div>
 
       <div class=""footer"">
-        This is an automated notification from the <strong>Job Tracker</strong> system.
+        This is an automated notification from the <strong>PROVIA</strong> system.
       </div>
     </div>
   </body>
@@ -907,7 +907,7 @@ Start Time: {materialRun.StartTime:MM/dd/yyyy HH:mm}
 Materials Needed:
 {materialRun.Materials}
 
-This is an automated notification from the Job Tracker system.
+This is an automated notification from the PROVIA system.
 ";
 
                     // Send email to all master admins and admins

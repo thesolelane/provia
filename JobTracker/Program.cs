@@ -166,7 +166,7 @@ app.UseMiddleware<JobTracker.Middleware.TenantContextMiddleware>();
 app.MapControllers();
 
 // Add simple test endpoint
-app.MapGet("/api/test", () => new { Message = "Job Tracker API is working!", Timestamp = DateTime.UtcNow });
+app.MapGet("/api/test", () => new { Message = "PROVIA API is working!", Timestamp = DateTime.UtcNow });
 
 // Map specific routes that should not fallback to SPA
 app.MapWhen(context => !context.Request.Path.StartsWithSegments("/api"), appBuilder =>
