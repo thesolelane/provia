@@ -39,6 +39,8 @@ namespace JobTracker.Data
         public DbSet<SubContractorCompany> SubContractorCompanies { get; set; } = null!;
         public DbSet<ClientInfo> ClientInfos { get; set; } = null!;
         public DbSet<JobBid> JobBids { get; set; } = null!;
+        public DbSet<InspectionStage> InspectionStages { get; set; } = null!;
+        public DbSet<PermitDocument> PermitDocuments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
