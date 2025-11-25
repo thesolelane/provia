@@ -78,6 +78,7 @@ namespace JobTracker.Models
             1520 => "Foreman", 
             1530 => "Supervisor",
             2001 => "Field Operator",
+            2010 => "Sub-Contractor",
             _ => "Unknown"
         };
     }
