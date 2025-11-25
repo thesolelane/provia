@@ -179,10 +179,10 @@ namespace JobTracker.Controllers
                     jobs = jobs.Select(j => new
                     {
                         jobId = j.Id,
-                        jobName = j.JobName,
+                        jobName = j.Name,
                         companyId = j.CompanyId,
                         status = j.Status,
-                        estimatedValue = j.EstimatedCost,
+                        estimatedValue = j.Budget,
                         createdAt = j.CreatedAt
                     }).ToList()
                 });

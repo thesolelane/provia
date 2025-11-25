@@ -220,7 +220,7 @@ namespace JobTracker.Services
 
                 // Get active/pending jobs from these companies
                 return await _context.Jobs
-                    .Where(j => companies.Contains(j.CompanyId) && (j.Status == "Active" || j.Status == "Pending"))
+                    .Where(j => j.CompanyId.HasValue && companies.Contains(j.CompanyId.Value) && (j.Status == "Planning" || j.Status == "InProgress"))
                     .OrderByDescending(j => j.CreatedAt)
                     .ToListAsync();
             }
@@ -250,7 +250,7 @@ namespace JobTracker.Services
                 // TODO: Query JobBid table once created to find accepted bids
                 // For now, return jobs in progress/assigned to this company
                 return await _context.Jobs
-                    .Where(j => companies.Contains(j.CompanyId) && j.Status == "In Progress")
+                    .Where(j => j.CompanyId.HasValue && companies.Contains(j.CompanyId.Value) && j.Status == "InProgress")
                     .OrderByDescending(j => j.CreatedAt)
                     .ToListAsync();
             }
