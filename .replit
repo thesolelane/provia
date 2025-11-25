@@ -1,4 +1,4 @@
-modules = ["dotnet", "dotnet-7.0", "python-3.11", "nodejs-20", "postgresql-16"]
+modules = ["dotnet", "dotnet-7.0", "python-3.11", "nodejs-20", "postgresql-16", "dotnet-10.0"]
 
 [nix]
 channel = "stable-24_05"

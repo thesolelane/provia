@@ -58,3 +58,6 @@
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.pdb
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.genruntimeconfig.cache
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/ref/JobTracker.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
