@@ -12,12 +12,18 @@ namespace JobTracker.Controllers
     {
         private readonly JobTrackerContext _context;
         private readonly ITenantContext _tenantContext;
+        private readonly ISubContractorService _subContractorService;
         private readonly ILogger<DashboardController> _logger;
 
-        public DashboardController(JobTrackerContext context, ITenantContext tenantContext, ILogger<DashboardController> logger)
+        public DashboardController(
+            JobTrackerContext context, 
+            ITenantContext tenantContext, 
+            ISubContractorService subContractorService,
+            ILogger<DashboardController> logger)
         {
             _context = context;
             _tenantContext = tenantContext;
+            _subContractorService = subContractorService;
             _logger = logger;
         }
 
@@ -50,6 +56,13 @@ namespace JobTracker.Controllers
                 _tenantContext.SetCurrentCompanyId(companyId);
                 _tenantContext.UserId = user.Id;
 
+                // Special handling for Sub-Contractors: they work for multiple companies
+                if (user.Role == 2010)
+                {
+                    // Sub-contractors see multi-company portal
+                    return Redirect("/contractor-dashboard.html");
+                }
+
                 // Route based on role
                 return user.Role switch
                 {
@@ -57,7 +70,6 @@ namespace JobTracker.Controllers
                     1520 => Redirect("/foreman-dashboard.html"), // Foreman
                     1530 => Redirect("/supervisor-dashboard.html"), // Supervisor
                     2001 => Redirect("/field-operator-dashboard.html"), // Field Operator
-                    2010 => Redirect("/contractor-dashboard.html"), // Sub-Contractor
                     _ => Redirect("/index.html")
                 };
             }
@@ -100,6 +112,85 @@ namespace JobTracker.Controllers
             {
                 _logger.LogError(ex, "Error getting current user");
                 return StatusCode(500, new { message = "Error retrieving user info" });
+            }
+        }
+
+        /// <summary>
+        /// Get all companies a sub-contractor works for
+        /// </summary>
+        [HttpGet("api/contractor/companies")]
+        public async Task<ActionResult<object>> GetContractorCompanies()
+        {
+            try
+            {
+                var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+                
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+                if (user == null || user.Role != 2010)
+                    return Forbid();
+
+                var companies = await _subContractorService.GetCompaniesForSubContractorAsync(user.Id);
+
+                return Ok(new
+                {
+                    subContractorId = user.Id,
+                    companyCount = companies.Count,
+                    companies = companies.Select(sc => new
+                    {
+                        companyId = sc.CompanyId,
+                        companyName = sc.Company.CompanyName,
+                        status = sc.Status,
+                        isVerified = sc.IsVerified,
+                        specializations = sc.Specializations,
+                        billingRate = sc.BillingRate,
+                        addedAt = sc.AddedAt,
+                        lastActivityAt = sc.LastActivityAt
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting contractor companies");
+                return StatusCode(500, new { message = "Error retrieving companies" });
+            }
+        }
+
+        /// <summary>
+        /// Get available job bids for a sub-contractor
+        /// </summary>
+        [HttpGet("api/contractor/available-bids")]
+        public async Task<ActionResult<object>> GetAvailableBids()
+        {
+            try
+            {
+                var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+                
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+                if (user == null || user.Role != 2010)
+                    return Forbid();
+
+                var jobs = await _subContractorService.GetAvailableBidsForSubContractorAsync(user.Id);
+
+                return Ok(new
+                {
+                    availableJobCount = jobs.Count,
+                    jobs = jobs.Select(j => new
+                    {
+                        jobId = j.Id,
+                        jobName = j.JobName,
+                        companyId = j.CompanyId,
+                        status = j.Status,
+                        estimatedValue = j.EstimatedCost,
+                        createdAt = j.CreatedAt
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting available bids");
+                return StatusCode(500, new { message = "Error retrieving bids" });
             }
         }
     }

@@ -49,6 +49,12 @@ builder.Services.AddScoped<JobTracker.Services.ITenantContext, JobTracker.Servic
 // Add JWT Token Service
 builder.Services.AddScoped<JobTracker.Services.IJwtTokenService, JobTracker.Services.JwtTokenService>();
 
+// Add Sub-Contractor Service for multi-company support
+builder.Services.AddScoped<JobTracker.Services.ISubContractorService, JobTracker.Services.SubContractorService>();
+
+// Add Mobile Sync Service
+builder.Services.AddScoped<JobTracker.Services.IMobileSyncService, JobTracker.Services.MobileSyncService>();
+
 // SECURITY: Configure JWT Authentication
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
 var key = Encoding.ASCII.GetBytes(jwtSecret);
