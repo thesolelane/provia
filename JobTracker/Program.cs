@@ -104,6 +104,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Disable caching for static HTML files to prevent preview cache issues
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value;
+    if (path != null && (path.EndsWith(".html") || path == "/"))
+    {
+        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        context.Response.Headers.Pragma = "no-cache";
+        context.Response.Headers.Expires = "0";
+    }
+    await next();
+});
+
 // Serve static files for the React app
 app.UseStaticFiles();
 
