@@ -26,8 +26,8 @@ namespace JobTracker.Services
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _logger = logger;
-            _fromEmail = configuration["EmailSettings:FromEmail"] ?? "noreply@smartjobtracker.com";
-            _fromName = configuration["EmailSettings:FromName"] ?? "Smart Job Tracker";
+            _fromEmail = configuration["EmailSettings:FromEmail"] ?? "noreply@provia.com";
+            _fromName = configuration["EmailSettings:FromName"] ?? "PROVIA";
             
             var apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
             _logger.LogInformation($"SendGrid API Key found: {!string.IsNullOrEmpty(apiKey)}");

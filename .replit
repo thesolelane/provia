@@ -43,3 +43,4 @@ expertMode = true
 
 [userenv.shared]
 JWT_SECRET_KEY = "PROVIA-Production-SecureKey-MinimumLength-32Chars"
+ALLOWED_ORIGINS = "http://localhost:3000,http://localhost:5000,http://0.0.0.0:5000"
