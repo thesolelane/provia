@@ -20,7 +20,7 @@ namespace JobTracker.Services
         Task<InspectionStage?> SubmitInspectionAsync(int inspectionId, int inspectorId, bool passed, string? notes);
         Task<bool> UploadPermitAsync(int inspectionId, int jobBidId, int companyId, string permitType, string? permitNumber, string? documentUrl, string? fileName, int uploadedByUserId);
         Task<bool> ApprovePermitAsync(int permitId, int reviewedByUserId, bool approved, string? notes);
-        Task<List<Inspection>> GetInspectionsForBidAsync(int jobBidId);
+        Task<List<InspectionStage>> GetInspectionsForBidAsync(int jobBidId);
         Task<List<PermitDocument>> GetPermitsForInspectionAsync(int inspectionId);
         Task<bool> CanAdvanceToNextStageAsync(int jobBidId);
         Task<string?> GetNextInspectionStageAsync(int jobBidId);
@@ -64,7 +64,7 @@ namespace JobTracker.Services
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _context.Inspections.Add(inspection);
+                _context.InspectionStages.Add(inspection);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"Inspection created for bid {jobBidId} at stage {stage}");
@@ -84,7 +84,7 @@ namespace JobTracker.Services
         {
             try
             {
-                var inspection = await _context.Inspections.FirstOrDefaultAsync(i => i.Id == inspectionId);
+                var inspection = await _context.InspectionStages.FirstOrDefaultAsync(i => i.Id == inspectionId);
                 if (inspection == null)
                 {
                     _logger.LogWarning("Inspection not found");
@@ -117,7 +117,7 @@ namespace JobTracker.Services
         {
             try
             {
-                var inspection = await _context.Inspections.FirstOrDefaultAsync(i => i.Id == inspectionId);
+                var inspection = await _context.InspectionStages.FirstOrDefaultAsync(i => i.Id == inspectionId);
                 if (inspection == null)
                 {
                     _logger.LogWarning("Inspection not found");
@@ -126,7 +126,7 @@ namespace JobTracker.Services
 
                 var permit = new PermitDocument
                 {
-                    InspectionId = inspectionId,
+                    InspectionStageId = inspectionId,
                     JobBidId = jobBidId,
                     CompanyId = companyId,
                     PermitType = permitType,
@@ -187,11 +187,11 @@ namespace JobTracker.Services
         /// <summary>
         /// Get all inspections for a job bid
         /// </summary>
-        public async Task<List<Inspection>> GetInspectionsForBidAsync(int jobBidId)
+        public async Task<List<InspectionStage>> GetInspectionsForBidAsync(int jobBidId)
         {
             try
             {
-                return await _context.Inspections
+                return await _context.InspectionStages
                     .Where(i => i.JobBidId == jobBidId)
                     .OrderBy(i => InspectionStages.IndexOf(i.Stage))
                     .ToListAsync();
@@ -199,7 +199,7 @@ namespace JobTracker.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting inspections");
-                return new List<Inspection>();
+                return new List<InspectionStage>();
             }
         }
 
@@ -211,7 +211,7 @@ namespace JobTracker.Services
             try
             {
                 return await _context.PermitDocuments
-                    .Where(p => p.InspectionId == inspectionId)
+                    .Where(p => p.InspectionStageId == inspectionId)
                     .OrderByDescending(p => p.CreatedAt)
                     .ToListAsync();
             }
