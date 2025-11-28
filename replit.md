@@ -15,6 +15,14 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ## Recent Changes (November 28, 2025)
 
+### Temporary Password System for User Creation ✅
+- **Auto-Generated Passwords**: When admins create users without providing a password, system generates a secure 12-character random password
+- **Email Delivery**: Temporary password sent via email (if available) with instructions to change on first login
+- **PasswordNeedsChange Flag**: User.PasswordNeedsChange tracks if password must be changed during email verification
+- **Change Password Endpoint**: POST /api/WorkingAuth/change-password requires current password + new password
+- **Login Response**: Login endpoint now returns `passwordNeedsChange` flag for client-side password change prompt
+- **Future Enhancement**: Email verification flow will force password change before account activation
+
 ### Massachusetts Code Engine (Merged Architecture) ✅
 - **CodeBook Table**: Stores MA jurisdiction codes (780 CMR Building, 248 CMR Plumbing/Gas, 527 CMR 12 Electrical, 527 CMR 1 Fire, 521 CMR Accessibility)
 - **CodeRule Table**: Trigger conditions linking scope selections to required permits/inspections with code section references

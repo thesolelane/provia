@@ -117,7 +117,8 @@ namespace JobTracker.Controllers
                         lastName = user.LastName,
                         role = user.Role,
                         companyId = user.CompanyId,
-                        companyName = user.Company?.CompanyName
+                        companyName = user.Company?.CompanyName,
+                        passwordNeedsChange = user.PasswordNeedsChange
                     }
                 });
             }
@@ -453,11 +454,10 @@ namespace JobTracker.Controllers
                         LanguagePreference = request.LanguagePreference ?? "en"
                     };
 
-                    // SECURITY: Hash password using BCrypt
-                    if (!string.IsNullOrEmpty(request.Password))
-                    {
-                        newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-                    }
+                    // SECURITY: Generate temporary password if not provided
+                    string tempPassword = request.Password ?? GenerateTemporaryPassword();
+                    newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+                    newUser.PasswordNeedsChange = true; // User must change password on first login
 
                     if (!string.IsNullOrEmpty(request.Pin))
                     {
@@ -467,11 +467,47 @@ namespace JobTracker.Controllers
                     _context.Users.Add(newUser);
                     await _context.SaveChangesAsync();
 
+                    // Send email with temporary password if email provided
+                    if (!string.IsNullOrEmpty(newUser.Email))
+                    {
+                        try
+                        {
+                            var emailService = HttpContext.RequestServices.GetService<JobTracker.Services.IEmailService>();
+                            if (emailService != null)
+                            {
+                                var subject = "PROVIA Account Created - Temporary Password";
+                                var emailBody = $@"
+Hello {newUser.FirstName} {newUser.LastName},
+
+Your PROVIA account has been created. Below are your temporary login credentials:
+
+Email: {newUser.Email}
+Temporary Password: {tempPassword}
+
+Please log in and change your password immediately. This temporary password expires after your first login.
+
+User Code: {newUser.UserCode}
+
+If you did not request this account, please contact your administrator.
+
+Best regards,
+PROVIA Team
+";
+                                await emailService.SendEmailAsync(newUser.Email, subject, emailBody);
+                            }
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogWarning(emailEx, "Failed to send welcome email to user {userId}", newUser.Id);
+                        }
+                    }
+
                     return Ok(new
                     {
-                        message = "User created successfully",
+                        message = "User created successfully. Temporary password sent to email.",
                         id = newUser.Id,
                         userCode = newUser.UserCode,
+                        tempPassword = tempPassword,
                         user = new
                         {
                             id = newUser.Id,
@@ -480,7 +516,8 @@ namespace JobTracker.Controllers
                             email = newUser.Email,
                             phoneNumber = newUser.PhoneNumber,
                             role = newUser.Role,
-                            userCode = newUser.UserCode
+                            userCode = newUser.UserCode,
+                            passwordNeedsChange = true
                         }
                     });
                 }
@@ -501,6 +538,90 @@ namespace JobTracker.Controllers
                 _logger.LogError(ex, "Error creating user");
                 return StatusCode(500, new { message = "An error occurred while creating the user" });
             }
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestModel request)
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new { message = "Invalid token format" });
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                
+                try
+                {
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                    var key = Encoding.ASCII.GetBytes(jwtSecret);
+                    
+                    SecurityToken validatedToken;
+                    var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ClockSkew = TimeSpan.Zero
+                    }, out validatedToken);
+
+                    var userIdClaim = principal.FindFirst("id");
+                    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    {
+                        return Unauthorized(new { message = "Invalid token" });
+                    }
+
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                    if (user == null)
+                    {
+                        return Unauthorized(new { message = "User not found" });
+                    }
+
+                    if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                    {
+                        return Unauthorized(new { message = "Invalid current password" });
+                    }
+
+                    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                    user.PasswordNeedsChange = false;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation($"User {user.Id} changed password successfully");
+                    return Ok(new { message = "Password changed successfully" });
+                }
+                catch (SecurityTokenException)
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                catch (Exception tokenEx)
+                {
+                    _logger.LogWarning(tokenEx, "Token validation error");
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password");
+                return StatusCode(500, new { message = "An error occurred while changing password" });
+            }
+        }
+
+        private string GenerateTemporaryPassword()
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+            var random = new Random();
+            var password = new StringBuilder();
+            for (int i = 0; i < 12; i++)
+            {
+                password.Append(chars[random.Next(chars.Length)]);
+            }
+            return password.ToString();
         }
 
         [HttpPost("logout")]
