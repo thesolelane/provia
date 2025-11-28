@@ -392,30 +392,22 @@ namespace JobTracker.Controllers
                     }
 
                     var userIdClaim = principal.FindFirst("id");
-                    var roleClaim = principal.FindFirst("role");
                     
-                    _logger.LogInformation($"Token claims - ID: {userIdClaim?.Value}, Role: {roleClaim?.Value}");
-                    
-                    if (userIdClaim == null || roleClaim == null)
+                    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                     {
-                        _logger.LogWarning($"Missing claims. ID: {userIdClaim}, Role: {roleClaim}");
                         return Unauthorized(new { message = "Invalid token claims" });
                     }
 
-                    if (!int.TryParse(userIdClaim.Value, out int userId) || !int.TryParse(roleClaim.Value, out int userRole))
-                    {
-                        return Unauthorized(new { message = "Invalid token data" });
-                    }
-
-                    if (userRole != UserRoles.Admin) // 1510 is Admin
-                    {
-                        return Forbid("Only administrators can create users");
-                    }
-
+                    // Fetch current user from database to verify admin role
                     var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
                     if (currentUser == null)
                     {
                         return Unauthorized(new { message = "Invalid token" });
+                    }
+
+                    if (currentUser.Role != UserRoles.Admin) // 1510 is Admin
+                    {
+                        return Forbid("Only administrators can create users");
                     }
 
                     // Validate request
