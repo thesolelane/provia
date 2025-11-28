@@ -291,37 +291,57 @@ namespace JobTracker.Controllers
                 
                 try
                 {
-                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
-                    var parts = tokenData.Split(':');
-                    if (parts.Length >= 2 && int.TryParse(parts[0], out int userId))
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                    var key = Encoding.ASCII.GetBytes(jwtSecret);
+                    
+                    SecurityToken validatedToken;
+                    var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
                     {
-                        var user = await _context.Users
-                            .Include(u => u.Company)
-                            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ClockSkew = TimeSpan.Zero
+                    }, out validatedToken);
 
-                        if (user != null)
-                        {
-                            return Ok(new
-                            {
-                                id = user.Id,
-                                email = user.Email,
-                                firstName = user.FirstName,
-                                lastName = user.LastName,
-                                role = user.Role,
-                                companyId = user.CompanyId,
-                                companyName = user.Company?.CompanyName,
-                                isActive = user.IsActive,
-                                lastLogin = user.LastLoginAt
-                            });
-                        }
+                    var userIdClaim = principal.FindFirst("id");
+                    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    {
+                        return Unauthorized(new { message = "Invalid token claims" });
                     }
-                }
-                catch
-                {
-                    // Token parsing failed
-                }
 
-                return Unauthorized(new { message = "Invalid token" });
+                    var user = await _context.Users
+                        .Include(u => u.Company)
+                        .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+
+                    if (user != null)
+                    {
+                        return Ok(new
+                        {
+                            id = user.Id,
+                            email = user.Email,
+                            firstName = user.FirstName,
+                            lastName = user.LastName,
+                            role = user.Role,
+                            companyId = user.CompanyId,
+                            companyName = user.Company?.CompanyName,
+                            isActive = user.IsActive,
+                            lastLogin = user.LastLoginAt
+                        });
+                    }
+
+                    return Unauthorized(new { message = "User not found" });
+                }
+                catch (SecurityTokenException)
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                catch (Exception tokenEx)
+                {
+                    _logger.LogWarning(tokenEx, "Token validation error");
+                    return Unauthorized(new { message = "Invalid token" });
+                }
             }
             catch (Exception ex)
             {
