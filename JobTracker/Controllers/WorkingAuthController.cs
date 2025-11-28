@@ -469,7 +469,10 @@ namespace JobTracker.Controllers
                     }
 
                     _context.Users.Add(newUser);
+                    _logger.LogInformation($"User {newUser.Id} added to context. Saving to database...");
+                    
                     await _context.SaveChangesAsync();
+                    _logger.LogInformation($"User {newUser.FirstName} {newUser.LastName} successfully saved to database. ID: {newUser.Id}, CompanyId: {newUser.CompanyId}, UserCode: {newUser.UserCode}");
 
                     // Send email with temporary password if email provided
                     if (!string.IsNullOrEmpty(newUser.Email))
