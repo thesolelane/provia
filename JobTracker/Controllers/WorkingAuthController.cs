@@ -373,20 +373,32 @@ namespace JobTracker.Controllers
                     var key = Encoding.ASCII.GetBytes(jwtSecret);
                     
                     SecurityToken validatedToken;
-                    var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                    ClaimsPrincipal principal;
+                    try
                     {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ClockSkew = TimeSpan.Zero
-                    }, out validatedToken);
+                        principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(key),
+                            ValidateIssuer = false,
+                            ValidateAudience = false,
+                            ClockSkew = TimeSpan.Zero
+                        }, out validatedToken);
+                    }
+                    catch (SecurityTokenException stEx)
+                    {
+                        _logger.LogWarning(stEx, "JWT validation failed");
+                        return Unauthorized(new { message = "Invalid token signature or format" });
+                    }
 
                     var userIdClaim = principal.FindFirst("id");
                     var roleClaim = principal.FindFirst("role");
                     
+                    _logger.LogInformation($"Token claims - ID: {userIdClaim?.Value}, Role: {roleClaim?.Value}");
+                    
                     if (userIdClaim == null || roleClaim == null)
                     {
+                        _logger.LogWarning($"Missing claims. ID: {userIdClaim}, Role: {roleClaim}");
                         return Unauthorized(new { message = "Invalid token claims" });
                     }
 
