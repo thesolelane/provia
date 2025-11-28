@@ -232,7 +232,7 @@
                     <select class="form-select" id="subscriptionType" required>
                         <option value="">Select a plan...</option>
                         <option value="Trial">Trial (30 days, up to 10 users)</option>
-                        <option value="Starter">Starter (10 users, 5 jobs)</option>
+                        <option value="Basic">Basic (10 users, 5 jobs)</option>
                         <option value="Professional">Professional (50 users, 25 jobs, advanced features)</option>
                         <option value="Enterprise">Enterprise (unlimited users, unlimited jobs)</option>
                     </select>
@@ -321,7 +321,7 @@
                     showAlert('danger', error.message || 'Registration failed. Please try again.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Registration error:', error);
                 showAlert('danger', 'Connection error. Please try again.');
             }
         }
