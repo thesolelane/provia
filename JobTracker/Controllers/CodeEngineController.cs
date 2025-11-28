@@ -334,11 +334,11 @@ namespace JobTracker.Controllers
             {
                 roles = new[]
                 {
-                    new { code = RoleCodes.Admin, name = "Admin", limit = RoleCodes.AdminLimit, canHoldPermit = false },
-                    new { code = RoleCodes.Supervisor, name = "Supervisor", limit = RoleCodes.SupervisorLimit, canHoldPermit = false },
-                    new { code = RoleCodes.Foreman, name = "Foreman", limit = RoleCodes.ForemanLimit, canHoldPermit = false },
-                    new { code = RoleCodes.FieldOperator, name = "Field Operator", limit = RoleCodes.FieldOperatorLimit, canHoldPermit = false },
-                    new { code = RoleCodes.Subcontractor, name = "Subcontractor", limit = RoleCodes.SubcontractorLimit, canHoldPermit = true }
+                    new { code = RoleCodes.MasterAdmin, name = "Master Admin", description = "General Contractor / Account Owner (individual or company)", limit = RoleCodes.MasterAdminLimit, canHoldPermit = false, isLicenseHolder = true },
+                    new { code = RoleCodes.Supervisor, name = "Supervisor", description = "Project managers, create jobs, approve scopes", limit = RoleCodes.SupervisorLimit, canHoldPermit = false, isLicenseHolder = false },
+                    new { code = RoleCodes.Foreman, name = "Foreman", description = "On-site leads, assign daily tasks", limit = RoleCodes.ForemanLimit, canHoldPermit = false, isLicenseHolder = false },
+                    new { code = RoleCodes.FieldOperator, name = "Field Operator", description = "In-house crews under GC permit", limit = RoleCodes.FieldOperatorLimit, canHoldPermit = false, isLicenseHolder = false },
+                    new { code = RoleCodes.Subcontractor, name = "Subcontractor", description = "Licensed trades with permit authority", limit = RoleCodes.SubcontractorLimit, canHoldPermit = true, isLicenseHolder = false }
                 },
                 departments = DepartmentCodes.AllDepartments,
                 licensedTrades = TradeTypes.LicensedTrades,

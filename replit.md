@@ -28,12 +28,14 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 ```
 Role Code | Name          | Limit | Permit Authority | Key Permissions
 ----------|---------------|-------|------------------|------------------
-1510      | Admin         | 2     | No               | Full system control, edit codes/templates
+1510      | Master Admin  | 2     | No               | GC/Account Owner (individual or company), license holder, full control
 1520      | Supervisor    | 4     | No               | Create jobs, approve scopes, assign trades
 1530      | Foreman       | 3     | No               | On-site lead, daily tasks, mark ready for inspection
 2001      | Field Operator| ∞     | No (GC permit)   | Task updates, checklists, photos
 2010      | Subcontractor | ∞     | Yes              | Bid, hold permits, flag inspections
 ```
+
+**Master Admin (1510)**: The General Contractor who is the account owner. Can be an individual name or company name. This is the entity that holds the PROVIA license.
 
 **RoleConfig.cs**: Static class with role codes, limits, and permissions
 **RolePermissions**: Per-role permission arrays for authorization checks
