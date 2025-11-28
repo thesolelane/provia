@@ -71,6 +71,9 @@ namespace JobTracker.Models
         // For GPS tracking consent during work hours
         public bool LocationTrackingConsent { get; set; } = false;
 
+        // For temporary password system - tracks if user needs to change password on first login
+        public bool PasswordNeedsChange { get; set; } = false;
+
         public string GetDisplayName() => $"{FirstName} {LastName}";
         public string GetRoleDisplayName() => Role switch
         {
@@ -124,5 +127,34 @@ namespace JobTracker.Models
         public string? PhoneNumber { get; set; }
         public bool LocationTrackingConsent { get; set; }
         public string? LanguagePreference { get; set; }
+    }
+
+    public class CreateUserRequestModel
+    {
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        
+        public string? Password { get; set; } // Optional - temp password will be generated if not provided
+        public string? Pin { get; set; }
+
+        [Required]
+        public int Role { get; set; }
+
+        public string LanguagePreference { get; set; } = "en";
+    }
+
+    public class ChangePasswordRequestModel
+    {
+        [Required]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required]
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
