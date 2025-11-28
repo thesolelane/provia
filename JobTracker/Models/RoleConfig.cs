@@ -7,22 +7,27 @@ namespace JobTracker.Models
     /// Role Configuration - Defines role codes, limits, and permissions
     /// 
     /// ROLE CODES (CONSOLIDATED):
-    /// - 1510 = Admin (2 max per company) - Full system control
+    /// - 1510 = Master Admin / General Contractor (2 max per company) - Account owner, license holder, full system control
     /// - 1520 = Supervisor (4 max per company) - Project managers, create jobs, approve scopes
     /// - 1530 = Foreman (3 max per company) - On-site leads, assign daily tasks
     /// - 2001 = Field Operator (unlimited) - In-house crews under GC permit
     /// - 2010 = Subcontractor (unlimited) - Licensed trades with permit authority
+    /// 
+    /// Note: Master Admin (1510) can be an individual name or company name - this is the account holder
+    /// who has the license to use PROVIA.
     /// </summary>
     public static class RoleCodes
     {
-        public const int Admin = 1510;
+        public const int MasterAdmin = 1510;  // General Contractor / Account Owner
+        public const int Admin = 1510;        // Alias for backwards compatibility
         public const int Supervisor = 1520;
         public const int Foreman = 1530;
         public const int FieldOperator = 2001;
         public const int Subcontractor = 2010;
 
         // Role limits per company
-        public const int AdminLimit = 2;
+        public const int MasterAdminLimit = 2;
+        public const int AdminLimit = 2;      // Alias
         public const int SupervisorLimit = 4;
         public const int ForemanLimit = 3;
         public const int FieldOperatorLimit = -1; // Unlimited
@@ -32,7 +37,7 @@ namespace JobTracker.Models
         {
             return roleCode switch
             {
-                1510 => "Admin",
+                1510 => "Master Admin",  // General Contractor / Account Owner
                 1520 => "Supervisor",
                 1530 => "Foreman",
                 2001 => "Field Operator",
@@ -80,8 +85,9 @@ namespace JobTracker.Models
     /// </summary>
     public static class RolePermissions
     {
-        // ADMIN (1510) - Full control
-        public static readonly string[] AdminPermissions = new[]
+        // MASTER ADMIN / GC (1510) - Account owner with full control
+        // Can be individual name or company name - holds PROVIA license
+        public static readonly string[] MasterAdminPermissions = new[]
         {
             "CREATE_JOB", "EDIT_JOB", "DELETE_JOB",
             "CREATE_USER", "EDIT_USER", "DELETE_USER",
@@ -90,8 +96,12 @@ namespace JobTracker.Models
             "APPROVE_SCOPE", "APPROVE_QUOTE", "APPROVE_CHANGE_ORDER",
             "REQUEST_INSPECTION", "OVERRIDE_INSPECTION",
             "ASSIGN_TRADES", "VIEW_ALL_FINANCIALS",
-            "VIEW_ALL_JOBS", "VIEW_ALL_TRADES"
+            "VIEW_ALL_JOBS", "VIEW_ALL_TRADES",
+            "MANAGE_LICENSE", "MANAGE_BILLING"
         };
+        
+        // Alias for backwards compatibility
+        public static readonly string[] AdminPermissions = MasterAdminPermissions;
 
         // SUPERVISOR (1520) - Project management
         public static readonly string[] SupervisorPermissions = new[]
