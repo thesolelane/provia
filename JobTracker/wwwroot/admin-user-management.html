@@ -236,6 +236,14 @@
         }
 
         function createUser() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            
+            if (!token || !userInfo.companyId) {
+                alert('Session expired. Please log in again.');
+                return;
+            }
+
             var formData = {
                 firstName: document.getElementById('firstName').value,
                 lastName: document.getElementById('lastName').value,
@@ -252,7 +260,33 @@
                 formData.pin = document.getElementById('pin').value;
             }
 
-            alert('Create user function called with data: ' + JSON.stringify(formData, null, 2));
+            // Send to API
+            fetch('/api/WorkingAuth/create-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(r => r.json())
+            .then(response => {
+                if (response.id) {
+                    alert(`User created successfully!\nName: ${formData.firstName} ${formData.lastName}\nID: ${response.userCode || 'Generated'}`);
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    // Clear form
+                    document.getElementById('addUserForm').reset();
+                    // Reload users
+                    loadUsers();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to create user'));
+                }
+            })
+            .catch(err => {
+                console.error('Error creating user:', err);
+                alert('Error creating user. Please try again.');
+            });
         }
 
         function loadUsers() {

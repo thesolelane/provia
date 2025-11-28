@@ -387,6 +387,13 @@ namespace JobTracker.Controllers
                             }
                         }
 
+                        // Generate unique UserCode
+                        var existingCount = await _context.Users
+                            .Where(u => u.CompanyId == currentUser.CompanyId && u.Role == request.Role)
+                            .CountAsync();
+                        var sequence = (existingCount + 1).ToString("D3");
+                        var userCode = $"C{currentUser.CompanyId}-{request.Role}-{sequence}";
+
                         // Create new user
                         var newUser = new User
                         {
@@ -395,6 +402,7 @@ namespace JobTracker.Controllers
                             Email = request.Email,
                             PhoneNumber = request.PhoneNumber,
                             Role = request.Role,
+                            UserCode = userCode,
                             CompanyId = currentUser.CompanyId,
                             IsActive = true,
                             CreatedAt = DateTime.UtcNow,
@@ -419,6 +427,8 @@ namespace JobTracker.Controllers
                         return Ok(new
                         {
                             message = "User created successfully",
+                            id = newUser.Id,
+                            userCode = newUser.UserCode,
                             user = new
                             {
                                 id = newUser.Id,
@@ -426,7 +436,8 @@ namespace JobTracker.Controllers
                                 lastName = newUser.LastName,
                                 email = newUser.Email,
                                 phoneNumber = newUser.PhoneNumber,
-                                role = newUser.Role
+                                role = newUser.Role,
+                                userCode = newUser.UserCode
                             }
                         });
                     }
