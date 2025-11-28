@@ -96,11 +96,11 @@ SubContractorCompany Junction Table:
 - Unified inbox for all communications
 
 ### Role-Based Access Control (RBAC)
-- **Admin** (1510): Max 2 per company - Full system control
-- **Foreman** (1520): Max 5 per company - Team leadership
-- **Supervisor** (1530): Unlimited - Field supervision
-- **Field Operator** (2001): Unlimited - Time tracking & updates
-- **Sub-Contractor** (2010): Unlimited - Limited bidding/progress portal
+- **Admin** (1510): 2 positions max per company - Full system control
+- **Foreman** (1520): 3 positions max per company - Team leadership & job assignments
+- **Supervisor** (1530): 4 slots max per company - Field supervision & work approval
+- **Field Operator** (2001): Unlimited - General contractor employees, time tracking & updates (no separate permits needed)
+- **Sub-Contractor** (2010): Unlimited - Licensed trades, bidding/progress portal with permit management
 
 ---
 
