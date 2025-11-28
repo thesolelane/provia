@@ -69,12 +69,14 @@ namespace JobTracker.Controllers
                 await _context.SaveChangesAsync();
 
                 // Create first Master Admin for the company
+                var userCode = await GenerateUniqueUserCode(company.Id, 1510);
                 var masterAdmin = new User
                 {
                     FirstName = request.AdminFirstName,
                     LastName = request.AdminLastName,
                     Email = request.ContactEmail,
                     Role = UserRoles.Admin,
+                    UserCode = userCode,
                     LanguagePreference = request.LanguagePreference,
                     PasswordHash = HashPassword(request.AdminPassword),
                     CompanyId = company.Id,
@@ -218,6 +220,17 @@ namespace JobTracker.Controllers
                 SubscriptionType.Enterprise => (int.MaxValue, int.MaxValue, true),
                 _ => (5, 10, false)
             };
+        }
+
+        private async Task<string> GenerateUniqueUserCode(int companyId, int roleCode)
+        {
+            // Format: COMPID-ROLE-SEQUENCE (e.g., C3-1510-001)
+            var existingCount = await _context.Users
+                .Where(u => u.CompanyId == companyId && u.Role == roleCode)
+                .CountAsync();
+            
+            var sequence = (existingCount + 1).ToString("D3");
+            return $"C{companyId}-{roleCode}-{sequence}";
         }
 
         private static string HashPassword(string password)
