@@ -1,7 +1,7 @@
 # PROVIA - Construction Management Platform
 
 ## Overview
-PROVIA is an enterprise-grade, multi-tenant construction management system designed for Preferred Builders USA, LLC and its partners. It supports a diverse user base including field workers, supervisors, foremen, administrators, and sub-contractors across multiple companies. The platform's core purpose is to streamline construction project workflows, from job creation and scope definition to permit tracking, inspections, and sub-contractor management. Key capabilities include Massachusetts code engine integration for automated compliance, a comprehensive role-based access control system, multi-company sub-contractor management, and an offline-first mobile synchronization architecture for field operations.
+PROVIA is an enterprise-grade, multi-tenant construction management SaaS platform developed by Cooperanth Consulting LLC. It serves construction companies like Preferred Builders USA, LLC and their partners. The platform supports a diverse user base including field workers, supervisors, foremen, administrators, and sub-contractors across multiple client companies. The core purpose is to streamline construction project workflows, from job creation and scope definition to permit tracking, inspections, and sub-contractor management. Key capabilities include Massachusetts code engine integration for automated compliance, a comprehensive role-based access control system, multi-company sub-contractor management, and an offline-first mobile synchronization architecture for field operations.
 
 ## User Preferences
 - Framework: .NET 6.0 (locked to Replit environment availability)
