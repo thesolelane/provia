@@ -285,6 +285,12 @@
                 return;
             }
 
+            const subscriptionType = document.getElementById('subscriptionType').value;
+            if (!subscriptionType) {
+                showAlert('danger', 'Please select a subscription plan');
+                return;
+            }
+
             const registrationData = {
                 companyName: document.getElementById('companyName').value,
                 contactEmail: document.getElementById('contactEmail').value,
@@ -296,9 +302,14 @@
                 adminFirstName: document.getElementById('adminFirstName').value,
                 adminLastName: document.getElementById('adminLastName').value,
                 adminPassword: adminPassword,
-                requestedSubscription: document.getElementById('subscriptionType').value,
+                requestedSubscription: subscriptionType,
                 languagePreference: document.getElementById('languagePreference').value
             };
+
+            console.log('Submitting registration:', registrationData);
+            const button = document.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.textContent = 'Registering...';
 
             try {
                 const response = await fetch('/api/Company/register', {
@@ -309,20 +320,26 @@
                     body: JSON.stringify(registrationData)
                 });
 
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
                 if (response.ok) {
-                    const result = await response.json();
                     showAlert('success', 'Company registered successfully! Redirecting to login...');
                     
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 2000);
                 } else {
-                    const error = await response.json();
-                    showAlert('danger', error.message || 'Registration failed. Please try again.');
+                    showAlert('danger', data.message || 'Registration failed. Please try again.');
+                    button.disabled = false;
+                    button.textContent = 'Register Company';
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                showAlert('danger', 'Connection error. Please try again.');
+                showAlert('danger', 'Connection error: ' + error.message);
+                button.disabled = false;
+                button.textContent = 'Register Company';
             }
         }
 
