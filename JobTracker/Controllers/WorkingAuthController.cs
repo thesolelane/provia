@@ -128,6 +128,36 @@ namespace JobTracker.Controllers
             }
         }
 
+        [HttpGet("company-users/{companyId}")]
+        public async Task<IActionResult> GetCompanyUsers(int companyId)
+        {
+            try
+            {
+                var users = await _context.Users
+                    .Where(u => u.CompanyId == companyId && u.IsActive)
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Email,
+                        u.PhoneNumber,
+                        u.Role,
+                        u.IsActive,
+                        u.UserCode
+                    })
+                    .OrderBy(u => u.FirstName)
+                    .ToListAsync();
+
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching company users");
+                return StatusCode(500, new { message = "Error fetching users" });
+            }
+        }
+
         [HttpPost("phone-login")]
         public async Task<IActionResult> PhoneLogin([FromBody] PhoneLoginRequestModel request)
         {

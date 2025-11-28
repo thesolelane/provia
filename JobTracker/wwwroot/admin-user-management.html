@@ -256,47 +256,80 @@
         }
 
         function loadUsers() {
-            setTimeout(function() {
-                var usersList = document.getElementById('usersList');
-                usersList.innerHTML = 
-                    '<div class="user-card">' +
-                        '<div class="row align-items-center">' +
-                            '<div class="col-md-3">' +
-                                '<div class="d-flex align-items-center">' +
-                                    '<div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">' +
-                                        '<strong>AD</strong>' +
-                                    '</div>' +
-                                    '<div>' +
-                                        '<h6 class="mb-1">Admin User</h6>' +
-                                        '<small class="text-muted">admin@example.com</small>' +
-                                    '</div>' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="col-md-2">' +
-                                '<span class="role-badge role-admin">Admin</span>' +
-                            '</div>' +
-                            '<div class="col-md-2">' +
-                                '<span class="badge bg-success">Active</span>' +
-                            '</div>' +
-                            '<div class="col-md-3">' +
-                                '<small class="text-muted">ID: 36DMRD-1520-001</small>' +
-                            '</div>' +
-                            '<div class="col-md-2 text-end">' +
-                                '<button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(1)">' +
-                                    '<i class="fas fa-edit"></i>' +
-                                '</button>' +
-                                '<button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(1)">' +
-                                    '<i class="fas fa-user-slash"></i>' +
-                                '</button>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
+            const token = localStorage.getItem('authToken');
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            
+            if (!token || !userInfo.companyId) {
+                document.getElementById('usersList').innerHTML = '<p class="text-muted">Unable to load users. Please log in again.</p>';
+                return;
+            }
 
-                document.getElementById('totalUsers').textContent = '1';
-                document.getElementById('adminCount').textContent = '1';
-                document.getElementById('supervisorCount').textContent = '0';
-                document.getElementById('fieldOperatorCount').textContent = '0';
-            }, 1000);
+            fetch(`/api/WorkingAuth/company-users/${userInfo.companyId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(r => r.json())
+            .then(users => {
+                const usersList = document.getElementById('usersList');
+                let adminCount = 0, supervisorCount = 0, fieldCount = 0;
+                
+                usersList.innerHTML = users.map(user => {
+                    const initials = (user.firstName[0] || '') + (user.lastName[0] || '');
+                    const roleName = user.role === 1510 ? 'Master Admin' : 
+                                     user.role === 1520 ? 'Supervisor' :
+                                     user.role === 1530 ? 'Foreman' :
+                                     user.role === 2001 ? 'Field Operator' : 'User';
+                    const roleClass = user.role === 1510 ? 'role-admin' : 
+                                      user.role === 1520 ? 'role-supervisor' : 'role-field-operator';
+                    
+                    if (user.role === 1510) adminCount++;
+                    else if (user.role === 1520 || user.role === 1530) supervisorCount++;
+                    else if (user.role === 2001) fieldCount++;
+                    
+                    return `<div class="user-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                        <strong>${initials}</strong>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">${user.firstName} ${user.lastName}</h6>
+                                        <small class="text-muted">${user.email || user.phoneNumber || 'N/A'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="role-badge ${roleClass}">${roleName}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="badge ${user.isActive ? 'bg-success' : 'bg-danger'}">${user.isActive ? 'Active' : 'Inactive'}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">ID: ${user.userCode || 'N/A'}</small>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${user.id})">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+                
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('adminCount').textContent = adminCount;
+                document.getElementById('supervisorCount').textContent = supervisorCount;
+                document.getElementById('fieldOperatorCount').textContent = fieldCount;
+            })
+            .catch(err => {
+                console.error('Error loading users:', err);
+                document.getElementById('usersList').innerHTML = '<p class="text-danger">Error loading users. Please refresh the page.</p>';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
