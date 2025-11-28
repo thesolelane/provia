@@ -347,103 +347,130 @@ namespace JobTracker.Controllers
                 // Validate current user is admin
                 try
                 {
-                    var tokenData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
-                    var parts = tokenData.Split(':');
-                    if (parts.Length >= 3 && int.TryParse(parts[0], out int userId) && int.TryParse(parts[2], out int userRole))
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                    var key = Encoding.ASCII.GetBytes(jwtSecret);
+                    
+                    SecurityToken validatedToken;
+                    var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
                     {
-                        if (userRole != UserRoles.Admin) // 1510 is Admin
-                        {
-                            return Forbid("Only administrators can create users");
-                        }
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ClockSkew = TimeSpan.Zero
+                    }, out validatedToken);
 
-                        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
-                        if (currentUser == null)
-                        {
-                            return Unauthorized(new { message = "Invalid token" });
-                        }
-
-                        // Validate request
-                        if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName))
-                        {
-                            return BadRequest(new { message = "First name and last name are required" });
-                        }
-
-                        // Check for duplicate email or phone
-                        if (!string.IsNullOrEmpty(request.Email))
-                        {
-                            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-                            if (existingUser != null)
-                            {
-                                return BadRequest(new { message = "Email already exists" });
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(request.PhoneNumber))
-                        {
-                            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
-                            if (existingUser != null)
-                            {
-                                return BadRequest(new { message = "Phone number already exists" });
-                            }
-                        }
-
-                        // Generate unique UserCode
-                        var existingCount = await _context.Users
-                            .Where(u => u.CompanyId == currentUser.CompanyId && u.Role == request.Role)
-                            .CountAsync();
-                        var sequence = (existingCount + 1).ToString("D3");
-                        var userCode = $"C{currentUser.CompanyId}-{request.Role}-{sequence}";
-
-                        // Create new user
-                        var newUser = new User
-                        {
-                            FirstName = request.FirstName,
-                            LastName = request.LastName,
-                            Email = request.Email,
-                            PhoneNumber = request.PhoneNumber,
-                            Role = request.Role,
-                            UserCode = userCode,
-                            CompanyId = currentUser.CompanyId,
-                            IsActive = true,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedByUserId = currentUser.Id,
-                            LanguagePreference = request.LanguagePreference ?? "en"
-                        };
-
-                        // SECURITY: Hash password using BCrypt
-                        if (!string.IsNullOrEmpty(request.Password))
-                        {
-                            newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-                        }
-
-                        if (!string.IsNullOrEmpty(request.Pin))
-                        {
-                            newUser.PinHash = request.Pin;
-                        }
-
-                        _context.Users.Add(newUser);
-                        await _context.SaveChangesAsync();
-
-                        return Ok(new
-                        {
-                            message = "User created successfully",
-                            id = newUser.Id,
-                            userCode = newUser.UserCode,
-                            user = new
-                            {
-                                id = newUser.Id,
-                                firstName = newUser.FirstName,
-                                lastName = newUser.LastName,
-                                email = newUser.Email,
-                                phoneNumber = newUser.PhoneNumber,
-                                role = newUser.Role,
-                                userCode = newUser.UserCode
-                            }
-                        });
+                    var userIdClaim = principal.FindFirst("id");
+                    var roleClaim = principal.FindFirst("role");
+                    
+                    if (userIdClaim == null || roleClaim == null)
+                    {
+                        return Unauthorized(new { message = "Invalid token claims" });
                     }
+
+                    if (!int.TryParse(userIdClaim.Value, out int userId) || !int.TryParse(roleClaim.Value, out int userRole))
+                    {
+                        return Unauthorized(new { message = "Invalid token data" });
+                    }
+
+                    if (userRole != UserRoles.Admin) // 1510 is Admin
+                    {
+                        return Forbid("Only administrators can create users");
+                    }
+
+                    var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+                    if (currentUser == null)
+                    {
+                        return Unauthorized(new { message = "Invalid token" });
+                    }
+
+                    // Validate request
+                    if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName))
+                    {
+                        return BadRequest(new { message = "First name and last name are required" });
+                    }
+
+                    // Check for duplicate email or phone
+                    if (!string.IsNullOrEmpty(request.Email))
+                    {
+                        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+                        if (existingUser != null)
+                        {
+                            return BadRequest(new { message = "Email already exists" });
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(request.PhoneNumber))
+                    {
+                        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+                        if (existingUser != null)
+                        {
+                            return BadRequest(new { message = "Phone number already exists" });
+                        }
+                    }
+
+                    // Generate unique UserCode
+                    var existingCount = await _context.Users
+                        .Where(u => u.CompanyId == currentUser.CompanyId && u.Role == request.Role)
+                        .CountAsync();
+                    var sequence = (existingCount + 1).ToString("D3");
+                    var userCode = $"C{currentUser.CompanyId}-{request.Role}-{sequence}";
+
+                    // Create new user
+                    var newUser = new User
+                    {
+                        FirstName = request.FirstName,
+                        LastName = request.LastName,
+                        Email = request.Email,
+                        PhoneNumber = request.PhoneNumber,
+                        Role = request.Role,
+                        UserCode = userCode,
+                        CompanyId = currentUser.CompanyId,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedByUserId = currentUser.Id,
+                        LanguagePreference = request.LanguagePreference ?? "en"
+                    };
+
+                    // SECURITY: Hash password using BCrypt
+                    if (!string.IsNullOrEmpty(request.Password))
+                    {
+                        newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                    }
+
+                    if (!string.IsNullOrEmpty(request.Pin))
+                    {
+                        newUser.PinHash = request.Pin;
+                    }
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        message = "User created successfully",
+                        id = newUser.Id,
+                        userCode = newUser.UserCode,
+                        user = new
+                        {
+                            id = newUser.Id,
+                            firstName = newUser.FirstName,
+                            lastName = newUser.LastName,
+                            email = newUser.Email,
+                            phoneNumber = newUser.PhoneNumber,
+                            role = newUser.Role,
+                            userCode = newUser.UserCode
+                        }
+                    });
                 }
-                catch
+                catch (SecurityTokenException)
                 {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                catch (Exception tokenEx)
+                {
+                    _logger.LogWarning(tokenEx, "Token validation error");
                     return Unauthorized(new { message = "Invalid token" });
                 }
 
