@@ -1,4 +1,4 @@
-modules = ["dotnet", "dotnet-7.0", "python-3.11", "nodejs-20", "postgresql-16", "dotnet-10.0"]
+modules = ["dotnet", "dotnet-7.0", "python-3.11", "nodejs-20", "dotnet-10.0", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
@@ -31,6 +31,10 @@ run = ["sh", "-c", "cd JobTracker && dotnet run --urls=http://0.0.0.0:5000"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 39613
+externalPort = 3000
 
 [[ports]]
 localPort = 40043

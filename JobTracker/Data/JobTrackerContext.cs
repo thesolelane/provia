@@ -41,6 +41,14 @@ namespace JobTracker.Data
         public DbSet<JobBid> JobBids { get; set; } = null!;
         public DbSet<InspectionStage> InspectionStages { get; set; } = null!;
         public DbSet<PermitDocument> PermitDocuments { get; set; } = null!;
+        
+        // Code Engine tables
+        public DbSet<CodeBook> CodeBooks { get; set; } = null!;
+        public DbSet<CodeRule> CodeRules { get; set; } = null!;
+        public DbSet<ScopeCategory> ScopeCategories { get; set; } = null!;
+        public DbSet<ScopeItem> ScopeItems { get; set; } = null!;
+        public DbSet<JobScope> JobScopes { get; set; } = null!;
+        public DbSet<TradeAssignment> TradeAssignments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
