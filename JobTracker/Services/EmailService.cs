@@ -2,6 +2,7 @@ using System.Net.Mail;
 using System.Net;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using System.Text.Json;
 
 namespace JobTracker.Services
 {
@@ -19,26 +20,94 @@ namespace JobTracker.Services
     public class EmailService : IEmailService
     {
         private readonly ILogger<EmailService> _logger;
-        private readonly ISendGridClient? _sendGridClient;
-        private readonly string _fromEmail;
+        private ISendGridClient? _sendGridClient;
+        private string _fromEmail;
         private readonly string _fromName;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _fromEmail = configuration["EmailSettings:FromEmail"] ?? "noreply@provia.com";
             _fromName = configuration["EmailSettings:FromName"] ?? "PROVIA";
+            _httpClientFactory = httpClientFactory;
             
+            // Try to initialize SendGrid from environment variable (backward compatibility)
             var apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
-            _logger.LogInformation($"SendGrid API Key found: {!string.IsNullOrEmpty(apiKey)}");
+            _logger.LogInformation($"SendGrid API Key from env: {!string.IsNullOrEmpty(apiKey)}");
             if (!string.IsNullOrEmpty(apiKey))
             {
                 _sendGridClient = new SendGridClient(apiKey);
-                _logger.LogInformation("SendGrid client initialized successfully");
+                _logger.LogInformation("SendGrid client initialized from environment variable");
             }
             else
             {
-                _logger.LogWarning("SendGrid API Key not found - emails will be simulated");
+                _logger.LogInformation("Will fetch SendGrid credentials from Replit connector on first email");
+            }
+        }
+
+        private async Task EnsureSendGridClientAsync()
+        {
+            if (_sendGridClient != null)
+                return;
+
+            try
+            {
+                _logger.LogInformation("Fetching SendGrid credentials from Replit connector...");
+                var hostname = Environment.GetEnvironmentVariable("REPLIT_CONNECTORS_HOSTNAME");
+                var xReplitToken = Environment.GetEnvironmentVariable("REPL_IDENTITY") != null
+                    ? $"repl {Environment.GetEnvironmentVariable("REPL_IDENTITY")}"
+                    : Environment.GetEnvironmentVariable("WEB_REPL_RENEWAL") != null
+                        ? $"depl {Environment.GetEnvironmentVariable("WEB_REPL_RENEWAL")}"
+                        : null;
+
+                if (string.IsNullOrEmpty(hostname) || string.IsNullOrEmpty(xReplitToken))
+                {
+                    _logger.LogWarning("Replit connector environment variables not set");
+                    return;
+                }
+
+                var client = _httpClientFactory.CreateClient();
+                var url = $"https://{hostname}/api/v2/connection?include_secrets=true&connector_names=sendgrid";
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("Accept", "application/json");
+                request.Headers.Add("X_REPLIT_TOKEN", xReplitToken);
+
+                var response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"Failed to fetch SendGrid credentials: {response.StatusCode}");
+                    return;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var jsonDoc = JsonDocument.Parse(content);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("items", out var items) && items.GetArrayLength() > 0)
+                {
+                    var connectionSettings = items[0];
+                    if (connectionSettings.TryGetProperty("settings", out var settings))
+                    {
+                        if (settings.TryGetProperty("api_key", out var apiKeyElement) && 
+                            settings.TryGetProperty("from_email", out var fromEmailElement))
+                        {
+                            var apiKey = apiKeyElement.GetString();
+                            var fromEmail = fromEmailElement.GetString();
+
+                            if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(fromEmail))
+                            {
+                                _sendGridClient = new SendGridClient(apiKey);
+                                _fromEmail = fromEmail;
+                                _logger.LogInformation($"SendGrid client initialized from Replit connector. From email: {fromEmail}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching SendGrid credentials from Replit connector");
             }
         }
 
@@ -188,6 +257,9 @@ namespace JobTracker.Services
         {
             try
             {
+                // Ensure SendGrid client is initialized
+                await EnsureSendGridClientAsync();
+
                 if (_sendGridClient == null)
                 {
                     _logger.LogWarning($"SendGrid not configured. Email would be sent to {toEmail}: {subject}");
