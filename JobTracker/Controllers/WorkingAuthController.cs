@@ -631,6 +631,142 @@ PROVIA Team
             return password.ToString();
         }
 
+        [HttpPost("deactivate-user/{userId}")]
+        public async Task<IActionResult> DeactivateUser(int userId, [FromBody] DeactivateUserRequest request)
+        {
+            try
+            {
+                // Get admin from token
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                    return Unauthorized(new { message = "Invalid token" });
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+                SecurityToken validatedToken;
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out validatedToken);
+
+                var adminIdClaim = principal.FindFirst("id");
+                if (adminIdClaim == null || !int.TryParse(adminIdClaim.Value, out int adminId))
+                    return Unauthorized(new { message = "Invalid token" });
+
+                var admin = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId && u.IsActive);
+                if (admin == null || admin.Role != UserRoles.Admin)
+                    return Forbid("Only administrators can deactivate users");
+
+                var userToDeactivate = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == admin.CompanyId);
+                if (userToDeactivate == null)
+                    return NotFound(new { message = "User not found" });
+
+                userToDeactivate.IsActive = false;
+                userToDeactivate.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Admin {admin.Id} deactivated user {userId}. Reason: {request.Reason}");
+                return Ok(new { message = $"User {userToDeactivate.FirstName} {userToDeactivate.LastName} has been deactivated" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deactivating user");
+                return StatusCode(500, new { message = "An error occurred while deactivating the user" });
+            }
+        }
+
+        [HttpPost("send-password-reset/{userId}")]
+        public async Task<IActionResult> SendPasswordReset(int userId)
+        {
+            try
+            {
+                // Get admin from token
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                    return Unauthorized(new { message = "Invalid token" });
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
+                var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+                SecurityToken validatedToken;
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out validatedToken);
+
+                var adminIdClaim = principal.FindFirst("id");
+                if (adminIdClaim == null || !int.TryParse(adminIdClaim.Value, out int adminId))
+                    return Unauthorized(new { message = "Invalid token" });
+
+                var admin = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId && u.IsActive);
+                if (admin == null || admin.Role != UserRoles.Admin)
+                    return Forbid("Only administrators can send password resets");
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == admin.CompanyId);
+                if (user == null || string.IsNullOrEmpty(user.Email))
+                    return NotFound(new { message = "User not found or has no email" });
+
+                var tempPassword = GenerateTemporaryPassword();
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+                user.PasswordNeedsChange = true;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                // Send password reset email
+                try
+                {
+                    var emailService = HttpContext.RequestServices.GetService<JobTracker.Services.IEmailService>();
+                    if (emailService != null)
+                    {
+                        var subject = "PROVIA Password Reset - New Temporary Password";
+                        var emailBody = $@"
+Hello {user.FirstName} {user.LastName},
+
+Your password has been reset by your administrator. Below is your new temporary password:
+
+Email: {user.Email}
+Temporary Password: {tempPassword}
+
+Please log in and change your password immediately. This temporary password expires after your first login.
+
+User Code: {user.UserCode}
+
+If you did not request this password reset, please contact your administrator.
+
+Best regards,
+PROVIA Team
+";
+                        await emailService.SendEmailAsync(user.Email, subject, emailBody);
+                    }
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send password reset email to user {userId}", user.Id);
+                }
+
+                _logger.LogInformation($"Admin {admin.Id} sent password reset to user {userId}");
+                return Ok(new { message = $"Password reset email sent to {user.Email}", tempPassword = tempPassword });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending password reset");
+                return StatusCode(500, new { message = "An error occurred while sending password reset" });
+            }
+        }
+
         [HttpPost("logout")]
         public IActionResult Logout()
         {
@@ -1320,5 +1456,11 @@ PROVIA Team
     public class VerifyEmailRequest
     {
         public string Email { get; set; } = string.Empty;
+    }
+
+    public class DeactivateUserRequest
+    {
+        public string? Reason { get; set; }
+        public string? Notes { get; set; }
     }
 }
