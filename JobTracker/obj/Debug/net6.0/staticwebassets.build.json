@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "J9sjaULiId0KiBPKkr4ougsZ7/Cl7DX5SX1I4ochF0s=",
+  "Hash": "9Ow3AJ8z90JfPLECpDrbCpt0lwVLmND0wYIfWwcGJcE=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -49,6 +49,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/admin-dashboard.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/admin-jobs.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "admin-jobs.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/admin-jobs.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/admin-scheduler.html",

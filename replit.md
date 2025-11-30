@@ -15,6 +15,18 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ## Recent Changes (November 30, 2025)
 
+### Job Management & Contract Creation ✅
+- **Create New Job**: Admin dashboard now has "Jobs Management" section to create construction jobs
+- **Job Creation Form**: Captures job name, location, client details, budget, dates, description
+- **Auto-Generated Job Numbers**: System automatically generates job numbers (YYYYMMDD-XXX format)
+- **Job Listing**: View all created jobs with status, budget tracking, and client information
+- **API Endpoints**:
+  - POST `/api/jobs` - Create new job
+  - GET `/api/jobs` - List all jobs for company
+  - Job workflow: Planning → Permits Pending → In Progress → Inspection → Completed
+- **Dashboard Navigation**: Admin dashboard links to Team Management and Jobs Management
+- **Next Step**: After creating jobs, users can assign scopes using Code Engine wizard
+
 ### Team Management - Edit & Deactivate Features ✅
 - **Edit Team Member**: Click Edit button to modify user details (first name, last name, email, phone, role)
 - **Deactivate/Suspend Account**: Click Deactivate button to suspend user access with optional reason

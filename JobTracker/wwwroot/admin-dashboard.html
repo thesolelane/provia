@@ -96,11 +96,30 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
         }
 
         .card-icon {
@@ -216,18 +235,18 @@
         </div>
 
         <div class="dashboard-grid">
-            <div class="card" onclick="navigate('/user-management-admin.html')">
+            <div class="card" onclick="navigate('/admin-user-management.html')">
                 <div class="card-icon">👥</div>
-                <h2>User Management</h2>
-                <p>Add, edit, and manage all company users and roles</p>
-                <a href="/user-management-admin.html" class="card-link">Manage →</a>
+                <h2>Team Management</h2>
+                <p>Add, edit, and manage team members and roles</p>
+                <a href="/admin-user-management.html" class="card-link">Manage →</a>
             </div>
 
-            <div class="card" onclick="navigate('/dashboard.html')">
+            <div class="card" onclick="navigate('/admin-jobs.html')">
                 <div class="card-icon">📋</div>
-                <h2>Jobs</h2>
-                <p>View and manage all project jobs</p>
-                <a href="/dashboard.html" class="card-link">View →</a>
+                <h2>Jobs Management</h2>
+                <p>Create and manage construction jobs and contracts</p>
+                <a href="/admin-jobs.html" class="card-link">Manage →</a>
             </div>
 
             <div class="card" onclick="navigate('/admin-scheduler.html')">
