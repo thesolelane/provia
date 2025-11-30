@@ -631,57 +631,6 @@ PROVIA Team
             return password.ToString();
         }
 
-        [HttpPost("deactivate-user/{userId}")]
-        public async Task<IActionResult> DeactivateUser(int userId, [FromBody] DeactivateUserRequest request)
-        {
-            try
-            {
-                // Get admin from token
-                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-                if (authHeader == null || !authHeader.StartsWith("Bearer "))
-                    return Unauthorized(new { message = "Invalid token" });
-
-                var token = authHeader.Substring("Bearer ".Length).Trim();
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
-                var key = Encoding.ASCII.GetBytes(jwtSecret);
-
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ClockSkew = TimeSpan.Zero
-                }, out validatedToken);
-
-                var adminIdClaim = principal.FindFirst("id");
-                if (adminIdClaim == null || !int.TryParse(adminIdClaim.Value, out int adminId))
-                    return Unauthorized(new { message = "Invalid token" });
-
-                var admin = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId && u.IsActive);
-                if (admin == null || admin.Role != UserRoles.Admin)
-                    return Forbid("Only administrators can deactivate users");
-
-                var userToDeactivate = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.CompanyId == admin.CompanyId);
-                if (userToDeactivate == null)
-                    return NotFound(new { message = "User not found" });
-
-                userToDeactivate.IsActive = false;
-                userToDeactivate.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation($"Admin {admin.Id} deactivated user {userId}. Reason: {request.Reason}");
-                return Ok(new { message = $"User {userToDeactivate.FirstName} {userToDeactivate.LastName} has been deactivated" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deactivating user");
-                return StatusCode(500, new { message = "An error occurred while deactivating the user" });
-            }
-        }
-
         [HttpPost("send-password-reset/{userId}")]
         public async Task<IActionResult> SendPasswordReset(int userId)
         {
@@ -1458,9 +1407,4 @@ PROVIA Team
         public string Email { get; set; } = string.Empty;
     }
 
-    public class DeactivateUserRequest
-    {
-        public string? Reason { get; set; }
-        public string? Notes { get; set; }
-    }
 }

@@ -160,6 +160,66 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Team Member</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="editFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="editLastName" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Role *</label>
+                            <select class="form-select" id="editUserRole" required>
+                                <option value="1510">Admin</option>
+                                <option value="1520">Supervisor</option>
+                                <option value="2001">Field Operator</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="editEmail">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="editPhoneNumber">
+                        </div>
+
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-check-label">
+                                <input type="checkbox" class="form-check-input" id="resetPasswordCheck">
+                                Send password reset email
+                            </label>
+                            <small class="form-text text-muted d-block mt-2">Check this box to send a password reset email to the user</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUserChanges()">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -297,6 +357,8 @@
             }
         }
 
+        let currentEditingUserId = null;
+
         function editUser(userId) {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -304,24 +366,93 @@
                 return;
             }
 
-            fetch(`/api/WorkingAuth/send-password-reset/${userId}`, {
-                method: 'POST',
+            currentEditingUserId = userId;
+
+            // Load user details
+            fetch(`/api/users/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
+            .then(r => {
+                if (r.status === 404) throw new Error('User not found');
+                return r.json();
+            })
+            .then(user => {
+                document.getElementById('editFirstName').value = user.firstName || '';
+                document.getElementById('editLastName').value = user.lastName || '';
+                document.getElementById('editUserRole').value = user.role || 2001;
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('editPhoneNumber').value = user.phoneNumber || '';
+                document.getElementById('resetPasswordCheck').checked = false;
+
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+            })
+            .catch(err => {
+                console.error('Error loading user:', err);
+                showNotification('Error loading user details. Please try again.', 'error');
+            });
+        }
+
+        function saveUserChanges() {
+            const token = localStorage.getItem('authToken');
+            if (!token || !currentEditingUserId) {
+                showNotification('Session expired. Please log in again.', 'error');
+                return;
+            }
+
+            const userData = {
+                firstName: document.getElementById('editFirstName').value.trim(),
+                lastName: document.getElementById('editLastName').value.trim(),
+                email: document.getElementById('editEmail').value.trim() || null,
+                phoneNumber: document.getElementById('editPhoneNumber').value.trim() || null,
+                role: parseInt(document.getElementById('editUserRole').value)
+            };
+
+            if (!userData.firstName || !userData.lastName) {
+                showNotification('First name and last name are required', 'error');
+                return;
+            }
+
+            // Check if password reset requested
+            const resetPassword = document.getElementById('resetPasswordCheck').checked;
+
+            fetch(`/api/users/${currentEditingUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(userData)
+            })
             .then(r => r.json())
             .then(response => {
                 if (response.message) {
-                    showNotification('✓ Password reset email sent to user', 'success');
-                    loadUsers();
+                    showNotification('✓ User updated successfully', 'success');
+                    
+                    // If password reset requested, send it
+                    if (resetPassword) {
+                        return fetch(`/api/WorkingAuth/send-password-reset/${currentEditingUserId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        }).then(r => r.json());
+                    }
                 } else {
-                    showNotification('Error: ' + (response.message || 'Failed to send password reset'), 'error');
+                    throw new Error('Failed to update user');
                 }
             })
+            .then(response => {
+                if (response && response.message) {
+                    showNotification('✓ Password reset email sent', 'success');
+                }
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                loadUsers();
+            })
             .catch(err => {
-                console.error('Error sending password reset:', err);
-                showNotification('Error sending password reset. Please try again.', 'error');
+                console.error('Error:', err);
+                showNotification('Error updating user. Please try again.', 'error');
             });
         }
 
@@ -342,7 +473,7 @@
                 return;
             }
 
-            fetch(`/api/WorkingAuth/deactivate-user/${userId}`, {
+            fetch(`/api/users/${userId}/deactivate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
