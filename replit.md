@@ -13,6 +13,20 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ---
 
+## Recent Changes (November 30, 2025)
+
+### Team Management - Edit & Deactivate Features ✅
+- **Edit Team Member**: Click Edit button to modify user details (first name, last name, email, phone, role)
+- **Deactivate/Suspend Account**: Click Deactivate button to suspend user access with optional reason
+- **Password Reset Integration**: Option to send password reset email when editing user details
+- **API Endpoints**: 
+  - GET `/api/users/{id}` - Fetch user details
+  - PUT `/api/users/{id}` - Update user information  
+  - POST `/api/users/{id}/deactivate` - Deactivate/suspend user account
+  - POST `/api/WorkingAuth/send-password-reset/{userId}` - Send password reset email
+- **Modal Forms**: Dedicated Edit User modal with role selection and optional password reset
+- **Security**: Admin-only operations with proper authorization checks
+
 ## Recent Changes (November 28, 2025)
 
 ### Temporary Password System for User Creation ✅
