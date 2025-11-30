@@ -298,11 +298,71 @@
         }
 
         function editUser(userId) {
-            showNotification('Edit user function coming soon!', 'info');
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showNotification('Session expired. Please log in again.', 'error');
+                return;
+            }
+
+            fetch(`/api/WorkingAuth/send-password-reset/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(r => r.json())
+            .then(response => {
+                if (response.message) {
+                    showNotification('✓ Password reset email sent to user', 'success');
+                    loadUsers();
+                } else {
+                    showNotification('Error: ' + (response.message || 'Failed to send password reset'), 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error sending password reset:', err);
+                showNotification('Error sending password reset. Please try again.', 'error');
+            });
         }
 
         function deactivateUser(userId) {
-            showNotification('User deactivation feature coming soon!', 'info');
+            const userCard = event.target.closest('.user-card');
+            const userName = userCard.querySelector('h6').textContent;
+            
+            if (!confirm(`Are you sure you want to deactivate ${userName}? They will be unable to log in until reactivated.`)) {
+                return;
+            }
+
+            const reason = prompt('Reason for deactivation (optional):');
+            if (reason === null) return;
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showNotification('Session expired. Please log in again.', 'error');
+                return;
+            }
+
+            fetch(`/api/WorkingAuth/deactivate-user/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason: reason })
+            })
+            .then(r => r.json())
+            .then(response => {
+                if (response.message) {
+                    showNotification('✓ User has been deactivated', 'success');
+                    loadUsers();
+                } else {
+                    showNotification('Error: ' + (response.message || 'Failed to deactivate user'), 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error deactivating user:', err);
+                showNotification('Error deactivating user. Please try again.', 'error');
+            });
         }
 
         function createUser() {
