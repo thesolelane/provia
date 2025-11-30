@@ -62,9 +62,63 @@
         .btn-primary:hover {
             background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
         }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .notification.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .notification-icon {
+            font-size: 20px;
+        }
+        .notification-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .notification-close:hover {
+            opacity: 1;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <div id="notificationContainer"></div>
     <div class="container-fluid">
         <div class="main-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -185,6 +239,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function showNotification(message, type = 'success', duration = 5000) {
+            const container = document.getElementById('notificationContainer');
+            const icons = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-circle',
+                'info': 'fas fa-info-circle'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="notification-icon ${icons[type]}"></i>
+                <span>${message}</span>
+                <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
+        }
+
         function showAddUserModal() {
             document.getElementById('addUserForm').reset();
             document.getElementById('emailLoginFields').style.display = 'none';
@@ -218,21 +298,11 @@
         }
 
         function editUser(userId) {
-            alert('Edit user function called for user ID: ' + userId);
+            showNotification('Edit user function coming soon!', 'info');
         }
 
         function deactivateUser(userId) {
-            const reason = prompt('Please provide a reason for deactivation (optional):');
-            if (reason === null) return;
-            
-            const notes = prompt('Additional notes (optional):');
-            if (notes === null) return;
-
-            if (!confirm('Are you sure you want to permanently deactivate this user? Their credentials will be archived and the account cannot be reused.')) {
-                return;
-            }
-
-            alert('Deactivate user function called for user ID: ' + userId + '\nReason: ' + (reason || 'None') + '\nNotes: ' + (notes || 'None'));
+            showNotification('User deactivation feature coming soon!', 'info');
         }
 
         function createUser() {
@@ -240,7 +310,7 @@
             const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
             
             if (!token || !userInfo.companyId) {
-                alert('Session expired. Please log in again.');
+                showNotification('Session expired. Please log in again.', 'error');
                 return;
             }
 
@@ -272,7 +342,7 @@
             .then(r => r.json())
             .then(response => {
                 if (response.id) {
-                    alert(`User created successfully!\nName: ${formData.firstName} ${formData.lastName}\nID: ${response.userCode || 'Generated'}`);
+                    showNotification(`✓ ${formData.firstName} ${formData.lastName} created! ID: ${response.userCode || 'Generated'}`, 'success');
                     // Close modal
                     bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
                     // Clear form
@@ -280,12 +350,12 @@
                     // Reload users
                     loadUsers();
                 } else {
-                    alert('Error: ' + (response.message || 'Failed to create user'));
+                    showNotification('Error: ' + (response.message || 'Failed to create user'), 'error');
                 }
             })
             .catch(err => {
                 console.error('Error creating user:', err);
-                alert('Error creating user. Please try again.');
+                showNotification('Error creating user. Please try again.', 'error');
             });
         }
 
