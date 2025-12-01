@@ -357,7 +357,7 @@
             }
 
             try {
-                const scopeItemIds = Array.from(selectedScopes);
+                const SelectedScopeItemIds = Array.from(selectedScopes);
                 
                 const response = await fetch(`/api/codeengine/job/${jobId}/scopes`, {
                     method: 'POST',
@@ -365,7 +365,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ scopeItemIds })
+                    body: JSON.stringify({ SelectedScopeItemIds })
                 });
 
                 if (!response.ok) {

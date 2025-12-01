@@ -147,6 +147,32 @@
     <script>
         const jobId = new URLSearchParams(window.location.search).get('id');
 
+        function formatPermitType(type) {
+            const names = {
+                'BUILDING': 'Building Permit',
+                'ELECTRICAL': 'Electrical Permit',
+                'PLUMBING': 'Plumbing Permit',
+                'GAS': 'Gas Permit',
+                'FIRE': 'Fire Safety Permit',
+                'MECHANICAL': 'Mechanical Permit',
+                'HVAC': 'HVAC Permit'
+            };
+            return names[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' Permit';
+        }
+
+        function getPermitDescription(type) {
+            const descriptions = {
+                'BUILDING': 'Required for structural work, framing, roofing, siding, windows, doors, and insulation per 780 CMR',
+                'ELECTRICAL': 'Required for electrical work including wiring, panels, and circuits per 527 CMR',
+                'PLUMBING': 'Required for plumbing systems including fixtures, supply lines, and drainage per 248 CMR',
+                'GAS': 'Required for gas piping and appliances per 248 CMR',
+                'FIRE': 'Required for fire alarm and sprinkler systems',
+                'MECHANICAL': 'Required for mechanical systems',
+                'HVAC': 'Required for heating, ventilation, and air conditioning systems'
+            };
+            return descriptions[type] || 'Massachusetts state code compliance required';
+        }
+
         if (!jobId) {
             document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">Job ID not found</div>';
         } else {
@@ -180,12 +206,13 @@
                     });
                     
                     if (permitsResponse.ok) {
-                        const permits = await permitsResponse.json();
-                        if (Array.isArray(permits) && permits.length > 0) {
-                            permitsHtml = permits.map(p => `
+                        const permitsData = await permitsResponse.json();
+                        const permitsList = permitsData.requiredPermits || [];
+                        if (Array.isArray(permitsList) && permitsList.length > 0) {
+                            permitsHtml = permitsList.map(permitType => `
                                 <div class="permit-item">
-                                    <strong>${p.permitType || 'Permit'}</strong>
-                                    <div class="text-muted small mt-2">${p.description || ''}</div>
+                                    <strong>${formatPermitType(permitType)}</strong>
+                                    <div class="text-muted small mt-2">${getPermitDescription(permitType)}</div>
                                     <span class="permit-status pending">
                                         <i class="fas fa-clock me-1"></i>Pending
                                     </span>
