@@ -220,6 +220,10 @@
                     <div class="stat-number" id="totalUsers">0</div>
                 </div>
                 <div class="stat-item">
+                    <div class="stat-label">Pending Jobs</div>
+                    <div class="stat-number" id="pendingJobs">0</div>
+                </div>
+                <div class="stat-item">
                     <div class="stat-label">Active Jobs</div>
                     <div class="stat-number" id="activeJobs">0</div>
                 </div>
@@ -292,6 +296,55 @@
             }
         }
 
+        async function loadDashboardMetrics() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                // Fetch all jobs
+                const jobsResponse = await fetch('/api/jobs', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const jobs = await jobsResponse.json();
+
+                if (Array.isArray(jobs)) {
+                    // Count pending jobs (Planning, PermitsPending)
+                    const pending = jobs.filter(j => 
+                        j.status === 'Planning' || j.status === 'PermitsPending'
+                    ).length;
+                    document.getElementById('pendingJobs').textContent = pending;
+
+                    // Count active jobs (InProgress, InspectionPending)
+                    const active = jobs.filter(j => 
+                        j.status === 'InProgress' || j.status === 'InspectionPending'
+                    ).length;
+                    document.getElementById('activeJobs').textContent = active;
+                }
+
+                // Fetch company users
+                const usersResponse = await fetch('/api/WorkingAuth/company-users/company', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    if (Array.isArray(users)) {
+                        document.getElementById('totalUsers').textContent = users.length;
+                        
+                        // Count field workers (role 2001)
+                        const fieldWorkers = users.filter(u => u.role === 2001).length;
+                        document.getElementById('fieldWorkers').textContent = fieldWorkers;
+
+                        // Count contractors (role 2010)
+                        const contractors = users.filter(u => u.role === 2010).length;
+                        document.getElementById('contractors').textContent = contractors;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard metrics:', error);
+            }
+        }
+
         function navigate(path) {
             window.location.href = path;
         }
@@ -304,6 +357,7 @@
 
         // Load data on page load
         loadUserInfo();
+        loadDashboardMetrics();
     </script>
 </body>
 </html>
