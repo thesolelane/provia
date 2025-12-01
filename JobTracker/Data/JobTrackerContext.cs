@@ -50,6 +50,13 @@ namespace JobTracker.Data
         public DbSet<JobScope> JobScopes { get; set; } = null!;
         public DbSet<TradeAssignment> TradeAssignments { get; set; } = null!;
 
+        // Construction Cost Code System (6-digit codes)
+        public DbSet<CostType> CostTypes { get; set; } = null!;
+        public DbSet<ConstructionDepartment> ConstructionDepartments { get; set; } = null!;
+        public DbSet<DepartmentSubcategory> DepartmentSubcategories { get; set; } = null!;
+        public DbSet<ConstructionCode> ConstructionCodes { get; set; } = null!;
+        public DbSet<CodeSyncLog> CodeSyncLogs { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -261,6 +268,50 @@ namespace JobTracker.Data
             modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.DeactivatedAt);
             modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.CanBeReactivated);
             modelBuilder.Entity<DeactivatedUser>().HasIndex(du => du.CompanyId);
+
+            // Configure Construction Code System relationships
+            modelBuilder.Entity<ConstructionDepartment>()
+                .HasMany(d => d.Subcategories)
+                .WithOne(s => s.Department)
+                .HasForeignKey(s => s.DepartmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ConstructionDepartment>()
+                .HasMany(d => d.Codes)
+                .WithOne(c => c.Department)
+                .HasForeignKey(c => c.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<DepartmentSubcategory>()
+                .HasMany(s => s.Codes)
+                .WithOne(c => c.Subcategory)
+                .HasForeignKey(c => c.SubcategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ConstructionCode>()
+                .HasIndex(c => c.FullCode)
+                .IsUnique();
+
+            modelBuilder.Entity<ConstructionCode>()
+                .HasIndex(c => new { c.DeptCode, c.CostTypeCode, c.SubCode });
+
+            modelBuilder.Entity<ConstructionDepartment>()
+                .HasIndex(d => d.DeptCode)
+                .IsUnique();
+
+            modelBuilder.Entity<DepartmentSubcategory>()
+                .HasIndex(s => new { s.DeptCode, s.SubCode })
+                .IsUnique();
+
+            modelBuilder.Entity<CostType>()
+                .HasIndex(ct => ct.Code)
+                .IsUnique();
+
+            modelBuilder.Entity<CodeSyncLog>()
+                .HasOne(l => l.ConstructionCode)
+                .WithMany()
+                .HasForeignKey(l => l.ConstructionCodeId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public override int SaveChanges()

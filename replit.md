@@ -13,6 +13,35 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ---
 
+## Recent Changes (December 1, 2025)
+
+### 6-Digit Construction Cost Code System ✅
+- **Code Format**: DDD L TT (Department + Cost Type + Subcategory)
+  - DDD = 3-digit department code (100-900)
+  - L = 1-digit cost type (0-5)
+  - TT = 2-digit subcategory (00-99)
+- **Cost Types (Global)**:
+  - 0 = Misc/Uncategorized
+  - 1 = Labor
+  - 2 = Material
+  - 3 = Equipment/Rentals
+  - 4 = Subcontract (lump sum)
+  - 5 = Fees/Permits/Disposal
+- **Departments** (21 total): General Conditions (100), Demolition (200), Site/Concrete (300), Framing (400), Roofing (410), Siding (420), Windows (430), Masonry (500), Plumbing (600), HVAC (610), Sheet Metal (620), Electrical (630), Fire Safety (640), Insulation (700), Drywall (710), Flooring (720), Tile (730), Painting (740), Finish Carpentry (750), Specialties (800), Overhead (900)
+- **Subcategories**: 129 total subcategories across all departments
+- **Total Codes**: 774 generated 6-digit codes
+- **API Endpoints**:
+  - GET `/api/constructioncodes/cost-types` - List cost types
+  - GET `/api/constructioncodes/departments` - List departments with subcategories
+  - GET `/api/constructioncodes/codes` - List all codes (with filters)
+  - GET `/api/constructioncodes/lookup/{fullCode}` - Parse/lookup a code
+  - POST `/api/constructioncodes/seed` - Seed all codes
+  - GET `/api/constructioncodes/stats` - Get code statistics
+- **Wave Integration Ready**: WaveProductId and LastSyncedToWave fields for future sync
+- **Example**: 720102 = Flooring (720) + Labor (1) + Tile flooring (02)
+
+---
+
 ## Recent Changes (November 30, 2025)
 
 ### Job Management & Contract Creation ✅
