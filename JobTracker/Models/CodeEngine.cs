@@ -253,6 +253,70 @@ namespace JobTracker.Models
     }
 
     /// <summary>
+    /// Job Permit - Tracks permit applications and status for jobs
+    /// </summary>
+    public class JobPermit
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int JobId { get; set; }
+        public Job? Job { get; set; }
+
+        [Required]
+        public int CompanyId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string PermitType { get; set; } = string.Empty; // BUILDING, ELECTRICAL, PLUMBING, GAS, FIRE
+
+        [StringLength(50)]
+        public string Status { get; set; } = "PENDING"; // PENDING, PREPARING, SUBMITTED, UNDER_REVIEW, APPROVED, DENIED
+
+        [StringLength(100)]
+        public string? PermitNumber { get; set; } // Assigned by municipality after approval
+
+        [StringLength(200)]
+        public string? IssuingAuthority { get; set; } // "Boston Building Department", etc.
+
+        // Application tracking
+        public DateTime? ApplicationDate { get; set; }
+        public DateTime? SubmittedDate { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public DateTime? ExpirationDate { get; set; }
+
+        // Fees
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? ApplicationFee { get; set; }
+        public bool FeePaid { get; set; } = false;
+
+        // Documents checklist
+        public bool HasPlotPlan { get; set; } = false;
+        public bool HasConstructionDrawings { get; set; } = false;
+        public bool HasContractorLicense { get; set; } = false;
+        public bool HasOwnerAuthorization { get; set; } = false;
+
+        // Notes and details
+        [StringLength(1000)]
+        public string? Notes { get; set; }
+
+        [StringLength(500)]
+        public string? DenialReason { get; set; }
+
+        // Who is handling this permit
+        public int? AssignedUserId { get; set; }
+        public User? AssignedUser { get; set; }
+
+        // Code reference
+        [StringLength(100)]
+        public string? CodeReference { get; set; } // "780 CMR", "527 CMR", etc.
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// DTO for Job Options Wizard scope selections
     /// </summary>
     public class JobScopeSelectionDto

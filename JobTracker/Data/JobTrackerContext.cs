@@ -49,6 +49,7 @@ namespace JobTracker.Data
         public DbSet<ScopeItem> ScopeItems { get; set; } = null!;
         public DbSet<JobScope> JobScopes { get; set; } = null!;
         public DbSet<TradeAssignment> TradeAssignments { get; set; } = null!;
+        public DbSet<JobPermit> JobPermits { get; set; } = null!;
 
         // Construction Cost Code System (6-digit codes)
         public DbSet<CostType> CostTypes { get; set; } = null!;
