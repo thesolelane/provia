@@ -13,6 +13,20 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ---
 
+## Recent Changes (Current Session)
+
+### Dashboard "Pending Jobs" Metric ✅
+- **Pending Jobs** metric now displays jobs imported from Wave or other software awaiting admin approval
+- Added `JobStatus.PendingApproval` enum value for imported/staged jobs
+- New Job model fields:
+  - `IsImported` (bool) - tracks if job came from external source
+  - `ImportedFrom` (string) - source system (Wave, QuickBooks, etc.)
+  - `ImportedDate` (DateTime?) - when job was imported
+- Dashboard automatically counts jobs with "PendingApproval" status
+- Workflow: External Import → Staged in Queue → Admin Reviews → Approves/Rejects → Moves to Planning
+
+---
+
 ## Recent Changes (December 1, 2025)
 
 ### 6-Digit Construction Cost Code System ✅

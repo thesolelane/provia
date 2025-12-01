@@ -308,9 +308,9 @@
                 const jobs = await jobsResponse.json();
 
                 if (Array.isArray(jobs)) {
-                    // Count pending jobs (Planning, PermitsPending)
+                    // Count pending jobs (imported from Wave/other software, waiting for admin approval)
                     const pending = jobs.filter(j => 
-                        j.status === 'Planning' || j.status === 'PermitsPending'
+                        j.status === 'PendingApproval'
                     ).length;
                     document.getElementById('pendingJobs').textContent = pending;
 
