@@ -57,6 +57,11 @@ namespace JobTracker.Models
         
         public int? CompanyId { get; set; }
         
+        // Import tracking
+        public bool IsImported { get; set; } = false;
+        public string? ImportedFrom { get; set; } // "Wave", "QuickBooks", etc.
+        public DateTime? ImportedDate { get; set; }
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
@@ -67,6 +72,7 @@ namespace JobTracker.Models
     
     public enum JobStatus
     {
+        PendingApproval = -1,  // Jobs imported and waiting for admin approval
         Planning = 0,
         PermitsPending = 1,
         InProgress = 2,
