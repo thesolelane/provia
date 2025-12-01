@@ -345,5 +345,238 @@ namespace JobTracker.Controllers
                 generalTrades = TradeTypes.GeneralTrades
             });
         }
+
+        // ==================== PERMIT MANAGEMENT ====================
+
+        /// <summary>
+        /// Get all permits for a job
+        /// </summary>
+        [HttpGet("job/{jobId}/permits")]
+        public async Task<ActionResult> GetJobPermits(int jobId)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var permits = await _context.JobPermits
+                    .Where(p => p.JobId == jobId && p.CompanyId == companyId)
+                    .OrderBy(p => p.PermitType)
+                    .Select(p => new
+                    {
+                        p.Id,
+                        p.JobId,
+                        p.PermitType,
+                        p.Status,
+                        p.PermitNumber,
+                        p.IssuingAuthority,
+                        p.ApplicationDate,
+                        p.SubmittedDate,
+                        p.ApprovedDate,
+                        p.ExpirationDate,
+                        p.ApplicationFee,
+                        p.FeePaid,
+                        p.HasPlotPlan,
+                        p.HasConstructionDrawings,
+                        p.HasContractorLicense,
+                        p.HasOwnerAuthorization,
+                        p.Notes,
+                        p.DenialReason,
+                        p.CodeReference,
+                        p.AssignedUserId,
+                        p.CreatedAt,
+                        p.UpdatedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { count = permits.Count, permits });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting job permits");
+                return StatusCode(500, new { message = "Error retrieving permits" });
+            }
+        }
+
+        /// <summary>
+        /// Initialize permits for a job based on required permit types
+        /// Creates permit records if they don't exist
+        /// </summary>
+        [HttpPost("job/{jobId}/permits/initialize")]
+        public async Task<ActionResult> InitializeJobPermits(int jobId)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                
+                // Get required permit types from scopes
+                var requiredPermitTypes = await _codeEngineService.GetRequiredPermitTypesAsync(jobId);
+                
+                // Get existing permits
+                var existingPermits = await _context.JobPermits
+                    .Where(p => p.JobId == jobId && p.CompanyId == companyId)
+                    .Select(p => p.PermitType)
+                    .ToListAsync();
+
+                var newPermits = new List<JobPermit>();
+                foreach (var permitType in requiredPermitTypes)
+                {
+                    if (!existingPermits.Contains(permitType))
+                    {
+                        var codeRef = permitType switch
+                        {
+                            "BUILDING" => "780 CMR",
+                            "ELECTRICAL" => "527 CMR",
+                            "PLUMBING" => "248 CMR",
+                            "GAS" => "248 CMR",
+                            "FIRE" => "527 CMR 12.00",
+                            _ => null
+                        };
+
+                        newPermits.Add(new JobPermit
+                        {
+                            JobId = jobId,
+                            CompanyId = companyId,
+                            PermitType = permitType,
+                            Status = "PENDING",
+                            CodeReference = codeRef,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+
+                if (newPermits.Count > 0)
+                {
+                    await _context.JobPermits.AddRangeAsync(newPermits);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Return all permits
+                var permits = await _context.JobPermits
+                    .Where(p => p.JobId == jobId && p.CompanyId == companyId)
+                    .OrderBy(p => p.PermitType)
+                    .ToListAsync();
+
+                return Ok(new 
+                { 
+                    message = $"Initialized {newPermits.Count} new permits",
+                    count = permits.Count, 
+                    permits 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error initializing job permits");
+                return StatusCode(500, new { message = "Error initializing permits" });
+            }
+        }
+
+        /// <summary>
+        /// Update a permit
+        /// </summary>
+        [HttpPut("permits/{id}")]
+        public async Task<ActionResult> UpdatePermit(int id, [FromBody] UpdatePermitDto dto)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var permit = await _context.JobPermits
+                    .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == companyId);
+
+                if (permit == null)
+                    return NotFound(new { message = "Permit not found" });
+
+                // Update fields
+                if (!string.IsNullOrEmpty(dto.Status))
+                    permit.Status = dto.Status;
+                if (dto.PermitNumber != null)
+                    permit.PermitNumber = dto.PermitNumber;
+                if (dto.IssuingAuthority != null)
+                    permit.IssuingAuthority = dto.IssuingAuthority;
+                if (dto.ApplicationDate.HasValue)
+                    permit.ApplicationDate = dto.ApplicationDate;
+                if (dto.SubmittedDate.HasValue)
+                    permit.SubmittedDate = dto.SubmittedDate;
+                if (dto.ApprovedDate.HasValue)
+                    permit.ApprovedDate = dto.ApprovedDate;
+                if (dto.ExpirationDate.HasValue)
+                    permit.ExpirationDate = dto.ExpirationDate;
+                if (dto.ApplicationFee.HasValue)
+                    permit.ApplicationFee = dto.ApplicationFee;
+                if (dto.FeePaid.HasValue)
+                    permit.FeePaid = dto.FeePaid.Value;
+                if (dto.HasPlotPlan.HasValue)
+                    permit.HasPlotPlan = dto.HasPlotPlan.Value;
+                if (dto.HasConstructionDrawings.HasValue)
+                    permit.HasConstructionDrawings = dto.HasConstructionDrawings.Value;
+                if (dto.HasContractorLicense.HasValue)
+                    permit.HasContractorLicense = dto.HasContractorLicense.Value;
+                if (dto.HasOwnerAuthorization.HasValue)
+                    permit.HasOwnerAuthorization = dto.HasOwnerAuthorization.Value;
+                if (dto.Notes != null)
+                    permit.Notes = dto.Notes;
+                if (dto.DenialReason != null)
+                    permit.DenialReason = dto.DenialReason;
+                if (dto.AssignedUserId.HasValue)
+                    permit.AssignedUserId = dto.AssignedUserId;
+
+                permit.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Permit updated successfully", permit });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating permit");
+                return StatusCode(500, new { message = "Error updating permit" });
+            }
+        }
+
+        /// <summary>
+        /// Get a single permit
+        /// </summary>
+        [HttpGet("permits/{id}")]
+        public async Task<ActionResult> GetPermit(int id)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var permit = await _context.JobPermits
+                    .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == companyId);
+
+                if (permit == null)
+                    return NotFound(new { message = "Permit not found" });
+
+                return Ok(permit);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting permit");
+                return StatusCode(500, new { message = "Error retrieving permit" });
+            }
+        }
+    }
+
+    /// <summary>
+    /// DTO for updating a permit
+    /// </summary>
+    public class UpdatePermitDto
+    {
+        public string? Status { get; set; }
+        public string? PermitNumber { get; set; }
+        public string? IssuingAuthority { get; set; }
+        public DateTime? ApplicationDate { get; set; }
+        public DateTime? SubmittedDate { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public DateTime? ExpirationDate { get; set; }
+        public decimal? ApplicationFee { get; set; }
+        public bool? FeePaid { get; set; }
+        public bool? HasPlotPlan { get; set; }
+        public bool? HasConstructionDrawings { get; set; }
+        public bool? HasContractorLicense { get; set; }
+        public bool? HasOwnerAuthorization { get; set; }
+        public string? Notes { get; set; }
+        public string? DenialReason { get; set; }
+        public int? AssignedUserId { get; set; }
     }
 }
