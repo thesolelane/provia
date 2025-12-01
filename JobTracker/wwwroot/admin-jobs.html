@@ -80,6 +80,13 @@
 <body>
     <div id="notificationContainer"></div>
     <div class="container-fluid">
+        <div style="background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <a href="/admin-dashboard.html" style="color: #FF9500; text-decoration: none; font-weight: 600;"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            </div>
+            <h3 style="margin: 0; color: #333;">PROVIA - Jobs Management</h3>
+            <div></div>
+        </div>
         <div class="main-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-briefcase me-2"></i>Jobs Management</h2>
@@ -232,7 +239,7 @@
         }
 
         function createJob() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
             if (!token) {
                 showNotification('Session expired. Please log in again.', 'error');
                 return;
@@ -283,7 +290,7 @@
         }
 
         function loadJobs() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
             if (!token) {
                 document.getElementById('jobsList').innerHTML = '<div class="alert alert-danger">Session expired</div>';
                 return;
