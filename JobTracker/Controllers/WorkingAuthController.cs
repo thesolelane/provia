@@ -93,8 +93,8 @@ namespace JobTracker.Controllers
                 {
                     Subject = new ClaimsIdentity(new[]
                     {
-                        new Claim("id", user.Id.ToString()),
-                        new Claim("email", user.Email ?? ""),
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new Claim(ClaimTypes.Email, user.Email ?? ""),
                         new Claim("role", user.Role.ToString()),
                         new Claim("companyId", user.CompanyId.ToString())
                     }),
