@@ -253,7 +253,7 @@
                 
                 console.log('Categories loaded:', categories.length, 'categories');
                 categories.forEach(cat => {
-                    console.log(`${cat.categoryName}: ${cat.Items ? cat.Items.length : 0} items`);
+                    console.log(`${cat.categoryName}: ${cat.items ? cat.items.length : 0} items`);
                 });
                 
                 renderCategories(categories);
@@ -276,8 +276,8 @@
                         <div id="category-${category.id}">
                 `;
 
-                if (category.Items && category.Items.length > 0) {
-                    category.Items.forEach(item => {
+                if (category.items && category.items.length > 0) {
+                    category.items.forEach(item => {
                         html += `
                             <div class="scope-item" onclick="toggleScope(${item.id}, '${item.itemName.replace(/'/g, "\\'")}', this)">
                                 <input type="checkbox" data-scope-id="${item.id}" data-scope-name="${item.itemName}">
