@@ -8,11 +8,13 @@ namespace JobTracker.Services
     {
         private readonly JobTrackerContext _context;
         private readonly ILogger<DatabaseSeeder> _logger;
+        private readonly ICodeEngineService _codeEngineService;
 
-        public DatabaseSeeder(JobTrackerContext context, ILogger<DatabaseSeeder> logger)
+        public DatabaseSeeder(JobTrackerContext context, ILogger<DatabaseSeeder> logger, ICodeEngineService codeEngineService)
         {
             _context = context;
             _logger = logger;
+            _codeEngineService = codeEngineService;
         }
 
         public async Task SeedAsync()
@@ -21,6 +23,19 @@ namespace JobTracker.Services
             {
                 // Ensure database is created
                 await _context.Database.EnsureCreatedAsync();
+
+                // Check if CodeRules need seeding (separate from company seeding)
+                var existingRules = await _context.CodeRules.AnyAsync();
+                if (!existingRules)
+                {
+                    _logger.LogInformation("Seeding Code Engine (CodeBooks and CodeRules)");
+                    await _codeEngineService.SeedMassachusettsCodesAsync();
+                    _logger.LogInformation("Seeded Massachusetts Code Engine");
+
+                    _logger.LogInformation("Seeding Scope Categories and Items");
+                    await _codeEngineService.SeedScopeCategoriesAsync();
+                    _logger.LogInformation("Seeded Scope Categories and Items");
+                }
 
                 // Check if company already exists
                 var existingCompany = await _context.Companies.FirstOrDefaultAsync();
