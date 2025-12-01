@@ -273,7 +273,7 @@
                         const authParams = `?token=${encodeURIComponent(result.token)}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
                         
                         if (role === 1510) { // Admin
-                            window.location.href = '/admin-user-management.html' + authParams;
+                            window.location.href = '/admin-dashboard.html' + authParams;
                         } else if (role === 1520) { // Foreman
                             window.location.href = '/supervisor-dashboard.html' + authParams;
                         } else if (role === 1530) { // Supervisor
