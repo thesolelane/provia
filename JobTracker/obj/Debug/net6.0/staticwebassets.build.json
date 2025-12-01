@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "9Ow3AJ8z90JfPLECpDrbCpt0lwVLmND0wYIfWwcGJcE=",
+  "Hash": "Nkp9QA+NNY4GFSv/WK/HJ+J7Bh4iKrIVsIHou+7HVuM=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -287,6 +287,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/index.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/job-detail.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "job-detail.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/job-detail.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/login.html",

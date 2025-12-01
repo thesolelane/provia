@@ -15,15 +15,29 @@ PROVIA is an enterprise-grade, multi-tenant construction management SaaS platfor
 
 ## Recent Changes (Current Session)
 
+### Job Detail Page with Permit Applications ✅
+- **Job Detail Page** (`job-detail.html`) displays complete job information including permits
+- Shows job basics: location, client, dates, budget, description
+- **Permit Applications Section** lists required permits based on job scopes
+- Permits auto-generated from CodeEngine based on selected scopes
+- **Next Steps Workflow** guides user through permit management:
+  1. Define Job Scope (Job Options Wizard)
+  2. Auto-Generate Permits (system auto-triggers)
+  3. Prepare Applications (collect documentation)
+  4. Submit to Municipalities (file with jurisdictions)
+  5. Track Approval Status
+  6. Schedule Inspections
+- Accessible from job list with "View" button
+- Links to Job Options Wizard for scope selection
+
 ### Dashboard "Pending Jobs" Metric ✅
-- **Pending Jobs** metric now displays jobs imported from Wave or other software awaiting admin approval
+- **Pending Jobs** metric displays jobs imported from Wave or other software awaiting admin approval
 - Added `JobStatus.PendingApproval` enum value for imported/staged jobs
 - New Job model fields:
   - `IsImported` (bool) - tracks if job came from external source
   - `ImportedFrom` (string) - source system (Wave, QuickBooks, etc.)
   - `ImportedDate` (DateTime?) - when job was imported
 - Dashboard automatically counts jobs with "PendingApproval" status
-- Workflow: External Import → Staged in Queue → Admin Reviews → Approves/Rejects → Moves to Planning
 
 ---
 
