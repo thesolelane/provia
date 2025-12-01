@@ -243,7 +243,13 @@
                     throw new Error('Failed to load scope categories');
                 }
 
-                const categories = await response.json();
+                const data = await response.json();
+                const categories = data.categories || data;
+                
+                if (!Array.isArray(categories)) {
+                    throw new Error('Invalid response format');
+                }
+                
                 renderCategories(categories);
             } catch (error) {
                 console.error('Error:', error);
