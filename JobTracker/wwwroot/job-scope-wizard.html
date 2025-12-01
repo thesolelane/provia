@@ -244,11 +244,17 @@
                 }
 
                 const data = await response.json();
+                console.log('API Response:', JSON.stringify(data, null, 2));
                 const categories = data.categories || data;
                 
                 if (!Array.isArray(categories)) {
-                    throw new Error('Invalid response format');
+                    throw new Error('Invalid response format: ' + JSON.stringify(categories).substring(0, 100));
                 }
+                
+                console.log('Categories loaded:', categories.length, 'categories');
+                categories.forEach(cat => {
+                    console.log(`${cat.categoryName}: ${cat.Items ? cat.Items.length : 0} items`);
+                });
                 
                 renderCategories(categories);
             } catch (error) {

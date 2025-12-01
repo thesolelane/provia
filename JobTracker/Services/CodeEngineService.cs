@@ -41,11 +41,20 @@ namespace JobTracker.Services
         /// </summary>
         public async Task<List<ScopeCategoryDto>> GetAllScopeCategoriesAsync()
         {
+            // Get categories
             var categories = await _context.ScopeCategories
                 .Where(c => c.IsActive)
-                .Include(c => c.ScopeItems)
                 .OrderBy(c => c.DisplayOrder)
                 .ToListAsync();
+
+            // Get all items and group by category
+            var allItems = await _context.ScopeItems
+                .Where(i => i.IsActive)
+                .ToListAsync();
+
+            var itemsByCategory = allItems
+                .GroupBy(i => i.ScopeCategoryId)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             return categories.Select(c => new ScopeCategoryDto
             {
@@ -53,20 +62,21 @@ namespace JobTracker.Services
                 CategoryCode = c.CategoryCode,
                 CategoryName = c.CategoryName,
                 Description = c.Description,
-                Items = c.ScopeItems?
-                    .Where(i => i.IsActive)
-                    .Select(i => new ScopeItemDto
-                    {
-                        Id = i.Id,
-                        ItemCode = i.ItemCode,
-                        ItemName = i.ItemName,
-                        Description = i.Description,
-                        TradeType = i.TradeType,
-                        RequiresLicensedTrade = i.RequiresLicensedTrade,
-                        Department = i.Department
-                    })
-                    .OrderBy(i => i.Id)
-                    .ToList() ?? new List<ScopeItemDto>()
+                Items = itemsByCategory.ContainsKey(c.Id)
+                    ? itemsByCategory[c.Id]
+                        .Select(i => new ScopeItemDto
+                        {
+                            Id = i.Id,
+                            ItemCode = i.ItemCode,
+                            ItemName = i.ItemName,
+                            Description = i.Description,
+                            TradeType = i.TradeType,
+                            RequiresLicensedTrade = i.RequiresLicensedTrade,
+                            Department = i.Department
+                        })
+                        .OrderBy(i => i.Id)
+                        .ToList()
+                    : new List<ScopeItemDto>()
             }).ToList();
         }
 
