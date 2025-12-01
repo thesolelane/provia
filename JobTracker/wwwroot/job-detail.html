@@ -288,9 +288,14 @@
                             <h4 class="section-title" style="margin-bottom: 0; border-bottom: none;">
                                 <i class="fas fa-file-invoice me-2" style="color: #FF9500;"></i>Required Permits
                             </h4>
-                            <a href="/job-scope-wizard.html?jobId=${jobId}" class="permit-wizard-btn" style="margin-bottom: 0;">
-                                <i class="fas fa-magic me-2"></i>Job Options Wizard
-                            </a>
+                            <div>
+                                <a href="/permit-management.html?jobId=${jobId}" class="btn btn-primary-custom me-2" style="padding: 12px 24px; border-radius: 6px; font-weight: 600; text-decoration: none;">
+                                    <i class="fas fa-clipboard-list me-2"></i>Manage Permits
+                                </a>
+                                <a href="/job-scope-wizard.html?jobId=${jobId}" class="permit-wizard-btn" style="margin-bottom: 0;">
+                                    <i class="fas fa-magic me-2"></i>Job Options Wizard
+                                </a>
+                            </div>
                         </div>
                         <hr>
                         ${permitsHtml}
