@@ -251,6 +251,17 @@ namespace JobTracker.Controllers
         {
             try
             {
+                // Get the current company from the tenant context
+                try
+                {
+                    var companyId = _tenantContext.GetCurrentCompanyId();
+                    job.CompanyId = companyId;
+                }
+                catch (InvalidOperationException)
+                {
+                    return BadRequest(new { error = "Unable to determine company context" });
+                }
+
                 job.CreatedAt = DateTime.UtcNow;
                 job.UpdatedAt = DateTime.UtcNow;
                 
@@ -270,12 +281,13 @@ namespace JobTracker.Controllers
                 _context.Jobs.Add(job);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation($"Job created successfully: {job.Id}");
                 return CreatedAtAction(nameof(GetJob), new { id = job.Id }, job);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating job");
-                return StatusCode(500, "An error occurred while creating the job");
+                return StatusCode(500, new { error = "An error occurred while creating the job", details = ex.Message });
             }
         }
 

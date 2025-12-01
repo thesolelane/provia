@@ -273,19 +273,32 @@
                 },
                 body: JSON.stringify(jobData)
             })
-            .then(r => r.json())
+            .then(r => {
+                if (r.ok) {
+                    return r.json().then(data => ({success: true, data: data}));
+                } else {
+                    return r.text().then(text => {
+                        try {
+                            return {success: false, data: JSON.parse(text)};
+                        } catch {
+                            return {success: false, data: {error: text}};
+                        }
+                    });
+                }
+            })
             .then(response => {
-                if (response.id || response.name) {
+                if (response.success && (response.data.id || response.data.name)) {
                     showNotification('✓ Job created successfully', 'success');
                     bootstrap.Modal.getInstance(document.getElementById('createJobModal')).hide();
-                    loadJobs();
+                    setTimeout(loadJobs, 500); // Give it time to settle
                 } else {
-                    showNotification('Error: ' + (response.message || 'Failed to create job'), 'error');
+                    const errorMsg = response.data.error || response.data.message || 'Failed to create job';
+                    showNotification('Error: ' + errorMsg, 'error');
                 }
             })
             .catch(err => {
                 console.error('Error creating job:', err);
-                showNotification('Error creating job. Please try again.', 'error');
+                showNotification('Error: ' + err.message, 'error');
             });
         }
 
