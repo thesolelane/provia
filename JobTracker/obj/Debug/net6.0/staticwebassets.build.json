@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "GNoEEndHBUXAud6g+h4Ryjy4J/P9cruFKBOZkA/NiLM=",
+  "Hash": "NSZ1qhRaj2S/qF8ji8gWHIR2B4c+kamsaEQvESN29x8=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -355,6 +355,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/main-dashboard.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/permit-management.html",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "permit-management.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/permit-management.html"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/simple-user-test.html",
