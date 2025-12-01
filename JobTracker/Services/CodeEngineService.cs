@@ -43,7 +43,7 @@ namespace JobTracker.Services
         {
             var categories = await _context.ScopeCategories
                 .Where(c => c.IsActive)
-                .Include(c => c.ScopeItems!.Where(i => i.IsActive))
+                .Include(c => c.ScopeItems)
                 .OrderBy(c => c.DisplayOrder)
                 .ToListAsync();
 
@@ -53,16 +53,20 @@ namespace JobTracker.Services
                 CategoryCode = c.CategoryCode,
                 CategoryName = c.CategoryName,
                 Description = c.Description,
-                Items = c.ScopeItems?.Select(i => new ScopeItemDto
-                {
-                    Id = i.Id,
-                    ItemCode = i.ItemCode,
-                    ItemName = i.ItemName,
-                    Description = i.Description,
-                    TradeType = i.TradeType,
-                    RequiresLicensedTrade = i.RequiresLicensedTrade,
-                    Department = i.Department
-                }).OrderBy(i => i.Id).ToList() ?? new List<ScopeItemDto>()
+                Items = c.ScopeItems?
+                    .Where(i => i.IsActive)
+                    .Select(i => new ScopeItemDto
+                    {
+                        Id = i.Id,
+                        ItemCode = i.ItemCode,
+                        ItemName = i.ItemName,
+                        Description = i.Description,
+                        TradeType = i.TradeType,
+                        RequiresLicensedTrade = i.RequiresLicensedTrade,
+                        Department = i.Department
+                    })
+                    .OrderBy(i => i.Id)
+                    .ToList() ?? new List<ScopeItemDto>()
             }).ToList();
         }
 
