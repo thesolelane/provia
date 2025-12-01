@@ -256,12 +256,29 @@
                 startDate: document.getElementById('startDate').value,
                 targetCompletionDate: document.getElementById('completionDate').value || null,
                 status: document.getElementById('jobStatus').value,
-                budget: parseFloat(document.getElementById('budget').value),
+                budget: document.getElementById('budget').value ? parseFloat(document.getElementById('budget').value) : null,
                 actualCost: 0
             };
 
-            if (!jobData.name || !jobData.location || !jobData.clientName || !jobData.budget) {
-                showNotification('Please fill in all required fields', 'error');
+            // Validate all required fields with specific error messages
+            const missingFields = [];
+            
+            if (!jobData.name) missingFields.push('Job Name');
+            if (!jobData.location) missingFields.push('Location');
+            if (!jobData.clientName) missingFields.push('Client Name');
+            if (!jobData.clientEmail) {
+                missingFields.push('Client Email');
+            } else if (!jobData.clientEmail.includes('@')) {
+                showNotification('Error: Client Email must be a valid email address', 'error');
+                return;
+            }
+            if (!jobData.clientPhone) missingFields.push('Client Phone');
+            if (!jobData.startDate) missingFields.push('Start Date');
+            if (!jobData.budget || isNaN(jobData.budget) || jobData.budget <= 0) missingFields.push('Budget');
+
+            if (missingFields.length > 0) {
+                const fieldsList = missingFields.join(', ');
+                showNotification(`Missing required fields: ${fieldsList}`, 'error', 7000);
                 return;
             }
 
