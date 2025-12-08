@@ -37,8 +37,12 @@ PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction manag
 - **Job Management:** Admin dashboard functionality to create, track, and manage construction jobs with auto-generated job numbers and a defined workflow (Planning → Permits Pending → In Progress → Inspection → Completed).
 - **Team Management:** Features for editing user details, deactivating accounts, and initiating password resets, managed through secure, admin-only operations.
 - **Temporary Password System:** Automates secure password generation for new users, delivered via email with a `PasswordNeedsChange` flag to enforce a password update on first login.
+- **MassGIS Property Data Integration:** Fetches Massachusetts parcel data (owner, zoning, assessed values, lot size) from the official ArcGIS FeatureServer to auto-populate permit applications. Job locations are parsed as "street address, city" format.
+- **Permit Document Automation:** Uses `PermitFormTemplate`, `PropertyProfile`, and `FormFieldMapping` tables to auto-fill official MA building permit PDFs with GIS-sourced property data and company/job information.
+- **Model Naming:** `PermitDocument` handles generated PDF permits; `UploadedPermitDoc` handles inspection-related document uploads.
 
 ## External Dependencies
 - **Database:** PostgreSQL (Neon-backed via Replit)
 - **Email Service:** SendGrid
 - **SMS Service:** Twilio/Textedly
+- **MassGIS API:** Massachusetts Geographic Information System via ArcGIS REST services (free public access)
