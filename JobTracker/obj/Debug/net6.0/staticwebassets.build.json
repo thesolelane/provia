@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "NSZ1qhRaj2S/qF8ji8gWHIR2B4c+kamsaEQvESN29x8=",
+  "Hash": "tFJrzyfrIaFUtFXemuK/nqwX8lLF/r7obvi5AJT3qrw=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -423,6 +423,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/supervisor-dashboard.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/templates/permits/BUILDING_homeowners_exemption_1765168400.docx",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "templates/permits/BUILDING_homeowners_exemption_1765168400.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/templates/permits/BUILDING_homeowners_exemption_1765168400.docx"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/test-auth.html",
