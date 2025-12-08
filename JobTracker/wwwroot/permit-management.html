@@ -260,6 +260,13 @@
                     <form id="permitForm">
                         <input type="hidden" id="permitId">
                         
+                        <div class="mb-3 p-3 rounded" id="permitHolderInfo" style="background: #e8f4f8; border-left: 4px solid #17a2b8;">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                <span id="permitHolderText">Loading permit holder info...</span>
+                            </div>
+                        </div>
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Status</label>
@@ -275,6 +282,18 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Permit Number</label>
                                 <input type="text" class="form-control" id="permitNumber" placeholder="Assigned after approval">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="subcontractorSection">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-hard-hat me-1"></i>Assigned Subcontractor (License Holder)
+                                </label>
+                                <select class="form-select" id="assignedSubcontractor">
+                                    <option value="">-- Select Subcontractor --</option>
+                                </select>
+                                <small class="text-muted">The subcontractor with the required license who will pull this permit</small>
                             </div>
                         </div>
 
@@ -368,6 +387,19 @@
         const jobId = urlParams.get('jobId');
         let permits = [];
         let jobData = null;
+        let subcontractors = [];
+        let permitHolderInfo = {};
+
+        const PERMIT_HOLDER_MAP = {
+            'BUILDING': { pulledBy: 'GC', description: 'Pulled by General Contractor', license: 'Construction Supervisor License' },
+            'ELECTRICAL': { pulledBy: 'SUB', description: 'Pulled by Licensed Electrician', license: 'Electrician License (527 CMR)' },
+            'PLUMBING': { pulledBy: 'SUB', description: 'Pulled by Licensed Plumber', license: 'Plumber License (248 CMR)' },
+            'GAS': { pulledBy: 'SUB', description: 'Pulled by Licensed Gas Fitter', license: 'Gas Fitter License (248 CMR)' },
+            'HVAC': { pulledBy: 'SUB', description: 'Pulled by Licensed HVAC Installer', license: 'Refrigeration License' },
+            'SHEET_METAL': { pulledBy: 'SUB', description: 'Pulled by Licensed Sheet Metal Worker', license: 'Sheet Metal License' },
+            'OIL_BURNER': { pulledBy: 'SUB', description: 'Pulled by Licensed Oil Burner Tech', license: 'Oil Burner License' },
+            'FIRE': { pulledBy: 'SUB', description: 'Pulled by Licensed Fire Protection', license: 'Fire Protection License' }
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
             if (!jobId) {
@@ -384,12 +416,62 @@
             
             document.getElementById('backLink').href = `job-detail.html?id=${jobId}`;
             loadJobAndPermits();
+            loadSubcontractors();
 
             document.getElementById('permitStatus').addEventListener('change', function() {
                 document.getElementById('denialReasonSection').style.display = 
                     this.value === 'DENIED' ? 'block' : 'none';
             });
         });
+
+        async function loadSubcontractors() {
+            try {
+                const response = await fetch('/api/codeengine/subcontractors', {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    subcontractors = data.subcontractors || [];
+                }
+            } catch (error) {
+                console.error('Error loading subcontractors:', error);
+            }
+        }
+
+        function populateSubcontractorDropdown(selectedId) {
+            const dropdown = document.getElementById('assignedSubcontractor');
+            dropdown.innerHTML = '<option value="">-- Select Subcontractor --</option>';
+            
+            subcontractors.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.userId;
+                option.textContent = `${sub.name} (${sub.email})`;
+                if (sub.userId == selectedId) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        }
+
+        function updatePermitHolderInfo(permitType) {
+            const info = PERMIT_HOLDER_MAP[permitType] || { pulledBy: 'Unknown', description: 'License holder required', license: 'Check requirements' };
+            const infoEl = document.getElementById('permitHolderText');
+            const sectionEl = document.getElementById('subcontractorSection');
+            
+            if (info.pulledBy === 'GC') {
+                infoEl.innerHTML = `<strong>GC Responsibility:</strong> ${info.description} - <em>${info.license}</em>`;
+                sectionEl.style.display = 'none';
+            } else {
+                infoEl.innerHTML = `<strong>Subcontractor Required:</strong> ${info.description} - <em>${info.license}</em>`;
+                sectionEl.style.display = 'block';
+            }
+        }
+
+        function getSubcontractorName(userId) {
+            if (!userId) return null;
+            const sub = subcontractors.find(s => s.userId == userId);
+            return sub ? sub.name : null;
+        }
 
         function getAuthHeaders() {
             const token = localStorage.getItem('token');
@@ -500,6 +582,11 @@
                 const statusLabel = getStatusLabel(permit.status);
                 const progressPercent = getProgressPercent(permit);
                 const docsComplete = countDocsComplete(permit);
+                const holderInfo = PERMIT_HOLDER_MAP[permit.permitType] || { pulledBy: 'SUB' };
+                const subName = getSubcontractorName(permit.assignedUserId);
+                const holderDisplay = holderInfo.pulledBy === 'GC' 
+                    ? '<span class="badge bg-primary">GC</span>' 
+                    : (subName ? `<span class="badge bg-info">${subName}</span>` : '<span class="badge bg-warning text-dark">Assign Sub</span>');
                 
                 return `
                     <div class="permit-card ${statusClass}" onclick="openPermitModal(${permit.id})">
@@ -509,6 +596,10 @@
                                 ${permit.codeReference ? `<span class="permit-code-ref">(${permit.codeReference})</span>` : ''}
                             </div>
                             <span class="status-badge ${statusClass}">${statusLabel}</span>
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Permit Holder:</small> ${holderDisplay}
                         </div>
                         
                         <div class="workflow-steps">
@@ -648,12 +739,16 @@
             document.getElementById('denialReasonSection').style.display = 
                 permit.status === 'DENIED' ? 'block' : 'none';
 
+            updatePermitHolderInfo(permit.permitType);
+            populateSubcontractorDropdown(permit.assignedUserId);
+
             const modal = new bootstrap.Modal(document.getElementById('permitModal'));
             modal.show();
         }
 
         async function savePermit() {
             const permitId = document.getElementById('permitId').value;
+            const assignedSub = document.getElementById('assignedSubcontractor').value;
             
             const updateData = {
                 status: document.getElementById('permitStatus').value,
@@ -670,7 +765,8 @@
                 hasContractorLicense: document.getElementById('hasContractorLicense').checked,
                 hasOwnerAuthorization: document.getElementById('hasOwnerAuthorization').checked,
                 notes: document.getElementById('permitNotes').value || null,
-                denialReason: document.getElementById('denialReason').value || null
+                denialReason: document.getElementById('denialReason').value || null,
+                assignedUserId: assignedSub ? parseInt(assignedSub) : null
             };
 
             try {

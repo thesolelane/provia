@@ -555,6 +555,125 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { message = "Error retrieving permit" });
             }
         }
+
+        /// <summary>
+        /// Get subcontractors available for permit assignment
+        /// Filters by trade type based on permit type
+        /// </summary>
+        [HttpGet("subcontractors")]
+        public async Task<ActionResult> GetSubcontractorsForPermits([FromQuery] string? permitType = null)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+
+                // Get subcontractors linked to this company
+                var subcontractors = await _context.SubContractorCompanies
+                    .Where(sc => sc.CompanyId == companyId && sc.Status == "ACTIVE")
+                    .Include(sc => sc.SubContractorUser)
+                    .Select(sc => new
+                    {
+                        userId = sc.SubContractorUserId,
+                        name = sc.SubContractorUser.FirstName + " " + sc.SubContractorUser.LastName,
+                        email = sc.SubContractorUser.Email,
+                        phone = sc.SubContractorUser.PhoneNumber,
+                        specializations = sc.Specializations,
+                        isVerified = sc.IsVerified
+                    })
+                    .ToListAsync();
+
+                // Also get users with Subcontractor role in this company
+                var subUsers = await _context.Users
+                    .Where(u => u.CompanyId == companyId && u.Role == RoleCodes.Subcontractor && u.IsActive)
+                    .Select(u => new
+                    {
+                        userId = u.Id,
+                        name = u.FirstName + " " + u.LastName,
+                        email = u.Email,
+                        phone = u.PhoneNumber,
+                        specializations = (string?)null,
+                        isVerified = true
+                    })
+                    .ToListAsync();
+
+                // Combine and deduplicate
+                var allSubs = subcontractors
+                    .Concat(subUsers)
+                    .GroupBy(s => s.userId)
+                    .Select(g => g.First())
+                    .OrderBy(s => s.name)
+                    .ToList();
+
+                return Ok(new { count = allSubs.Count, subcontractors = allSubs });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting subcontractors");
+                return StatusCode(500, new { message = "Error retrieving subcontractors" });
+            }
+        }
+
+        /// <summary>
+        /// Get permit holder types - explains who pulls each permit type
+        /// </summary>
+        [HttpGet("permit-holders")]
+        public ActionResult GetPermitHolderInfo()
+        {
+            return Ok(new
+            {
+                permitTypes = new[]
+                {
+                    new { 
+                        type = "BUILDING", 
+                        pulledBy = "GC", 
+                        description = "Pulled by General Contractor (license holder)",
+                        requiredLicense = "Construction Supervisor License"
+                    },
+                    new { 
+                        type = "ELECTRICAL", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Electrician",
+                        requiredLicense = "Electrician License (527 CMR)"
+                    },
+                    new { 
+                        type = "PLUMBING", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Plumber",
+                        requiredLicense = "Plumber License (248 CMR)"
+                    },
+                    new { 
+                        type = "GAS", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Gas Fitter (separate from plumbing)",
+                        requiredLicense = "Gas Fitter License (248 CMR)"
+                    },
+                    new { 
+                        type = "HVAC", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed HVAC Installer",
+                        requiredLicense = "Refrigeration Technician License"
+                    },
+                    new { 
+                        type = "SHEET_METAL", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Sheet Metal Worker (separate from HVAC)",
+                        requiredLicense = "Sheet Metal License"
+                    },
+                    new { 
+                        type = "OIL_BURNER", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Oil Burner Technician",
+                        requiredLicense = "Oil Burner Technician License"
+                    },
+                    new { 
+                        type = "FIRE", 
+                        pulledBy = "SUBCONTRACTOR", 
+                        description = "Pulled by Licensed Fire Protection Contractor",
+                        requiredLicense = "Fire Protection License"
+                    }
+                }
+            });
+        }
     }
 
     /// <summary>
