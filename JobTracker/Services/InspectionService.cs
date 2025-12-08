@@ -21,7 +21,7 @@ namespace JobTracker.Services
         Task<bool> UploadPermitAsync(int inspectionId, int jobBidId, int companyId, string permitType, string? permitNumber, string? documentUrl, string? fileName, int uploadedByUserId);
         Task<bool> ApprovePermitAsync(int permitId, int reviewedByUserId, bool approved, string? notes);
         Task<List<InspectionStage>> GetInspectionsForBidAsync(int jobBidId);
-        Task<List<PermitDocument>> GetPermitsForInspectionAsync(int inspectionId);
+        Task<List<UploadedPermitDoc>> GetPermitsForInspectionAsync(int inspectionId);
         Task<bool> CanAdvanceToNextStageAsync(int jobBidId);
         Task<string?> GetNextInspectionStageAsync(int jobBidId);
     }
@@ -124,7 +124,7 @@ namespace JobTracker.Services
                     return false;
                 }
 
-                var permit = new PermitDocument
+                var permit = new UploadedPermitDoc
                 {
                     InspectionStageId = inspectionId,
                     JobBidId = jobBidId,
@@ -139,7 +139,7 @@ namespace JobTracker.Services
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _context.PermitDocuments.Add(permit);
+                _context.UploadedPermitDocs.Add(permit);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"Permit uploaded: {permitType} for inspection {inspectionId}");
@@ -159,7 +159,7 @@ namespace JobTracker.Services
         {
             try
             {
-                var permit = await _context.PermitDocuments.FirstOrDefaultAsync(p => p.Id == permitId);
+                var permit = await _context.UploadedPermitDocs.FirstOrDefaultAsync(p => p.Id == permitId);
                 if (permit == null)
                 {
                     _logger.LogWarning("Permit not found");
@@ -206,11 +206,11 @@ namespace JobTracker.Services
         /// <summary>
         /// Get all permit documents for an inspection
         /// </summary>
-        public async Task<List<PermitDocument>> GetPermitsForInspectionAsync(int inspectionId)
+        public async Task<List<UploadedPermitDoc>> GetPermitsForInspectionAsync(int inspectionId)
         {
             try
             {
-                return await _context.PermitDocuments
+                return await _context.UploadedPermitDocs
                     .Where(p => p.InspectionStageId == inspectionId)
                     .OrderByDescending(p => p.CreatedAt)
                     .ToListAsync();
@@ -218,7 +218,7 @@ namespace JobTracker.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting permits");
-                return new List<PermitDocument>();
+                return new List<UploadedPermitDoc>();
             }
         }
 

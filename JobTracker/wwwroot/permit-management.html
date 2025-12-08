@@ -248,6 +248,64 @@
             </div>
         </div>
 
+        <div class="detail-card mb-4">
+            <h3 class="section-title">
+                <i class="fas fa-map-marker-alt me-2"></i>Property Data (MassGIS)
+            </h3>
+            <p class="text-muted mb-3">Property information retrieved from Massachusetts public records. This data auto-fills permit applications.</p>
+            
+            <div id="propertyDataSection">
+                <div class="row" id="propertyDataContent" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="info-item mb-2">
+                            <div class="info-label">Parcel ID</div>
+                            <div class="info-value" id="gisParcelId">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Map/Lot</div>
+                            <div class="info-value" id="gisMapLot">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Owner of Record</div>
+                            <div class="info-value" id="gisOwner">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Owner Address</div>
+                            <div class="info-value" id="gisOwnerAddress">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item mb-2">
+                            <div class="info-label">Lot Size</div>
+                            <div class="info-value" id="gisLotSize">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Use Code</div>
+                            <div class="info-value" id="gisUseCode">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Total Assessed Value</div>
+                            <div class="info-value" id="gisTotalValue">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Year Built</div>
+                            <div class="info-value" id="gisYearBuilt">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="propertyDataEmpty" class="text-center py-3">
+                    <i class="fas fa-database text-muted fa-2x mb-2"></i>
+                    <p class="text-muted mb-0">No property data loaded yet</p>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary-custom" id="fetchGisBtn" onclick="fetchPropertyData()">
+                        <i class="fas fa-download me-2"></i>Fetch from MassGIS
+                    </button>
+                    <small class="text-muted ms-2" id="gisLastFetched"></small>
+                </div>
+            </div>
+        </div>
+
         <div class="detail-card">
             <h3 class="section-title">
                 <i class="fas fa-clipboard-list me-2"></i>Permit Workflow
@@ -508,6 +566,7 @@
                 }
 
                 await loadPermits();
+                await loadPropertyData();
             } catch (error) {
                 console.error('Error loading job:', error);
             }
@@ -839,6 +898,74 @@
             } catch (error) {
                 console.error('Error assigning subcontractor:', error);
                 alert('Error assigning subcontractor: ' + error.message);
+            }
+        }
+
+        async function loadPropertyData() {
+            try {
+                const response = await fetch(`/api/codeengine/job/${jobId}/property-data`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.exists && data.propertyProfile) {
+                        displayPropertyData(data.propertyProfile);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading property data:', error);
+            }
+        }
+
+        function displayPropertyData(profile) {
+            document.getElementById('propertyDataContent').style.display = 'flex';
+            document.getElementById('propertyDataEmpty').style.display = 'none';
+            
+            document.getElementById('gisParcelId').textContent = profile.parcelId || '-';
+            document.getElementById('gisMapLot').textContent = profile.mapLot || '-';
+            document.getElementById('gisOwner').textContent = profile.ownerName || '-';
+            document.getElementById('gisOwnerAddress').textContent = profile.ownerAddress || '-';
+            document.getElementById('gisLotSize').textContent = profile.lotAreaSqFt ? `${profile.lotAreaSqFt.toLocaleString()} sq ft` : '-';
+            document.getElementById('gisUseCode').textContent = profile.useDescription ? `${profile.useCode} - ${profile.useDescription}` : (profile.useCode || '-');
+            document.getElementById('gisTotalValue').textContent = profile.totalAssessedValue ? `$${profile.totalAssessedValue.toLocaleString()}` : '-';
+            document.getElementById('gisYearBuilt').textContent = profile.yearBuilt || '-';
+            
+            if (profile.gisFetchedAt) {
+                const fetchDate = new Date(profile.gisFetchedAt);
+                document.getElementById('gisLastFetched').textContent = `Last updated: ${fetchDate.toLocaleDateString()}`;
+            }
+        }
+
+        async function fetchPropertyData() {
+            const btn = document.getElementById('fetchGisBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Fetching...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/codeengine/job/${jobId}/property-data/fetch`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.propertyProfile) {
+                        displayPropertyData(data.propertyProfile);
+                        alert('Property data fetched successfully from MassGIS!');
+                    } else {
+                        alert(data.message || 'Could not fetch property data. Check the job address.');
+                    }
+                } else {
+                    throw new Error('Failed to fetch property data');
+                }
+            } catch (error) {
+                console.error('Error fetching property data:', error);
+                alert('Error fetching property data: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
     </script>

@@ -674,6 +674,177 @@ namespace JobTracker.Controllers
                 }
             });
         }
+
+        // ==================== PROPERTY DATA & PDF GENERATION ====================
+
+        /// <summary>
+        /// Fetch property data from MassGIS for a job
+        /// </summary>
+        [HttpPost("job/{jobId}/property-data/fetch")]
+        public async Task<ActionResult> FetchPropertyData(int jobId, [FromServices] IPermitDocumentService permitDocService)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var propertyProfile = await permitDocService.FetchAndSavePropertyDataAsync(jobId, companyId);
+
+                if (propertyProfile == null)
+                {
+                    return Ok(new { 
+                        success = false, 
+                        message = "Could not fetch property data. Please check the job address and try again." 
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Property data fetched from MassGIS",
+                    propertyProfile = new
+                    {
+                        propertyProfile.ParcelId,
+                        propertyProfile.MapLot,
+                        propertyProfile.OwnerName,
+                        propertyProfile.OwnerAddress,
+                        propertyProfile.PropertyAddress,
+                        propertyProfile.City,
+                        propertyProfile.ZoningCode,
+                        propertyProfile.LotAreaSqFt,
+                        propertyProfile.LandValue,
+                        propertyProfile.BuildingValue,
+                        propertyProfile.TotalAssessedValue,
+                        propertyProfile.UseCode,
+                        propertyProfile.UseDescription,
+                        propertyProfile.YearBuilt,
+                        propertyProfile.FiscalYear,
+                        propertyProfile.GisFetchedAt
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching property data");
+                return StatusCode(500, new { message = "Error fetching property data" });
+            }
+        }
+
+        /// <summary>
+        /// Get property profile for a job
+        /// </summary>
+        [HttpGet("job/{jobId}/property-data")]
+        public async Task<ActionResult> GetPropertyData(int jobId)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var propertyProfile = await _context.PropertyProfiles
+                    .FirstOrDefaultAsync(p => p.JobId == jobId && p.CompanyId == companyId);
+
+                if (propertyProfile == null)
+                {
+                    return Ok(new { exists = false, message = "No property data on file. Click 'Fetch from GIS' to retrieve." });
+                }
+
+                return Ok(new
+                {
+                    exists = true,
+                    propertyProfile = new
+                    {
+                        propertyProfile.ParcelId,
+                        propertyProfile.MapLot,
+                        propertyProfile.OwnerName,
+                        propertyProfile.OwnerAddress,
+                        propertyProfile.PropertyAddress,
+                        propertyProfile.City,
+                        propertyProfile.ZoningCode,
+                        propertyProfile.LotAreaSqFt,
+                        propertyProfile.LandValue,
+                        propertyProfile.BuildingValue,
+                        propertyProfile.TotalAssessedValue,
+                        propertyProfile.UseCode,
+                        propertyProfile.UseDescription,
+                        propertyProfile.YearBuilt,
+                        propertyProfile.FiscalYear,
+                        propertyProfile.GisFetchedAt
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting property data");
+                return StatusCode(500, new { message = "Error retrieving property data" });
+            }
+        }
+
+        /// <summary>
+        /// Get available permit form templates
+        /// </summary>
+        [HttpGet("permit-templates")]
+        public async Task<ActionResult> GetPermitTemplates([FromQuery] string? permitType, [FromServices] IPermitDocumentService permitDocService)
+        {
+            try
+            {
+                var templates = await permitDocService.GetActiveTemplatesAsync(permitType);
+                return Ok(new { count = templates.Count, templates });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting permit templates");
+                return StatusCode(500, new { message = "Error retrieving templates" });
+            }
+        }
+
+        /// <summary>
+        /// Get form data preview for a permit (what will be filled in the PDF)
+        /// </summary>
+        [HttpGet("permits/{permitId}/form-data")]
+        public async Task<ActionResult> GetPermitFormData(int permitId, [FromServices] IPermitDocumentService permitDocService)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var formData = await permitDocService.GetPermitFormDataAsync(permitId, companyId);
+                return Ok(new { fieldCount = formData.Count, fields = formData });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting permit form data");
+                return StatusCode(500, new { message = "Error retrieving form data" });
+            }
+        }
+
+        /// <summary>
+        /// Get generated documents for a permit
+        /// </summary>
+        [HttpGet("permits/{permitId}/documents")]
+        public async Task<ActionResult> GetPermitDocuments(int permitId)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var documents = await _context.PermitDocuments
+                    .Include(d => d.Template)
+                    .Where(d => d.JobPermitId == permitId && d.CompanyId == companyId)
+                    .OrderByDescending(d => d.GeneratedAt)
+                    .Select(d => new
+                    {
+                        d.Id,
+                        d.TemplateId,
+                        templateName = d.Template != null ? d.Template.TemplateName : "Unknown",
+                        d.StoragePath,
+                        d.Status,
+                        d.GeneratedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { count = documents.Count, documents });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting permit documents");
+                return StatusCode(500, new { message = "Error retrieving documents" });
+            }
+        }
     }
 
     /// <summary>
