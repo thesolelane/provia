@@ -57,3 +57,6 @@ PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction manag
 - **OpenGov/ViewPoint Cloud:** Enterprise API for Lexington, Hanover, Gardner, etc. (requires partnership)
 - **PermitEyes:** Web automation for Mashpee, Falmouth, Chelmsford, etc. (no public API)
 - **Additional Data Sources:** FEMA NFHL (flood zones), MA DPL (contractor licenses), DIA (workers comp)
+
+## Documentation Files
+- `JobTracker/docs/AWS_INTEGRATION_ROADMAP.md` - AWS integration strategy, migration plan, security requirements, cost estimates
