@@ -16,6 +16,9 @@ namespace JobTracker.Models
         [StringLength(100)]
         public string TemplateName { get; set; } = string.Empty;
 
+        [StringLength(500)]
+        public string? Description { get; set; }
+
         [StringLength(100)]
         public string? Jurisdiction { get; set; }
 
@@ -24,6 +27,13 @@ namespace JobTracker.Models
 
         [Required]
         public string StoragePath { get; set; } = string.Empty;
+
+        public string? FilePath { get; set; }
+
+        [StringLength(255)]
+        public string? OriginalFileName { get; set; }
+
+        public long? FileSize { get; set; }
 
         public string? FieldSchema { get; set; }
 
