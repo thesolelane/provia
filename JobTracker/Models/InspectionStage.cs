@@ -56,9 +56,10 @@ namespace JobTracker.Models
     }
 
     /// <summary>
-    /// Permit document tracking - sub uploads signed permits as proof
+    /// Uploaded permit document tracking - sub uploads signed permits as proof
+    /// For inspection stage verification (differs from generated PermitDocument in PermitDocument.cs)
     /// </summary>
-    public class PermitDocument
+    public class UploadedPermitDoc
     {
         [Key]
         public int Id { get; set; }

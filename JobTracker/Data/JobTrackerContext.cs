@@ -41,6 +41,7 @@ namespace JobTracker.Data
         public DbSet<JobBid> JobBids { get; set; } = null!;
         public DbSet<InspectionStage> InspectionStages { get; set; } = null!;
         public DbSet<PermitDocument> PermitDocuments { get; set; } = null!;
+        public DbSet<UploadedPermitDoc> UploadedPermitDocs { get; set; } = null!;
         public DbSet<PermitFormTemplate> PermitFormTemplates { get; set; } = null!;
         public DbSet<PropertyProfile> PropertyProfiles { get; set; } = null!;
         public DbSet<FormFieldMapping> FormFieldMappings { get; set; } = null!;

@@ -69,6 +69,10 @@ builder.Services.AddScoped<JobTracker.Services.IInspectionService, JobTracker.Se
 // Add Code Engine Service for scope-based permit/inspection generation
 builder.Services.AddScoped<JobTracker.Services.ICodeEngineService, JobTracker.Services.CodeEngineService>();
 
+// Add MassGIS and Permit Document Services for PDF auto-fill
+builder.Services.AddScoped<JobTracker.Services.IMassGISService, JobTracker.Services.MassGISService>();
+builder.Services.AddScoped<JobTracker.Services.IPermitDocumentService, JobTracker.Services.PermitDocumentService>();
+
 // SECURITY: Configure JWT Authentication
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
 var key = Encoding.ASCII.GetBytes(jwtSecret);
