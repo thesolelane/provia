@@ -151,6 +151,20 @@
             gap: 10px;
             margin-top: 15px;
         }
+        .quick-assign-section {
+            background: rgba(47, 90, 126, 0.05);
+            border: 1px dashed #2F5A7E;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .quick-assign-section label {
+            color: #2F5A7E;
+            font-weight: 500;
+        }
+        .quick-assign-section .form-select {
+            border-color: #2F5A7E;
+        }
         .loading-spinner {
             text-align: center;
             padding: 60px;
@@ -640,6 +654,16 @@
                             </div>
                         </div>
 
+                        ${holderInfo.pulledBy === 'SUB' ? `
+                        <div class="quick-assign-section" onclick="event.stopPropagation();">
+                            <label class="form-label mb-1"><small><i class="fas fa-user-hard-hat me-1"></i>Assign Subcontractor:</small></label>
+                            <select class="form-select form-select-sm" id="quickAssign_${permit.id}" onchange="quickAssignSubcontractor(${permit.id}, this.value)">
+                                <option value="">-- Select --</option>
+                                ${subcontractors.map(sub => `<option value="${sub.userId}" ${sub.userId == permit.assignedUserId ? 'selected' : ''}>${sub.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
+
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-outline-custom" onclick="event.stopPropagation(); openPermitModal(${permit.id})">
                                 <i class="fas fa-edit me-1"></i>Edit Details
@@ -799,6 +823,22 @@
             } catch (error) {
                 console.error('Error updating status:', error);
                 alert('Error updating status: ' + error.message);
+            }
+        }
+
+        async function quickAssignSubcontractor(permitId, userId) {
+            try {
+                const response = await fetch(`/api/codeengine/permits/${permitId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ assignedUserId: userId ? parseInt(userId) : null })
+                });
+
+                if (!response.ok) throw new Error('Failed to assign subcontractor');
+                await loadPermits();
+            } catch (error) {
+                console.error('Error assigning subcontractor:', error);
+                alert('Error assigning subcontractor: ' + error.message);
             }
         }
     </script>
