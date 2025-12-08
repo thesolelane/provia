@@ -40,9 +40,20 @@ PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction manag
 - **MassGIS Property Data Integration:** Fetches Massachusetts parcel data (owner, zoning, assessed values, lot size) from the official ArcGIS FeatureServer to auto-populate permit applications. Job locations are parsed as "street address, city" format.
 - **Permit Document Automation:** Uses `PermitFormTemplate`, `PropertyProfile`, and `FormFieldMapping` tables to auto-fill official MA building permit PDFs with GIS-sourced property data and company/job information.
 - **Model Naming:** `PermitDocument` handles generated PDF permits; `UploadedPermitDoc` handles inspection-related document uploads.
+- **Municipal Integration Infrastructure:** Foundation tables for future portal integrations:
+  - `MunicipalPortal`: Registry of 19 MA towns with their permit platforms (OpenGov, PermitEyes, Accela, Custom)
+  - `PermitAuditLog`: Compliance logging for all permit-related actions
+  - `CompanyPortalCredential`: Secure storage for municipal portal API credentials per company
+- **Permit Form Templates:** Uploaded templates stored as copies with unique filenames; originals never modified. Supports PDF, DOCX, XLSX formats.
 
 ## External Dependencies
 - **Database:** PostgreSQL (Neon-backed via Replit)
 - **Email Service:** SendGrid
 - **SMS Service:** Twilio/Textedly
 - **MassGIS API:** Massachusetts Geographic Information System via ArcGIS REST services (free public access)
+
+## Future Integration Roadmap
+- **Accela Civic Platform:** REST API for Framingham, Cape Cod towns (best API availability)
+- **OpenGov/ViewPoint Cloud:** Enterprise API for Lexington, Hanover, Gardner, etc. (requires partnership)
+- **PermitEyes:** Web automation for Mashpee, Falmouth, Chelmsford, etc. (no public API)
+- **Additional Data Sources:** FEMA NFHL (flood zones), MA DPL (contractor licenses), DIA (workers comp)

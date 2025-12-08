@@ -62,6 +62,11 @@ namespace JobTracker.Data
         public DbSet<ConstructionCode> ConstructionCodes { get; set; } = null!;
         public DbSet<CodeSyncLog> CodeSyncLogs { get; set; } = null!;
 
+        // Municipal Integration tables
+        public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
+        public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
+        public DbSet<CompanyPortalCredential> CompanyPortalCredentials { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "tFJrzyfrIaFUtFXemuK/nqwX8lLF/r7obvi5AJT3qrw=",
+  "Hash": "CbDdqh+wNVJEEjKJqbLOqVOU0jdAZG+BCcC3CF1S31w=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -425,6 +425,40 @@
       "OriginalItemSpec": "wwwroot/supervisor-dashboard.html"
     },
     {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/templates/permits/BUILDING_commercial_permit_1765168478.doc",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "templates/permits/BUILDING_commercial_permit_1765168478.doc",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/templates/permits/BUILDING_commercial_permit_1765168478.doc"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/templates/permits/BUILDING_commercial_permit_pdf_1765168582.pdf",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "templates/permits/BUILDING_commercial_permit_pdf_1765168582.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/templates/permits/BUILDING_commercial_permit_pdf_1765168582.pdf"
+    },
+    {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/templates/permits/BUILDING_homeowners_exemption_1765168400.docx",
       "SourceId": "JobTracker",
       "SourceType": "Discovered",
@@ -440,6 +474,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/templates/permits/BUILDING_homeowners_exemption_1765168400.docx"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/templates/permits/BUILDING_residential_1_2_family_1765168582.pdf",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "templates/permits/BUILDING_residential_1_2_family_1765168582.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/templates/permits/BUILDING_residential_1_2_family_1765168582.pdf"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/test-auth.html",
