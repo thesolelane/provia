@@ -777,6 +777,82 @@ namespace JobTracker.Controllers
         }
 
         /// <summary>
+        /// Upload a document as a permit form template (saves copy, does not modify original)
+        /// </summary>
+        [HttpPost("permit-templates/upload")]
+        public async Task<ActionResult> UploadPermitTemplate(
+            [FromForm] IFormFile file,
+            [FromForm] string templateName,
+            [FromForm] string permitType,
+            [FromForm] string? description,
+            [FromForm] string? version)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest(new { message = "No file uploaded" });
+
+                var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { message = "Only PDF, DOCX, and XLSX files are allowed" });
+
+                var templateDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "permits");
+                if (!Directory.Exists(templateDir))
+                    Directory.CreateDirectory(templateDir);
+
+                var uniqueFileName = $"{permitType}_{Guid.NewGuid():N}{extension}";
+                var filePath = Path.Combine(templateDir, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var storagePath = $"/templates/permits/{uniqueFileName}";
+                var template = new PermitFormTemplate
+                {
+                    TemplateName = templateName,
+                    PermitType = permitType,
+                    Description = description,
+                    Version = version ?? "1.0",
+                    StoragePath = storagePath,
+                    FilePath = storagePath,
+                    OriginalFileName = file.FileName,
+                    FileSize = file.Length,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.PermitFormTemplates.Add(template);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Uploaded permit template: {TemplateName} ({FileName})", templateName, uniqueFileName);
+
+                return Ok(new 
+                { 
+                    message = "Template uploaded successfully",
+                    template = new
+                    {
+                        template.Id,
+                        template.TemplateName,
+                        template.PermitType,
+                        template.FilePath,
+                        template.OriginalFileName,
+                        template.Version,
+                        template.IsActive
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading permit template");
+                return StatusCode(500, new { message = "Error uploading template" });
+            }
+        }
+
+        /// <summary>
         /// Get available permit form templates
         /// </summary>
         [HttpGet("permit-templates")]
