@@ -325,6 +325,172 @@ namespace JobTracker.Controllers
         }
 
         /// <summary>
+        /// Get all building codes organized by trade/department for easy lookup
+        /// </summary>
+        [HttpGet("codes")]
+        public async Task<ActionResult> GetAllCodes()
+        {
+            try
+            {
+                var codeBooks = await _context.CodeBooks
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.AppliesToDepartment)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Code,
+                        c.Name,
+                        c.Edition,
+                        department = c.AppliesToDepartment,
+                        c.Description,
+                        c.ReferenceUrl
+                    })
+                    .ToListAsync();
+
+                return Ok(new { count = codeBooks.Count, codes = codeBooks });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting codes");
+                return StatusCode(500, new { message = "Error retrieving codes" });
+            }
+        }
+
+        /// <summary>
+        /// Get codes and rules for a specific trade/department
+        /// </summary>
+        [HttpGet("codes/{department}")]
+        public async Task<ActionResult> GetCodesByDepartment(string department)
+        {
+            try
+            {
+                var dept = department.ToUpper();
+
+                // Get the code book for this department
+                var codeBook = await _context.CodeBooks
+                    .Where(c => c.AppliesToDepartment == dept && c.IsActive)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Code,
+                        c.Name,
+                        c.Edition,
+                        c.Description,
+                        c.ReferenceUrl
+                    })
+                    .FirstOrDefaultAsync();
+
+                // Get all code rules for this department
+                var rules = await _context.CodeRules
+                    .Where(r => r.Department == dept && r.IsActive)
+                    .OrderBy(r => r.CodeSection)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.RuleName,
+                        r.CodeSection,
+                        r.Description,
+                        r.RequiredPermitType,
+                        r.RequiredInspectionType,
+                        r.TriggerScope,
+                        r.InspectionOrder
+                    })
+                    .ToListAsync();
+
+                // Get scope items for this department
+                var scopeItems = await _context.ScopeItems
+                    .Where(s => s.Department == dept)
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.ItemCode,
+                        s.ItemName,
+                        s.TradeType,
+                        s.RequiresLicensedTrade
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    department = dept,
+                    codeBook,
+                    rulesCount = rules.Count,
+                    rules,
+                    scopeItemsCount = scopeItems.Count,
+                    scopeItems
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting codes by department");
+                return StatusCode(500, new { message = "Error retrieving department codes" });
+            }
+        }
+
+        /// <summary>
+        /// Quick reference: Get the applicable code section for a scope item
+        /// </summary>
+        [HttpGet("code-lookup/{scopeItemCode}")]
+        public async Task<ActionResult> LookupCodeForScope(string scopeItemCode)
+        {
+            try
+            {
+                // Get the scope item
+                var scopeItem = await _context.ScopeItems
+                    .FirstOrDefaultAsync(s => s.ItemCode == scopeItemCode);
+
+                if (scopeItem == null)
+                    return NotFound(new { message = "Scope item not found" });
+
+                // Get applicable code rules
+                var rules = await _context.CodeRules
+                    .Where(r => r.TriggerScope == scopeItem.ItemCode || r.Department == scopeItem.Department)
+                    .Include(r => r.CodeBook)
+                    .Select(r => new
+                    {
+                        codeBook = r.CodeBook != null ? r.CodeBook.Code + " - " + r.CodeBook.Name : null,
+                        r.RuleName,
+                        r.CodeSection,
+                        r.Description,
+                        r.RequiredPermitType,
+                        r.RequiredInspectionType
+                    })
+                    .ToListAsync();
+
+                // Get document requirements
+                var docRequirements = await _context.DocumentRequirements
+                    .Where(d => d.ScopeItemCode == scopeItemCode)
+                    .Select(d => new
+                    {
+                        d.DocumentPhase,
+                        d.DocumentFormat,
+                        d.IsRequired,
+                        d.Description
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    scopeItem = new
+                    {
+                        scopeItem.ItemCode,
+                        scopeItem.ItemName,
+                        scopeItem.TradeType,
+                        scopeItem.Department,
+                        scopeItem.RequiresLicensedTrade
+                    },
+                    applicableRules = rules,
+                    documentRequirements = docRequirements
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error looking up code for scope");
+                return StatusCode(500, new { message = "Error looking up code" });
+            }
+        }
+
+        /// <summary>
         /// Get role limits and permissions info
         /// </summary>
         [HttpGet("role-info")]
