@@ -46,6 +46,7 @@ PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction manag
   - `CompanyPortalCredential`: Secure storage for municipal portal API credentials per company
 - **Permit Form Templates:** Uploaded templates stored as copies with unique filenames; originals never modified. Supports PDF, DOCX, XLSX formats.
 - **Construction Control Documents:** Official MA 10th Edition forms (Initial/Final Construction Control, Checklist, Contractor Letter, Structural Review Guidance) required by 780 CMR Section 107.6 for buildings ≥ 35,000 cubic feet.
+- **Document Requirements System:** `DocumentRequirements` table links templates to job scopes with phase tracking (EXISTING/PROPOSED) and format types (PHOTO/DRAWING/FORM/CERTIFICATE). Exterior existing conditions typically use photos; proposed work uses drawings. Documents are selected based on job scope and permit type.
 
 ## External Dependencies
 - **Database:** PostgreSQL (Neon-backed via Replit)

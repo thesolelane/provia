@@ -45,6 +45,7 @@ namespace JobTracker.Data
         public DbSet<PermitFormTemplate> PermitFormTemplates { get; set; } = null!;
         public DbSet<PropertyProfile> PropertyProfiles { get; set; } = null!;
         public DbSet<FormFieldMapping> FormFieldMappings { get; set; } = null!;
+        public DbSet<DocumentRequirement> DocumentRequirements { get; set; } = null!;
         
         // Code Engine tables
         public DbSet<CodeBook> CodeBooks { get; set; } = null!;

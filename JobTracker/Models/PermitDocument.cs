@@ -199,4 +199,48 @@ namespace JobTracker.Models
         public int TemplateId { get; set; }
         public Dictionary<string, string>? FieldOverrides { get; set; }
     }
+
+    public class DocumentRequirement
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int? TemplateId { get; set; }
+        public PermitFormTemplate? Template { get; set; }
+
+        [StringLength(50)]
+        public string? ScopeItemCode { get; set; }
+
+        [StringLength(50)]
+        public string? PermitType { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string DocumentPhase { get; set; } = string.Empty; // EXISTING, PROPOSED, BOTH, COMPLETION
+
+        [StringLength(50)]
+        public string? DocumentFormat { get; set; } // PHOTO, DRAWING, FORM, CERTIFICATE
+
+        public bool IsRequired { get; set; } = true;
+
+        public string? Description { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public static class DocumentPhases
+    {
+        public const string Existing = "EXISTING";
+        public const string Proposed = "PROPOSED";
+        public const string Both = "BOTH";
+        public const string Completion = "COMPLETION";
+    }
+
+    public static class DocumentFormats
+    {
+        public const string Photo = "PHOTO";
+        public const string Drawing = "DRAWING";
+        public const string Form = "FORM";
+        public const string Certificate = "CERTIFICATE";
+    }
 }
