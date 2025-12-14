@@ -16,6 +16,7 @@ namespace JobTracker.Data
         public DbSet<InspectionReminder> InspectionReminders { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Company> Companies { get; set; } = null!;
+        public DbSet<CompanyCredential> CompanyCredentials { get; set; } = null!;
         public DbSet<WorkTask> WorkTasks { get; set; } = null!;
         public DbSet<MaterialRequest> MaterialRequests { get; set; } = null!;
         public DbSet<ChangeRequest> ChangeRequests { get; set; } = null!;
