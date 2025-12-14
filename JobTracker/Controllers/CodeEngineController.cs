@@ -921,6 +921,123 @@ namespace JobTracker.Controllers
                 return StatusCode(500, new { message = "Error retrieving documents" });
             }
         }
+
+        /// <summary>
+        /// Get required documents for a job based on selected scopes
+        /// Returns documents organized by phase (EXISTING/PROPOSED) and format (PHOTO/DRAWING)
+        /// </summary>
+        [HttpGet("job/{jobId}/required-documents")]
+        public async Task<ActionResult> GetRequiredDocuments(int jobId)
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+
+                // Get selected scope items for this job
+                var jobScopes = await _context.JobScopes
+                    .Where(js => js.JobId == jobId)
+                    .Include(js => js.ScopeItem)
+                    .ToListAsync();
+
+                if (!jobScopes.Any())
+                    return Ok(new { 
+                        message = "No scopes selected for this job",
+                        existingDocuments = new List<object>(),
+                        proposedDocuments = new List<object>()
+                    });
+
+                var scopeCodes = jobScopes.Select(js => js.ScopeItem?.ItemCode).Where(c => c != null).ToList();
+
+                // Get document requirements for these scope items
+                var requirements = await _context.DocumentRequirements
+                    .Where(dr => scopeCodes.Contains(dr.ScopeItemCode))
+                    .ToListAsync();
+
+                // Organize by phase
+                var existingDocs = requirements
+                    .Where(r => r.DocumentPhase == "EXISTING")
+                    .Select(r => new
+                    {
+                        scopeItemCode = r.ScopeItemCode,
+                        scopeItemName = jobScopes.FirstOrDefault(js => js.ScopeItem?.ItemCode == r.ScopeItemCode)?.ScopeItem?.ItemName,
+                        permitType = r.PermitType,
+                        format = r.DocumentFormat,
+                        isRequired = r.IsRequired,
+                        description = r.Description
+                    })
+                    .OrderBy(d => d.scopeItemCode)
+                    .ToList();
+
+                var proposedDocs = requirements
+                    .Where(r => r.DocumentPhase == "PROPOSED")
+                    .Select(r => new
+                    {
+                        scopeItemCode = r.ScopeItemCode,
+                        scopeItemName = jobScopes.FirstOrDefault(js => js.ScopeItem?.ItemCode == r.ScopeItemCode)?.ScopeItem?.ItemName,
+                        permitType = r.PermitType,
+                        format = r.DocumentFormat,
+                        isRequired = r.IsRequired,
+                        description = r.Description
+                    })
+                    .OrderBy(d => d.scopeItemCode)
+                    .ToList();
+
+                // Summary by format type
+                var summary = new
+                {
+                    totalRequired = requirements.Count(r => r.IsRequired),
+                    existingPhotosNeeded = existingDocs.Count(d => d.format == "PHOTO" && d.isRequired),
+                    existingDrawingsNeeded = existingDocs.Count(d => d.format == "DRAWING" && d.isRequired),
+                    proposedDrawingsNeeded = proposedDocs.Count(d => d.format == "DRAWING" && d.isRequired),
+                    scopesSelected = scopeCodes.Count
+                };
+
+                return Ok(new
+                {
+                    jobId,
+                    summary,
+                    existingDocuments = existingDocs,
+                    proposedDocuments = proposedDocs
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting required documents for job");
+                return StatusCode(500, new { message = "Error retrieving document requirements" });
+            }
+        }
+
+        /// <summary>
+        /// Get all document requirement rules (admin reference)
+        /// </summary>
+        [HttpGet("document-requirements")]
+        public async Task<ActionResult> GetAllDocumentRequirements()
+        {
+            try
+            {
+                var requirements = await _context.DocumentRequirements
+                    .OrderBy(r => r.ScopeItemCode)
+                    .ThenBy(r => r.DocumentPhase)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.ScopeItemCode,
+                        r.PermitType,
+                        r.DocumentPhase,
+                        r.DocumentFormat,
+                        r.IsRequired,
+                        r.Description
+                    })
+                    .ToListAsync();
+
+                return Ok(new { count = requirements.Count, requirements });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting document requirements");
+                return StatusCode(500, new { message = "Error retrieving requirements" });
+            }
+        }
     }
 
     /// <summary>
