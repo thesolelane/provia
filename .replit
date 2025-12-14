@@ -32,18 +32,6 @@ run = ["sh", "-c", "cd JobTracker && dotnet run --urls=http://0.0.0.0:5000"]
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 40043
-externalPort = 3001
-
-[[ports]]
-localPort = 41417
-externalPort = 3000
-
-[[ports]]
-localPort = 45675
-externalPort = 3002
-
 [agent]
 expertMode = true
 integrations = ["sendgrid:1.0.0"]
