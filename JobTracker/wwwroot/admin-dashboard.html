@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - PROVIA</title>
     <style>
+        :root {
+            --primary-color: #FF9500;
+            --secondary-color: #2F5A7E;
+            --accent-color: #764ba2;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +19,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -42,9 +48,15 @@
         }
 
         .logo-section h1 {
-            color: #FF9500;
+            color: var(--primary-color);
             font-size: 28px;
             margin: 0;
+        }
+
+        .company-logo {
+            height: 40px;
+            max-width: 150px;
+            object-fit: contain;
         }
 
         .user-info {
@@ -68,7 +80,7 @@
         }
 
         .logout-btn {
-            background: #FF9500;
+            background: var(--primary-color);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -187,12 +199,20 @@
         }
 
         .admin-badge {
-            background: #FF9500;
+            background: var(--primary-color);
             color: white;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 600;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+        }
+
+        .card-link {
+            color: var(--primary-color);
         }
     </style>
 </head>
@@ -200,7 +220,8 @@
     <div class="container">
         <header>
             <div class="logo-section">
-                <h1>PROVIA</h1>
+                <img id="companyLogo" class="company-logo" style="display: none;">
+                <h1 id="companyTitle">PROVIA</h1>
                 <span class="admin-badge">ADMIN</span>
             </div>
             <div class="user-info">
@@ -375,7 +396,49 @@
             window.location.href = '/login.html';
         }
 
+        async function loadBranding() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/company/settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    // Apply colors
+                    if (settings.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+                    }
+                    if (settings.secondaryColor) {
+                        document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
+                    }
+                    if (settings.accentColor) {
+                        document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+                    }
+
+                    // Apply company name
+                    if (settings.companyName) {
+                        document.getElementById('companyTitle').textContent = settings.companyName;
+                        document.title = `Admin Dashboard - ${settings.companyName}`;
+                    }
+
+                    // Apply logo
+                    if (settings.logoUrl) {
+                        const logoEl = document.getElementById('companyLogo');
+                        logoEl.src = settings.logoUrl;
+                        logoEl.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading branding:', error);
+            }
+        }
+
         // Load data on page load
+        loadBranding();
         loadUserInfo();
         loadDashboardMetrics();
     </script>
