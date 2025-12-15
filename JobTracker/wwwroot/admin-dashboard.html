@@ -301,6 +301,19 @@
             if (!token) return;
 
             try {
+                // First get the current user to know their companyId
+                const userResponse = await fetch('/api/user/current', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!userResponse.ok) {
+                    console.error('Failed to get current user');
+                    return;
+                }
+                
+                const currentUser = await userResponse.json();
+                const companyId = currentUser.companyId;
+
                 // Fetch all jobs
                 const jobsResponse = await fetch('/api/jobs', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -321,8 +334,8 @@
                     document.getElementById('activeJobs').textContent = active;
                 }
 
-                // Fetch company users
-                const usersResponse = await fetch('/api/WorkingAuth/company-users/company', {
+                // Fetch company users using the correct endpoint with companyId
+                const usersResponse = await fetch(`/api/WorkingAuth/company-users/${companyId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
