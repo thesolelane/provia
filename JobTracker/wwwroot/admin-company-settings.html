@@ -477,21 +477,29 @@
         }
 
         async function saveSettings() {
+            if (!token) {
+                showAlert('error', 'Please log in first');
+                return;
+            }
+            
             try {
+                const websiteVal = document.getElementById('websiteUrl').value.trim();
+                const accentVal = document.getElementById('accentColor').value.trim();
+                
                 const data = {
                     companyName: document.getElementById('companyName').value,
                     contactEmail: document.getElementById('contactEmail').value,
-                    contactPhone: document.getElementById('contactPhone').value,
-                    address: document.getElementById('address').value,
-                    city: document.getElementById('city').value,
-                    state: document.getElementById('state').value,
-                    zipCode: document.getElementById('zipCode').value,
-                    description: document.getElementById('description').value,
-                    tagline: document.getElementById('tagline').value,
-                    websiteUrl: document.getElementById('websiteUrl').value,
+                    contactPhone: document.getElementById('contactPhone').value || null,
+                    address: document.getElementById('address').value || null,
+                    city: document.getElementById('city').value || null,
+                    state: document.getElementById('state').value || null,
+                    zipCode: document.getElementById('zipCode').value || null,
+                    description: document.getElementById('description').value || null,
+                    tagline: document.getElementById('tagline').value || null,
+                    websiteUrl: websiteVal ? websiteVal : null,
                     primaryColor: document.getElementById('primaryColor').value,
                     secondaryColor: document.getElementById('secondaryColor').value,
-                    accentColor: document.getElementById('accentColor').value
+                    accentColor: accentVal ? accentVal : null
                 };
 
                 const response = await fetch('/api/company/settings', {
