@@ -81,6 +81,22 @@ namespace JobTracker.Controllers
                 if (user == null || user.Role != 1510) // Admin only
                     return Forbid();
 
+                // Cross-tenant security check
+                if (user.CompanyId != companyId)
+                {
+                    _logger.LogWarning($"Cross-tenant access attempt: User {userEmail} tried to update company {companyId}");
+                    return Forbid();
+                }
+
+                // Validate color formats
+                var colorPattern = new System.Text.RegularExpressions.Regex(@"^#[0-9A-Fa-f]{6}$");
+                if (!string.IsNullOrWhiteSpace(request.PrimaryColor) && !colorPattern.IsMatch(request.PrimaryColor))
+                    return BadRequest(new { message = "Primary color must be a valid hex color (e.g., #FF9500)" });
+                if (!string.IsNullOrWhiteSpace(request.SecondaryColor) && !colorPattern.IsMatch(request.SecondaryColor))
+                    return BadRequest(new { message = "Secondary color must be a valid hex color (e.g., #2F5A7E)" });
+                if (!string.IsNullOrWhiteSpace(request.AccentColor) && !colorPattern.IsMatch(request.AccentColor))
+                    return BadRequest(new { message = "Accent color must be a valid hex color (e.g., #764ba2)" });
+
                 var company = await _context.Companies.FindAsync(companyId);
                 if (company == null)
                     return NotFound(new { message = "Company not found" });
@@ -150,6 +166,13 @@ namespace JobTracker.Controllers
                 if (user == null || user.Role != 1510)
                     return Forbid();
 
+                // Cross-tenant security check
+                if (user.CompanyId != companyId)
+                {
+                    _logger.LogWarning($"Cross-tenant logo upload attempt: User {userEmail} tried to update company {companyId}");
+                    return Forbid();
+                }
+
                 if (file == null || file.Length == 0)
                     return BadRequest(new { message = "No file uploaded" });
 
@@ -212,6 +235,13 @@ namespace JobTracker.Controllers
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail && u.CompanyId == companyId);
                 if (user == null || user.Role != 1510)
                     return Forbid();
+
+                // Cross-tenant security check
+                if (user.CompanyId != companyId)
+                {
+                    _logger.LogWarning($"Cross-tenant logo delete attempt: User {userEmail} tried to update company {companyId}");
+                    return Forbid();
+                }
 
                 var company = await _context.Companies.FindAsync(companyId);
                 if (company == null)

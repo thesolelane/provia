@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Settings - PROVIA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-section h1 {
+            color: #FF9500;
+            font-size: 24px;
+        }
+
+        .back-btn {
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .settings-card h2 {
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FF9500;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #FF9500;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            padding: 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-picker-group input[type="text"] {
+            flex: 1;
+        }
+
+        .logo-upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logo-upload-area:hover {
+            border-color: #FF9500;
+            background: #fff8f0;
+        }
+
+        .logo-upload-area.has-logo {
+            border-style: solid;
+        }
+
+        .current-logo {
+            max-width: 200px;
+            max-height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #FF9500;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #E68900;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .color-preview {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .preview-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>Company Settings</h1>
+            </div>
+            <a href="/admin-dashboard.html" class="back-btn">← Back to Dashboard</a>
+        </header>
+
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+
+        <div class="settings-card">
+            <h2>Company Branding</h2>
+            
+            <div class="form-group">
+                <label>Company Logo</label>
+                <div class="logo-upload-area" id="logoUploadArea" onclick="document.getElementById('fileInput').click()">
+                    <img id="currentLogo" class="current-logo" style="display: none;">
+                    <div id="uploadPrompt">
+                        <div class="upload-text">Click to upload your company logo</div>
+                        <div class="upload-hint">JPEG, PNG, GIF, or SVG (max 5MB)</div>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/svg+xml" onchange="uploadLogo(this)">
+                <button id="removeLogo" class="btn btn-danger" style="margin-top: 10px; display: none;" onclick="removeLogo()">Remove Logo</button>
+            </div>
+
+            <div class="section-title">Brand Colors</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Primary Color</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="primaryColorPicker" value="#FF9500" onchange="syncColorInput('primaryColor', this.value)">
+                        <input type="text" id="primaryColor" placeholder="#FF9500" value="#FF9500" oninput="syncColorPicker('primaryColorPicker', this.value)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Secondary Color</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="secondaryColorPicker" value="#2F5A7E" onchange="syncColorInput('secondaryColor', this.value)">
+                        <input type="text" id="secondaryColor" placeholder="#2F5A7E" value="#2F5A7E" oninput="syncColorPicker('secondaryColorPicker', this.value)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Accent Color (Optional)</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="accentColorPicker" value="#764ba2" onchange="syncColorInput('accentColor', this.value)">
+                        <input type="text" id="accentColor" placeholder="#764ba2" oninput="syncColorPicker('accentColorPicker', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-preview">
+                <div class="preview-box" id="primaryPreview" style="background: #FF9500;">Primary</div>
+                <div class="preview-box" id="secondaryPreview" style="background: #2F5A7E;">Secondary</div>
+                <div class="preview-box" id="accentPreview" style="background: #764ba2;">Accent</div>
+            </div>
+
+            <div class="section-title">Brand Details</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Company Tagline</label>
+                    <input type="text" id="tagline" placeholder="Your company tagline">
+                </div>
+                <div class="form-group">
+                    <label>Website URL</label>
+                    <input type="url" id="websiteUrl" placeholder="https://yourcompany.com">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h2>Company Information</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" placeholder="Your Company Name">
+                </div>
+                <div class="form-group">
+                    <label>Contact Email</label>
+                    <input type="email" id="contactEmail" placeholder="contact@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Contact Phone</label>
+                    <input type="tel" id="contactPhone" placeholder="(555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="address" placeholder="123 Main Street">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="city" placeholder="Boston">
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" id="state" placeholder="MA" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label>ZIP Code</label>
+                    <input type="text" id="zipCode" placeholder="02101">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Company Description</label>
+                <textarea id="description" placeholder="Brief description of your company..."></textarea>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+                <button class="btn btn-secondary" onclick="loadSettings()">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+
+        function syncColorInput(inputId, value) {
+            document.getElementById(inputId).value = value;
+            updateColorPreview();
+        }
+
+        function syncColorPicker(pickerId, value) {
+            if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                document.getElementById(pickerId).value = value;
+            }
+            updateColorPreview();
+        }
+
+        function updateColorPreview() {
+            const primary = document.getElementById('primaryColor').value || '#FF9500';
+            const secondary = document.getElementById('secondaryColor').value || '#2F5A7E';
+            const accent = document.getElementById('accentColor').value || '#764ba2';
+            
+            document.getElementById('primaryPreview').style.background = primary;
+            document.getElementById('secondaryPreview').style.background = secondary;
+            document.getElementById('accentPreview').style.background = accent;
+        }
+
+        function showAlert(type, message) {
+            const successEl = document.getElementById('alertSuccess');
+            const errorEl = document.getElementById('alertError');
+            
+            successEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            if (type === 'success') {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+            } else {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+
+            setTimeout(() => {
+                successEl.style.display = 'none';
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/company/settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    document.getElementById('companyName').value = settings.companyName || '';
+                    document.getElementById('contactEmail').value = settings.contactEmail || '';
+                    document.getElementById('contactPhone').value = settings.contactPhone || '';
+                    document.getElementById('address').value = settings.address || '';
+                    document.getElementById('city').value = settings.city || '';
+                    document.getElementById('state').value = settings.state || '';
+                    document.getElementById('zipCode').value = settings.zipCode || '';
+                    document.getElementById('description').value = settings.description || '';
+                    document.getElementById('tagline').value = settings.tagline || '';
+                    document.getElementById('websiteUrl').value = settings.websiteUrl || '';
+                    
+                    document.getElementById('primaryColor').value = settings.primaryColor || '#FF9500';
+                    document.getElementById('primaryColorPicker').value = settings.primaryColor || '#FF9500';
+                    document.getElementById('secondaryColor').value = settings.secondaryColor || '#2F5A7E';
+                    document.getElementById('secondaryColorPicker').value = settings.secondaryColor || '#2F5A7E';
+                    document.getElementById('accentColor').value = settings.accentColor || '';
+                    document.getElementById('accentColorPicker').value = settings.accentColor || '#764ba2';
+                    
+                    updateColorPreview();
+
+                    if (settings.logoUrl) {
+                        document.getElementById('currentLogo').src = settings.logoUrl;
+                        document.getElementById('currentLogo').style.display = 'block';
+                        document.getElementById('uploadPrompt').style.display = 'none';
+                        document.getElementById('removeLogo').style.display = 'inline-block';
+                        document.getElementById('logoUploadArea').classList.add('has-logo');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showAlert('error', 'Failed to load company settings');
+            }
+        }
+
+        async function saveSettings() {
+            try {
+                const data = {
+                    companyName: document.getElementById('companyName').value,
+                    contactEmail: document.getElementById('contactEmail').value,
+                    contactPhone: document.getElementById('contactPhone').value,
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zipCode: document.getElementById('zipCode').value,
+                    description: document.getElementById('description').value,
+                    tagline: document.getElementById('tagline').value,
+                    websiteUrl: document.getElementById('websiteUrl').value,
+                    primaryColor: document.getElementById('primaryColor').value,
+                    secondaryColor: document.getElementById('secondaryColor').value,
+                    accentColor: document.getElementById('accentColor').value
+                };
+
+                const response = await fetch('/api/company/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert('success', 'Settings saved successfully!');
+                } else {
+                    const error = await response.json();
+                    showAlert('error', error.message || 'Failed to save settings');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('error', 'Failed to save settings');
+            }
+        }
+
+        async function uploadLogo(input) {
+            if (input.files && input.files[0]) {
+                const formData = new FormData();
+                formData.append('file', input.files[0]);
+
+                try {
+                    const response = await fetch('/api/company/settings/logo', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        document.getElementById('currentLogo').src = result.logoUrl;
+                        document.getElementById('currentLogo').style.display = 'block';
+                        document.getElementById('uploadPrompt').style.display = 'none';
+                        document.getElementById('removeLogo').style.display = 'inline-block';
+                        document.getElementById('logoUploadArea').classList.add('has-logo');
+                        showAlert('success', 'Logo uploaded successfully!');
+                    } else {
+                        const error = await response.json();
+                        showAlert('error', error.message || 'Failed to upload logo');
+                    }
+                } catch (error) {
+                    console.error('Error uploading logo:', error);
+                    showAlert('error', 'Failed to upload logo');
+                }
+            }
+        }
+
+        async function removeLogo() {
+            if (!confirm('Are you sure you want to remove the company logo?')) return;
+
+            try {
+                const response = await fetch('/api/company/settings/logo', {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    document.getElementById('currentLogo').style.display = 'none';
+                    document.getElementById('uploadPrompt').style.display = 'block';
+                    document.getElementById('removeLogo').style.display = 'none';
+                    document.getElementById('logoUploadArea').classList.remove('has-logo');
+                    showAlert('success', 'Logo removed successfully!');
+                } else {
+                    showAlert('error', 'Failed to remove logo');
+                }
+            } catch (error) {
+                console.error('Error removing logo:', error);
+                showAlert('error', 'Failed to remove logo');
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
