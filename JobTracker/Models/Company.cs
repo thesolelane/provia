@@ -61,6 +61,25 @@ namespace JobTracker.Models
         public int MaxJobs { get; set; } = 10; // Default for trial
         public bool CanUseAdvancedFeatures { get; set; } = false;
 
+        // Company Branding
+        [StringLength(500)]
+        public string? LogoUrl { get; set; } // Path to company logo
+
+        [StringLength(7)]
+        public string PrimaryColor { get; set; } = "#FF9500"; // Orange default
+
+        [StringLength(7)]
+        public string SecondaryColor { get; set; } = "#2F5A7E"; // Teal default
+
+        [StringLength(7)]
+        public string? AccentColor { get; set; }
+
+        [StringLength(200)]
+        public string? Tagline { get; set; }
+
+        [StringLength(500)]
+        public string? WebsiteUrl { get; set; }
+
         public string GetDisplayName() => $"{CompanyName} ({AccountNumber})";
     }
 
