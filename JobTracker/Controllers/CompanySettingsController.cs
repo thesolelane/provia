@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using JobTracker.Data;
 using JobTracker.Services;
 using System.ComponentModel.DataAnnotations;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace JobTracker.Controllers
 {
@@ -154,6 +157,10 @@ namespace JobTracker.Controllers
             }
         }
 
+        // Logo standard size: 300x100 pixels (3:1 aspect ratio) - industry standard for enterprise headers
+        private const int LogoMaxWidth = 300;
+        private const int LogoMaxHeight = 100;
+
         [HttpPost("logo")]
         public async Task<IActionResult> UploadLogo(IFormFile file)
         {
@@ -186,13 +193,60 @@ namespace JobTracker.Controllers
                 var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "logos");
                 Directory.CreateDirectory(uploadsDir);
 
-                var extension = Path.GetExtension(file.FileName);
-                var fileName = $"company_{companyId}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+                // Always save as PNG for consistency
+                var fileName = $"company_{companyId}_{DateTime.UtcNow:yyyyMMddHHmmss}.png";
                 var filePath = Path.Combine(uploadsDir, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                // Handle SVG separately (can't be resized)
+                if (file.ContentType.ToLower() == "image/svg+xml")
                 {
-                    await file.CopyToAsync(stream);
+                    var svgFileName = $"company_{companyId}_{DateTime.UtcNow:yyyyMMddHHmmss}.svg";
+                    var svgFilePath = Path.Combine(uploadsDir, svgFileName);
+                    
+                    using (var stream = new FileStream(svgFilePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    
+                    var company2 = await _context.Companies.FindAsync(companyId);
+                    if (company2 == null) return NotFound();
+                    
+                    // Delete old logo
+                    if (!string.IsNullOrEmpty(company2.LogoUrl))
+                    {
+                        var oldPath = Path.Combine(_env.WebRootPath, company2.LogoUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldPath))
+                            System.IO.File.Delete(oldPath);
+                    }
+                    
+                    company2.LogoUrl = $"/uploads/logos/{svgFileName}";
+                    company2.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    
+                    return Ok(new { 
+                        message = "SVG logo uploaded successfully",
+                        logoUrl = company2.LogoUrl,
+                        note = "SVG files maintain their original dimensions"
+                    });
+                }
+
+                // Process raster images (JPEG, PNG, GIF) - resize to standard dimensions
+                using (var inputStream = file.OpenReadStream())
+                using (var image = await Image.LoadAsync(inputStream))
+                {
+                    // Calculate new dimensions maintaining aspect ratio within max bounds
+                    var ratioX = (double)LogoMaxWidth / image.Width;
+                    var ratioY = (double)LogoMaxHeight / image.Height;
+                    var ratio = Math.Min(ratioX, ratioY);
+                    
+                    var newWidth = (int)(image.Width * ratio);
+                    var newHeight = (int)(image.Height * ratio);
+                    
+                    // Resize the image
+                    image.Mutate(x => x.Resize(newWidth, newHeight));
+                    
+                    // Save as PNG
+                    await image.SaveAsPngAsync(filePath);
                 }
 
                 var company = await _context.Companies.FindAsync(companyId);
@@ -210,11 +264,12 @@ namespace JobTracker.Controllers
                 company.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Logo uploaded for Company {companyId} by {userEmail}");
+                _logger.LogInformation($"Logo uploaded and resized to {LogoMaxWidth}x{LogoMaxHeight} for Company {companyId} by {userEmail}");
 
                 return Ok(new { 
-                    message = "Logo uploaded successfully",
-                    logoUrl = company.LogoUrl
+                    message = "Logo uploaded and standardized successfully",
+                    logoUrl = company.LogoUrl,
+                    dimensions = $"Max {LogoMaxWidth}x{LogoMaxHeight}px (3:1 ratio)"
                 });
             }
             catch (Exception ex)
