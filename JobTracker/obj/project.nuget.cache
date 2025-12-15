@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "2eWHKOFu3nNiXW1y/2wBmfReHRb+seMNd687j9Y2m/FGh06t8OH3p2zSxIkvmMLoDockuSfktYx3VLTWmOqqWw==",
+  "dgSpecHash": "RkH8oksAmIz9zW/cbmMlK7Do24iWdBGELAJAYgiLAl8DnugPmgsI6HdpsSI5Dxol93wAIQd/q5fWXhJfxtZ7GQ==",
   "success": true,
   "projectFilePath": "/home/runner/workspace/JobTracker/JobTracker.csproj",
   "expectedPackageFiles": [
@@ -35,6 +35,7 @@
     "/home/runner/.nuget/packages/npgsql/7.0.4/npgsql.7.0.4.nupkg.sha512",
     "/home/runner/.nuget/packages/npgsql.entityframeworkcore.postgresql/7.0.4/npgsql.entityframeworkcore.postgresql.7.0.4.nupkg.sha512",
     "/home/runner/.nuget/packages/sendgrid/9.29.3/sendgrid.9.29.3.nupkg.sha512",
+    "/home/runner/.nuget/packages/sixlabors.imagesharp/3.1.4/sixlabors.imagesharp.3.1.4.nupkg.sha512",
     "/home/runner/.nuget/packages/starkbank-ecdsa/1.3.3/starkbank-ecdsa.1.3.3.nupkg.sha512",
     "/home/runner/.nuget/packages/swashbuckle.aspnetcore/6.5.0/swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
     "/home/runner/.nuget/packages/swashbuckle.aspnetcore.swagger/6.5.0/swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",

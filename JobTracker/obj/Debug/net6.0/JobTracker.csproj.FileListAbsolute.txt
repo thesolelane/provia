@@ -61,3 +61,4 @@
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/SixLabors.ImageSharp.dll

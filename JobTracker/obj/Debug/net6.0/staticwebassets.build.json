@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "N1RtYYDtyzLx3p1v1AKkl8qLdrYRr0SVOqO2zTGQb4M=",
+  "Hash": "0//an76UymA0gVpk8h8aW45ZouFkp5lEfEbas8tmthQ=",
   "Source": "JobTracker",
   "BasePath": "_content/JobTracker",
   "Mode": "Default",
@@ -644,6 +644,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/update-coordinates.html"
+    },
+    {
+      "Identity": "/home/runner/workspace/JobTracker/wwwroot/uploads/logos/company_3_20251215032053.jpg",
+      "SourceId": "JobTracker",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/workspace/JobTracker/wwwroot/",
+      "BasePath": "_content/JobTracker",
+      "RelativePath": "uploads/logos/company_3_20251215032053.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/logos/company_3_20251215032053.jpg"
     },
     {
       "Identity": "/home/runner/workspace/JobTracker/wwwroot/user-management-admin.html",
