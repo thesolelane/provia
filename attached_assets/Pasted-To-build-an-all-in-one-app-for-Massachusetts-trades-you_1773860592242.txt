@@ -1,0 +1,33 @@
+To build an all-in-one app for Massachusetts trades, you have to move away from a "top-down" GC model and toward a Permission-Based Hierarchy.
+The app must treat the Permit Holder as the "Lead" of that specific project, regardless of their trade. Here is the step-by-step overlap for any trade-originated job in MA:
+1. Lead Generation & Scoping (The "Who")
+Whether it’s a GC doing a kitchen or an Electrician doing a panel upgrade, the data entry is the same:
+Customer Intake: Name, address, and Parcel ID/Map-Block-Lot (crucial for MA building departments).
+Site Survey: Photo uploads and "Rough Dimensions" to build the quote.
+2. The Smart Quote & Contract (The "How Much")
+Itemized Estimating: A database of parts (breakers, pipe, lumber) that calculates margin.
+MA-Compliant Contracts: Automatically includes the HRC (Home Improvement Contractor) or Master License numbers.
+The Deposit: Integrated payment (Stripe/Square) to lock in the schedule.
+3. The Permitting Engine (The "Green Light")
+In MA, this is where the trades "handshake." Your app needs to handle:
+The Affidavit: Automatic generation of the Workers’ Comp Insurance Affidavit (standard for all MA permits).
+Interdependency Tracking:
+If a GC starts a job, the app must "ping" the Electrician to pull their specific permit using the GC’s Building Permit Number.
+If a Plumber starts a water heater job, the app knows no GC is needed, but maybe an Electrician is.
+Digital Filing: Integration with systems like OpenGov or ViewPoint Cloud (used by many MA towns like Worcester, Framingham, etc.).
+4. Project Execution & "The Push" (The "Do")
+The app "pushes" the job to completion by triggering the next step based on the previous one:
+Scheduling: Once the permit is "Issued" (status update), the app notifies the crew to start.
+Daily Logs: Quick "On-Site/Off-Site" buttons for labor tracking.
+Change Orders: A "Add Work" button that updates the contract and price instantly so no one works for free.
+5. Inspection & Closeout (The "Finish")
+The app must automate the most annoying part of MA contracting: The Inspector Call.
+Rough-In Trigger: Once "Rough Wiring" is marked done in the app, it prompts the user: "Would you like to email the [Town Name] Inspector for a Rough Inspection?"
+The "Pass" Upload: A photo of the signed green/blue/yellow card (the permit card) to move the job to "Finals."
+Final Payment & Warranty: The system automatically sends the final invoice once the Certificate of Occupancy or Final Sign-off is uploaded.
+The "Permission Matrix" (How the App Adapts)
+If Originated By:	App Focuses On:	Secondary Requirements:
+GC	Managing Subs & Building Permit	HIC Registration, CSL License
+Electrician	Wiring Permit & Load Calcs	Master License, Insurance Cert
+Plumber	Plumbing/Gas Permit	Licensed Plumber #, Sign-off from Gas Inspector
+Sheet Metal	Ductwork/Mechanical Permit	J-1/M-1 License info
