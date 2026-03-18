@@ -62,7 +62,13 @@ namespace JobTracker.Controllers
                     WebsiteUrl = company.WebsiteUrl,
                     SubscriptionType = company.SubscriptionType.ToString(),
                     MaxUsers = company.MaxUsers,
-                    MaxJobs = company.MaxJobs
+                    MaxJobs = company.MaxJobs,
+                    TradeType = (int)company.TradeType,
+                    TradeTypeLabel = Models.PermitAuthority.TradeLabel[company.TradeType],
+                    LicenseRequired = Models.PermitAuthority.MaLicenseRequired[company.TradeType],
+                    PermitsAuthorized = Models.PermitAuthority.CanPullPermits[company.TradeType],
+                    LicenseNumber = company.LicenseNumber,
+                    LicenseHolderName = company.LicenseHolderName
                 });
             }
             catch (Exception ex)
@@ -343,6 +349,13 @@ namespace JobTracker.Controllers
         public string SubscriptionType { get; set; } = "Trial";
         public int MaxUsers { get; set; }
         public int MaxJobs { get; set; }
+        // Trade / Permit info
+        public int TradeType { get; set; }
+        public string TradeTypeLabel { get; set; } = string.Empty;
+        public string LicenseRequired { get; set; } = string.Empty;
+        public string[] PermitsAuthorized { get; set; } = Array.Empty<string>();
+        public string? LicenseNumber { get; set; }
+        public string? LicenseHolderName { get; set; }
     }
 
     public class UpdateCompanySettingsRequest

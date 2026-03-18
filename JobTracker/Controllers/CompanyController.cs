@@ -62,7 +62,10 @@ namespace JobTracker.Controllers
                     CanUseAdvancedFeatures = canUseAdvanced,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    TradeType = request.TradeType,
+                    LicenseNumber = request.LicenseNumber,
+                    LicenseHolderName = request.LicenseHolderName
                 };
 
                 _context.Companies.Add(company);
