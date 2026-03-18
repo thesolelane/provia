@@ -8,119 +8,226 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
-            background: #ffffff;
+            background: #f8f9fa;
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .signup-container {
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 2rem;
         }
-        
+
         .signup-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: #fff;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            padding: 3rem;
-            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            max-width: 750px;
             width: 100%;
+            margin: 1rem 0;
         }
-        
+
         .logo-section {
             text-align: center;
             margin-bottom: 2rem;
         }
-        
-        .logo-icon {
-            font-size: 3rem;
-            color: #FF9500;
-            margin-bottom: 1rem;
-        }
-        
+
         .app-title {
-            font-size: 1.8rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             color: #333;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
+            letter-spacing: 2px;
         }
-        
+
         .app-subtitle {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        
-        .form-floating {
-            margin-bottom: 1rem;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 15px;
-            border: 2px solid #e9ecef;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #FF9500;
-            box-shadow: 0 0 0 0.2rem rgba(255, 149, 0, 0.25);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #FF9500 0%, #2F5A7E 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 0.8rem 2rem;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 149, 0, 0.4);
-            color: white;
-        }
-        
-        .form-section-title {
+            color: #888;
             font-size: 0.95rem;
+        }
+
+        .form-section-title {
+            font-size: 0.9rem;
             font-weight: 700;
-            color: #333;
-            margin-top: 1.5rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1.8rem;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #FF9500;
         }
-        
-        .login-link {
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.7rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #FF9500;
+            box-shadow: 0 0 0 0.15rem rgba(255, 149, 0, 0.2);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        /* Trade Type Cards */
+        .trade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .trade-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.2rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e9ecef;
+            background: #fff;
+            position: relative;
         }
-        
-        .alert {
-            border-radius: 15px;
-            margin-bottom: 1rem;
+
+        .trade-card:hover {
+            border-color: #FF9500;
+            background: #fff8f0;
+            transform: translateY(-2px);
         }
-        
+
+        .trade-card.selected {
+            border-color: #FF9500;
+            background: #fff3e0;
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.2);
+        }
+
+        .trade-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            color: #FF9500;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .trade-icon {
+            font-size: 2rem;
+            margin-bottom: 0.6rem;
+            display: block;
+        }
+
+        .trade-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .trade-permit-note {
+            font-size: 0.72rem;
+            color: #888;
+            line-height: 1.3;
+        }
+
+        .license-info-box {
+            background: #f0f7ff;
+            border: 1px solid #b8d9f5;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            margin-top: 0.8rem;
+            display: none;
+        }
+
+        .license-info-box.show { display: block; }
+
+        .license-info-box .license-title {
+            font-weight: 700;
+            color: #2F5A7E;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .license-info-box .license-text {
+            font-size: 0.82rem;
+            color: #555;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #FF9500 0%, #2F5A7E 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.9rem 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            color: white;
+            transition: all 0.3s ease;
+            margin-top: 1.5rem;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 149, 0, 0.35);
+            color: white;
+        }
+
+        .btn-register:disabled {
+            opacity: 0.7;
+            transform: none;
+        }
+
         .back-link {
             display: inline-block;
             margin-bottom: 1rem;
             color: #FF9500;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
-        
-        .back-link:hover {
-            color: #2F5A7E;
+
+        .back-link:hover { color: #2F5A7E; }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #888;
         }
+
+        .login-link a {
+            color: #FF9500;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .alert { border-radius: 12px; }
+
+        .investor-note {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            font-size: 0.82rem;
+            color: #2e7d32;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .investor-note.show { display: block; }
     </style>
 </head>
 <body>
@@ -129,17 +236,15 @@
             <a href="/" class="back-link">
                 <i class="fas fa-arrow-left me-2"></i>Back to Home
             </a>
-            
+
             <div class="logo-section">
-                <div class="logo-icon">
-                    <svg width="80" height="80" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="26">
-                            <path d="M80 48 L176 128 L80 208" stroke="#FF9500"/>
-                            <path d="M176 48 L272 128 L176 208" stroke="#2E8CCF"/>
-                            <path d="M272 48 L368 128 L272 208" stroke="#163853"/>
-                        </g>
-                    </svg>
-                </div>
+                <svg width="60" height="60" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="26">
+                        <path d="M80 48 L176 128 L80 208" stroke="#FF9500"/>
+                        <path d="M176 48 L272 128 L176 208" stroke="#2E8CCF"/>
+                        <path d="M272 48 L368 128 L272 208" stroke="#163853"/>
+                    </g>
+                </svg>
                 <h1 class="app-title">PROVIA</h1>
                 <p class="app-subtitle">Register Your Company</p>
             </div>
@@ -147,217 +252,329 @@
             <div id="alertContainer"></div>
 
             <form id="companyRegisterForm">
-                <!-- Company Information -->
+
+                <!-- Step 1: Trade Type -->
+                <div class="form-section-title">
+                    <i class="fas fa-hard-hat me-2"></i>What type of business are you?
+                </div>
+
+                <div class="trade-grid">
+                    <div class="trade-card" data-trade="0" onclick="selectTrade(this, 0)">
+                        <span class="trade-icon">🏗️</span>
+                        <div class="trade-name">General Contractor</div>
+                        <div class="trade-permit-note">Pulls building permits (CSL required)</div>
+                    </div>
+                    <div class="trade-card" data-trade="1" onclick="selectTrade(this, 1)">
+                        <span class="trade-icon">⚡</span>
+                        <div class="trade-name">Electrician</div>
+                        <div class="trade-permit-note">Pulls electrical permits only (MA Licensed)</div>
+                    </div>
+                    <div class="trade-card" data-trade="2" onclick="selectTrade(this, 2)">
+                        <span class="trade-icon">🔧</span>
+                        <div class="trade-name">Plumber</div>
+                        <div class="trade-permit-note">Pulls plumbing permits only (Master/Journeyman)</div>
+                    </div>
+                    <div class="trade-card" data-trade="3" onclick="selectTrade(this, 3)">
+                        <span class="trade-icon">🔥</span>
+                        <div class="trade-name">Gas Fitter</div>
+                        <div class="trade-permit-note">Pulls gas permits only (Licensed Gas Fitter)</div>
+                    </div>
+                    <div class="trade-card" data-trade="4" onclick="selectTrade(this, 4)">
+                        <span class="trade-icon">🌀</span>
+                        <div class="trade-name">Sheet Metal / HVAC</div>
+                        <div class="trade-permit-note">Pulls ductwork & HVAC permits (Licensed)</div>
+                    </div>
+                    <div class="trade-card" data-trade="5" onclick="selectTrade(this, 5)">
+                        <span class="trade-icon">🚒</span>
+                        <div class="trade-name">Fire Protection</div>
+                        <div class="trade-permit-note">Pulls sprinkler & alarm permits (S-License)</div>
+                    </div>
+                    <div class="trade-card" data-trade="6" onclick="selectTrade(this, 6)">
+                        <span class="trade-icon">🏠</span>
+                        <div class="trade-name">Property Investor / Flipper</div>
+                        <div class="trade-permit-note">Manages projects & contractors across properties</div>
+                    </div>
+                </div>
+
+                <!-- Dynamic license info shown after trade selection -->
+                <div class="license-info-box" id="licenseInfoBox">
+                    <div class="license-title" id="licenseTitle"></div>
+                    <div class="license-text" id="licenseText"></div>
+                </div>
+
+                <div class="investor-note" id="investorNote">
+                    <i class="fas fa-info-circle me-1"></i>
+                    As a Property Investor, PROVIA will help you manage project timelines, budgets, contractor coordination, and permit tracking across all your properties — without requiring you to hold any trade licenses.
+                </div>
+
+                <!-- License fields (hidden for investors) -->
+                <div id="licenseFields">
+                    <div class="row mt-3" id="licenseRow" style="display:none;">
+                        <div class="col-md-6">
+                            <label class="form-label">License Number</label>
+                            <input type="text" class="form-control" id="licenseNumber" placeholder="e.g. CSL-123456">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">License Holder Name</label>
+                            <input type="text" class="form-control" id="licenseHolderName" placeholder="Name on the license">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Company Info -->
                 <div class="form-section-title">
                     <i class="fas fa-building me-2"></i>Company Information
                 </div>
-                
-                <div class="form-floating">
+
+                <div class="mb-3">
+                    <label class="form-label">Company Name <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="companyName" placeholder="Your Company Name" required>
-                    <label for="companyName"><i class="fas fa-briefcase me-2"></i>Company Name</label>
                 </div>
-                
-                <div class="form-floating">
-                    <input type="email" class="form-control" id="contactEmail" placeholder="company@example.com" required>
-                    <label for="contactEmail"><i class="fas fa-envelope me-2"></i>Company Email</label>
-                </div>
-                
-                <div class="form-floating">
-                    <input type="tel" class="form-control" id="contactPhone" placeholder="(555) 123-4567">
-                    <label for="contactPhone"><i class="fas fa-phone me-2"></i>Company Phone</label>
-                </div>
-                
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="address" placeholder="Street Address">
-                    <label for="address"><i class="fas fa-map-pin me-2"></i>Address</label>
-                </div>
-                
+
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="city" placeholder="City">
-                            <label for="city">City</label>
-                        </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Company Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="contactEmail" placeholder="contact@company.com" required>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="state" placeholder="State" maxlength="2">
-                            <label for="state">State</label>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="zipCode" placeholder="Zip">
-                            <label for="zipCode">Zip Code</label>
-                        </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Company Phone</label>
+                        <input type="tel" class="form-control" id="contactPhone" placeholder="(617) 555-0100">
                     </div>
                 </div>
 
-                <!-- Admin Information -->
+                <div class="mb-3">
+                    <label class="form-label">Street Address</label>
+                    <input type="text" class="form-control" id="address" placeholder="123 Main Street">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" placeholder="Boston">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">State</label>
+                        <input type="text" class="form-control" id="state" placeholder="MA" maxlength="2" value="MA">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">ZIP Code</label>
+                        <input type="text" class="form-control" id="zipCode" placeholder="02101">
+                    </div>
+                </div>
+
+                <!-- Step 3: Admin Account -->
                 <div class="form-section-title">
                     <i class="fas fa-user-tie me-2"></i>Admin Account
                 </div>
-                
+
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="adminFirstName" placeholder="First Name" required>
-                            <label for="adminFirstName">First Name</label>
-                        </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="adminFirstName" placeholder="First Name" required>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="adminLastName" placeholder="Last Name" required>
-                            <label for="adminLastName">Last Name</label>
-                        </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="adminLastName" placeholder="Last Name" required>
                     </div>
-                </div>
-                
-                <div class="form-floating">
-                    <input type="password" class="form-control" id="adminPassword" placeholder="Password" required>
-                    <label for="adminPassword"><i class="fas fa-lock me-2"></i>Password (at least 8 characters)</label>
-                </div>
-                
-                <div class="form-floating">
-                    <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
-                    <label for="confirmPassword"><i class="fas fa-lock me-2"></i>Confirm Password</label>
                 </div>
 
-                <!-- Plan Selection -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="adminPassword" placeholder="At least 8 characters" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Repeat password" required>
+                    </div>
+                </div>
+
+                <!-- Step 4: Plan -->
                 <div class="form-section-title">
                     <i class="fas fa-chart-line me-2"></i>Subscription Plan
                 </div>
-                
+
                 <div class="mb-3">
                     <select class="form-select" id="subscriptionType" required>
                         <option value="">Select a plan...</option>
-                        <option value="Trial">Trial (30 days, up to 10 users)</option>
-                        <option value="Basic">Basic (10 users, 5 jobs)</option>
-                        <option value="Professional">Professional (50 users, 25 jobs, advanced features)</option>
-                        <option value="Enterprise">Enterprise (unlimited users, unlimited jobs)</option>
+                        <option value="Trial">Free Trial — 30 days, up to 5 users</option>
+                        <option value="Basic">Basic — Up to 10 users, 20 active jobs</option>
+                        <option value="Professional">Professional — Up to 50 users, unlimited jobs + advanced features</option>
+                        <option value="Enterprise">Enterprise — Unlimited users & jobs</option>
                     </select>
                 </div>
 
-                <!-- Language Preference -->
                 <div class="mb-3">
-                    <label class="form-label"><i class="fas fa-globe me-2"></i>Language Preference</label>
+                    <label class="form-label"><i class="fas fa-globe me-2"></i>Language</label>
                     <select class="form-select" id="languagePreference">
                         <option value="en">English</option>
                         <option value="es">Español</option>
-                        <option value="fr">Français</option>
                         <option value="pt">Português</option>
+                        <option value="fr">Français</option>
                     </select>
                 </div>
 
-                <!-- Submit -->
-                <button type="submit" class="btn btn-primary mt-4">
-                    <i class="fas fa-building me-2"></i>Register Company
+                <input type="hidden" id="selectedTradeType" value="">
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-building me-2"></i>Create My Company Account
                 </button>
             </form>
 
             <div class="login-link">
-                <p class="mb-2">Already registered?</p>
-                <a href="/login.html" class="text-decoration-none">
-                    <i class="fas fa-sign-in-alt me-2"></i>Employee Login
-                </a>
+                Already registered? <a href="/login.html">Sign In</a>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const tradeInfo = {
+            0: {
+                title: 'General Contractor — Required License',
+                text: 'A Construction Supervisor License (CSL) issued by the MA Board of Building Regulations and Standards is required to pull building permits. You may also need a Home Improvement Contractor (HIC) registration for residential work.',
+                showLicense: true, investor: false
+            },
+            1: {
+                title: 'Electrician — MA Permit Authority',
+                text: 'In Massachusetts, only a licensed Master or Journeyman Electrician may apply for electrical permits. This is mandated by the MA Board of State Examiners of Electricians — a GC cannot pull electrical permits on your behalf.',
+                showLicense: true, investor: false
+            },
+            2: {
+                title: 'Plumber — MA Permit Authority',
+                text: 'Only a licensed Master or Journeyman Plumber may pull plumbing permits in Massachusetts. Required for any installation, alteration, or replacement of plumbing fixtures, water heaters, and drainage systems.',
+                showLicense: true, investor: false
+            },
+            3: {
+                title: 'Gas Fitter — MA Permit Authority',
+                text: 'All gas-related work (furnaces, water heaters, gas lines, stoves) requires a separate gas permit that must be pulled by a MA Licensed Gas Fitter. This is independent from the general building permit.',
+                showLicense: true, investor: false
+            },
+            4: {
+                title: 'Sheet Metal / HVAC — MA Permit Authority',
+                text: 'Licensed Sheet Metal Workers are the only contractors authorized to pull permits for installing or altering ductwork, ventilation systems, and other sheet metal systems under MA law.',
+                showLicense: true, investor: false
+            },
+            5: {
+                title: 'Fire Protection — MA S-License Required',
+                text: 'Sprinkler system, fire alarm, and suppression system permits must be pulled by an S-License holder (MA Board of Fire Prevention Regulations). This applies to both new installs and alterations.',
+                showLicense: true, investor: false
+            },
+            6: {
+                title: 'Property Investor / Flipper',
+                text: '',
+                showLicense: false, investor: true
+            }
+        };
+
+        let selectedTrade = null;
+
+        function selectTrade(card, tradeValue) {
+            document.querySelectorAll('.trade-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedTrade = tradeValue;
+            document.getElementById('selectedTradeType').value = tradeValue;
+
+            const info = tradeInfo[tradeValue];
+            const infoBox = document.getElementById('licenseInfoBox');
+            const investorNote = document.getElementById('investorNote');
+            const licenseRow = document.getElementById('licenseRow');
+
+            if (info.investor) {
+                infoBox.classList.remove('show');
+                investorNote.classList.add('show');
+                licenseRow.style.display = 'none';
+            } else {
+                document.getElementById('licenseTitle').textContent = info.title;
+                document.getElementById('licenseText').textContent = info.text;
+                infoBox.classList.add('show');
+                investorNote.classList.remove('show');
+                licenseRow.style.display = info.showLicense ? 'flex' : 'none';
+            }
+        }
+
         document.getElementById('companyRegisterForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleCompanyRegistration();
-        });
 
-        async function handleCompanyRegistration() {
+            if (selectedTrade === null) {
+                showAlert('danger', 'Please select your business type to continue.');
+                document.querySelector('.trade-grid').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
             const adminPassword = document.getElementById('adminPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             if (adminPassword !== confirmPassword) {
-                showAlert('danger', 'Passwords do not match');
+                showAlert('danger', 'Passwords do not match.');
                 return;
             }
 
             if (adminPassword.length < 8) {
-                showAlert('danger', 'Password must be at least 8 characters');
+                showAlert('danger', 'Password must be at least 8 characters.');
                 return;
             }
 
             const subscriptionType = document.getElementById('subscriptionType').value;
             if (!subscriptionType) {
-                showAlert('danger', 'Please select a subscription plan');
+                showAlert('danger', 'Please select a subscription plan.');
                 return;
             }
 
             const registrationData = {
                 companyName: document.getElementById('companyName').value,
                 contactEmail: document.getElementById('contactEmail').value,
-                contactPhone: document.getElementById('contactPhone').value,
-                address: document.getElementById('address').value,
-                city: document.getElementById('city').value,
-                state: document.getElementById('state').value,
-                zipCode: document.getElementById('zipCode').value,
+                contactPhone: document.getElementById('contactPhone').value || null,
+                address: document.getElementById('address').value || null,
+                city: document.getElementById('city').value || null,
+                state: document.getElementById('state').value || null,
+                zipCode: document.getElementById('zipCode').value || null,
                 adminFirstName: document.getElementById('adminFirstName').value,
                 adminLastName: document.getElementById('adminLastName').value,
                 adminPassword: adminPassword,
                 requestedSubscription: subscriptionType,
-                languagePreference: document.getElementById('languagePreference').value
+                languagePreference: document.getElementById('languagePreference').value,
+                tradeType: selectedTrade,
+                licenseNumber: document.getElementById('licenseNumber').value || null,
+                licenseHolderName: document.getElementById('licenseHolderName').value || null
             };
 
-            console.log('Submitting registration:', registrationData);
             const button = document.querySelector('button[type="submit"]');
             button.disabled = true;
-            button.textContent = 'Registering...';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating your account...';
 
             try {
                 const response = await fetch('/api/Company/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(registrationData)
                 });
 
-                console.log('Response status:', response.status);
                 const data = await response.json();
-                console.log('Response data:', data);
 
                 if (response.ok) {
-                    showAlert('success', 'Company registered successfully! Redirecting to login...');
-                    
-                    setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 2000);
+                    showAlert('success', 'Account created! Redirecting to login...');
+                    setTimeout(() => { window.location.href = '/login.html'; }, 2000);
                 } else {
                     showAlert('danger', data.message || 'Registration failed. Please try again.');
                     button.disabled = false;
-                    button.textContent = 'Register Company';
+                    button.innerHTML = '<i class="fas fa-building me-2"></i>Create My Company Account';
                 }
             } catch (error) {
-                console.error('Registration error:', error);
-                showAlert('danger', 'Connection error: ' + error.message);
+                showAlert('danger', 'Connection error. Please try again.');
                 button.disabled = false;
-                button.textContent = 'Register Company';
+                button.innerHTML = '<i class="fas fa-building me-2"></i>Create My Company Account';
             }
-        }
+        });
 
         function showAlert(type, message) {
-            const alertContainer = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type} alert-dismissible fade show`;
-            alert.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            alertContainer.appendChild(alert);
-            
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-            }, 5000);
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+            container.scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
