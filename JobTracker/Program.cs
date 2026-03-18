@@ -137,9 +137,8 @@ builder.Services.AddCors(options =>
 // Add rate limiting for brute force protection
 builder.Services.AddMemoryCache();
 
-// Register SMS Service for Twilio
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<JobTracker.Services.IMessagingService, JobTracker.Services.SimpleSmsService>();
+// Register SMS Service
+builder.Services.AddScoped<JobTracker.Services.SMSService>();
 
 var app = builder.Build();
 
