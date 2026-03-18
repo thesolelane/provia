@@ -1,15 +1,27 @@
 # PROVIA - Construction Management Platform
 
 ## Overview
-PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction management, developed by Cooperanth Consulting LLC. It supports a diverse user base, including field workers, supervisors, and subcontractors, across multiple client companies. The platform streamlines construction project workflows from job creation and scope definition to permit tracking, inspections, and subcontractor management. Key features include a Massachusetts code engine for compliance, a comprehensive role-based access control system, multi-company subcontractor management, and an offline-first mobile synchronization architecture. The platform aims to enhance efficiency and compliance in construction project delivery.
+PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction management (and any workflow-driven industry), developed by Cooperanth Consulting LLC. It supports field workers, supervisors, subcontractors, and company admins across multiple client companies. The platform streamlines construction project workflows from job creation and scope definition to permit tracking, inspections, and subcontractor management. Key features include a Massachusetts code engine for compliance, a comprehensive role-based access control system, multi-company subcontractor management, and an offline-first mobile synchronization architecture.
+
+## Deployment Strategy
+- **Development/Build**: Replit (this environment) - code, build, push to GitHub only
+- **Production**: Docker server (self-hosted) - runs the actual SaaS platform
+- **Architecture**: Single shared PostgreSQL + single .NET app serves all tenants via CompanyId isolation
+
+## Clean State (March 2026)
+- All test data cleared - database is clean
+- Single admin account: `admin@provia.app` / `Provia2024!` (Company: PROVIA Platform, CompanyId: 5)
+- Removed: all debug/test HTML pages, duplicate SMS services, junk controllers
+- Removed: WeatherForecastController, TestController, SmsTestController, QuickAuthController, SeedController, InitializationController
 
 ## User Preferences
 - Framework: .NET 6.0 (locked to Replit environment availability)
 - Brand: PROVIA (3-arrow logo, orange/teal theme, white background)
 - Security: Enterprise-grade (no test credentials, all secrets in env vars)
 - Database: Shared tenant model with CompanyId filtering + sub-contractor multi-company
-- Deployment: Three separate domains (.com, .app, .sol)
+- Deployment: Docker on own server; Replit for development only
 - Mobile: Offline-first architecture with batch sync
+- Vision: Universal workflow automation platform (not just construction)
 
 ## System Architecture
 
