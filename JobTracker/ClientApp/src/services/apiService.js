@@ -186,6 +186,44 @@ const invoicesApi = {
   void: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/void`, { method: 'POST' }),
 };
 
+// Tasks API
+const tasksApi = {
+  getAll: async ({ view = 'all', jobId, contactId, leadId } = {}) => {
+    const params = new URLSearchParams();
+    if (view !== 'all') params.set('view', view);
+    if (jobId) params.set('jobId', jobId);
+    if (contactId) params.set('contactId', contactId);
+    if (leadId) params.set('leadId', leadId);
+    return fetchWithErrorHandling(`/api/tasks?${params}`);
+  },
+
+  getCounts: async () => fetchWithErrorHandling('/api/tasks/counts'),
+
+  getById: async (id) => fetchWithErrorHandling(`/api/tasks/${id}`),
+
+  create: async (task) => fetchWithErrorHandling('/api/tasks', {
+    method: 'POST',
+    body: JSON.stringify(task),
+  }),
+
+  update: async (id, task) => fetchWithErrorHandling(`/api/tasks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(task),
+  }),
+
+  complete: async (id, note = '') => fetchWithErrorHandling(`/api/tasks/${id}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  }),
+
+  updateStatus: async (id, status) => fetchWithErrorHandling(`/api/tasks/${id}/status`, {
+    method: 'POST',
+    body: JSON.stringify({ status }),
+  }),
+
+  delete: async (id) => fetchWithErrorHandling(`/api/tasks/${id}`, { method: 'DELETE' }),
+};
+
 // Export the APIs
 export const apiService = {
   jobs: jobsApi,
@@ -193,4 +231,5 @@ export const apiService = {
   contacts: contactsApi,
   leads: leadsApi,
   invoices: invoicesApi,
+  tasks: tasksApi,
 };

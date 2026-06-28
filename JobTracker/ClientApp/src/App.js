@@ -15,6 +15,7 @@ import ContactDetail from './components/contacts/ContactDetail';
 import LeadPipeline from './components/leads/LeadPipeline';
 import InvoiceList from './components/invoices/InvoiceList';
 import InvoiceDetail from './components/invoices/InvoiceDetail';
+import TaskList from './components/tasks/TaskList';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/leads" element={<Layout><LeadPipeline /></Layout>} />
         <Route path="/invoices" element={<Layout><InvoiceList /></Layout>} />
         <Route path="/invoices/:id" element={<Layout><InvoiceDetail /></Layout>} />
+        <Route path="/tasks" element={<Layout><TaskList /></Layout>} />
       </Routes>
     </div>
   );

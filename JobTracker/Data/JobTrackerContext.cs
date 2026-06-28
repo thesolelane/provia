@@ -78,6 +78,9 @@ namespace JobTracker.Data
         public DbSet<InvoiceLineItem> InvoiceLineItems { get; set; } = null!;
         public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
 
+        // Tasks
+        public DbSet<TaskItem> TaskItems { get; set; } = null!;
+
         // Municipal Integration tables
         public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
         public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
@@ -287,6 +290,20 @@ namespace JobTracker.Data
             modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.InvoiceNumber }).IsUnique();
             modelBuilder.Entity<InvoiceLineItem>().HasIndex(li => li.InvoiceId);
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.InvoiceId);
+
+            // Configure TaskItem relationships
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.Job).WithMany().HasForeignKey(t => t.JobId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.Contact).WithMany().HasForeignKey(t => t.ContactId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.Lead).WithMany().HasForeignKey(t => t.LeadId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.ParentTask).WithMany().HasForeignKey(t => t.ParentTaskId).OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<TaskItem>().HasIndex(t => t.CompanyId);
+            modelBuilder.Entity<TaskItem>().HasIndex(t => new { t.CompanyId, t.Status });
+            modelBuilder.Entity<TaskItem>().HasIndex(t => new { t.CompanyId, t.AssignedToUserId });
 
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
