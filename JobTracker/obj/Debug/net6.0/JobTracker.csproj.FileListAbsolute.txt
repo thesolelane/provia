@@ -1,10 +1,3 @@
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.AssemblyReference.cache
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.GeneratedMSBuildEditorConfig.editorconfig
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfoInputs.cache
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfo.cs
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.CoreCompileInputs.cache
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cs
-/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cache
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/appsettings.Development.json
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/appsettings.json
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/ClientApp/package.json
@@ -16,6 +9,7 @@
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/JobTracker.pdb
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/BCrypt.Net-Next.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Humanizer.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.Abstractions.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.Design.dll
@@ -33,6 +27,8 @@
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Abstractions.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.JsonWebTokens.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Logging.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Tokens.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.OpenApi.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Mono.TextTemplating.dll
@@ -40,6 +36,7 @@
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Npgsql.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/SendGrid.dll
+/home/runner/workspace/JobTracker/bin/Debug/net6.0/SixLabors.ImageSharp.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/StarkbankEcdsa.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Swashbuckle.AspNetCore.Swagger.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/Swashbuckle.AspNetCore.SwaggerGen.dll
@@ -49,6 +46,13 @@
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/System.Text.Encodings.Web.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/System.Text.Json.dll
 /home/runner/workspace/JobTracker/bin/Debug/net6.0/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.AssemblyReference.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfoInputs.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.AssemblyInfo.cs
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.csproj.CoreCompileInputs.cache
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cs
+/home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.MvcApplicationPartsAssemblyInfo.cache
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/staticwebassets.build.json
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/staticwebassets.development.json
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/scopedcss/bundle/JobTracker.styles.css
@@ -58,7 +62,3 @@
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.pdb
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/JobTracker.genruntimeconfig.cache
 /home/runner/workspace/JobTracker/obj/Debug/net6.0/ref/JobTracker.dll
-/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
-/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.dll
-/home/runner/workspace/JobTracker/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-/home/runner/workspace/JobTracker/bin/Debug/net6.0/SixLabors.ImageSharp.dll
