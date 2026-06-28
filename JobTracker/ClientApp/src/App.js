@@ -12,6 +12,7 @@ import JobSectionList from './components/jobs/JobSectionList';
 import JobSectionDetail from './components/jobs/JobSectionDetail';
 import ContactList from './components/contacts/ContactList';
 import ContactDetail from './components/contacts/ContactDetail';
+import LeadPipeline from './components/leads/LeadPipeline';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/sections/:sectionId/edit" element={<Layout><JobSectionForm /></Layout>} />
         <Route path="/contacts" element={<Layout><ContactList /></Layout>} />
         <Route path="/contacts/:id" element={<Layout><ContactDetail /></Layout>} />
+        <Route path="/leads" element={<Layout><LeadPipeline /></Layout>} />
       </Routes>
     </div>
   );
