@@ -13,6 +13,8 @@ import JobSectionDetail from './components/jobs/JobSectionDetail';
 import ContactList from './components/contacts/ContactList';
 import ContactDetail from './components/contacts/ContactDetail';
 import LeadPipeline from './components/leads/LeadPipeline';
+import InvoiceList from './components/invoices/InvoiceList';
+import InvoiceDetail from './components/invoices/InvoiceDetail';
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
         <Route path="/contacts" element={<Layout><ContactList /></Layout>} />
         <Route path="/contacts/:id" element={<Layout><ContactDetail /></Layout>} />
         <Route path="/leads" element={<Layout><LeadPipeline /></Layout>} />
+        <Route path="/invoices" element={<Layout><InvoiceList /></Layout>} />
+        <Route path="/invoices/:id" element={<Layout><InvoiceDetail /></Layout>} />
       </Routes>
     </div>
   );
