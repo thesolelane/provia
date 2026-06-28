@@ -3,11 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 
 function Layout({ children }) {
   const location = useLocation();
-  
+
   const isActive = (path) => {
-    return location.pathname === path ? 'active' : '';
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path) ? 'active' : '';
   };
-  
+
   return (
     <div className="layout">
       <header className="app-header">
@@ -23,6 +24,9 @@ function Layout({ children }) {
               <li className={isActive('/jobs')}>
                 <Link to="/jobs">Jobs</Link>
               </li>
+              <li className={isActive('/contacts')}>
+                <Link to="/contacts">Contacts</Link>
+              </li>
               <li className={isActive('/sections')}>
                 <Link to="/sections">Sections</Link>
               </li>
@@ -30,11 +34,11 @@ function Layout({ children }) {
           </nav>
         </div>
       </header>
-      
+
       <main className="app-content">
         {children}
       </main>
-      
+
       <footer className="app-footer">
         <div className="footer-container">
           <p>&copy; {new Date().getFullYear()} PROVIA Application</p>

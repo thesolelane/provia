@@ -211,6 +211,19 @@ using (var scope = app.Services.CreateScope())
         var seeder = services.GetRequiredService<DatabaseSeeder>();
         
         context.Database.EnsureCreated();
+
+        // Add new columns to existing tables (idempotent)
+        var startupLogger = services.GetRequiredService<ILogger<Program>>();
+        var addColumns = new[]
+        {
+            "ALTER TABLE \"Jobs\" ADD COLUMN IF NOT EXISTS \"ContactId\" INTEGER;"
+        };
+        foreach (var sql in addColumns)
+        {
+            try { await context.Database.ExecuteSqlRawAsync(sql); }
+            catch (Exception colEx) { startupLogger.LogWarning("Column migration skipped: {Msg}", colEx.Message); }
+        }
+
         await seeder.SeedAsync();
         
         Console.WriteLine("Database initialized and seeded successfully!");

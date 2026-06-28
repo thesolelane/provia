@@ -56,7 +56,11 @@ namespace JobTracker.Models
         public double? Longitude { get; set; }
         
         public int? CompanyId { get; set; }
-        
+
+        // CRM link — optional FK to Contact
+        public int? ContactId { get; set; }
+        public Contact? Contact { get; set; }
+
         // Import tracking
         public bool IsImported { get; set; } = false;
         public string? ImportedFrom { get; set; } // "Wave", "QuickBooks", etc.
