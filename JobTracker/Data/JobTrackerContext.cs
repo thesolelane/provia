@@ -77,6 +77,10 @@ namespace JobTracker.Data
         public DbSet<Invoice> Invoices { get; set; } = null!;
         public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
 
+        // Vendors
+        public DbSet<Vendor> Vendors { get; set; } = null!;
+        public DbSet<VendorPurchase> VendorPurchases { get; set; } = null!;
+
         // Tasks
         public DbSet<TaskItem> TaskItems { get; set; } = null!;
 
@@ -289,6 +293,24 @@ namespace JobTracker.Data
             modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.Status });
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.InvoiceId);
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.CompanyId);
+
+            // Configure Vendor relationships
+            modelBuilder.Entity<Vendor>()
+                .HasMany(v => v.Purchases)
+                .WithOne(p => p.Vendor)
+                .HasForeignKey(p => p.VendorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<VendorPurchase>()
+                .HasOne(p => p.Job)
+                .WithMany()
+                .HasForeignKey(p => p.JobId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Vendor>().HasIndex(v => v.CompanyId);
+            modelBuilder.Entity<Vendor>().HasIndex(v => new { v.CompanyId, v.Name });
+            modelBuilder.Entity<VendorPurchase>().HasIndex(p => p.VendorId);
+            modelBuilder.Entity<VendorPurchase>().HasIndex(p => p.CompanyId);
 
             // Configure TaskItem relationships
             modelBuilder.Entity<TaskItem>()

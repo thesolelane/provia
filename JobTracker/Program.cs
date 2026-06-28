@@ -279,7 +279,54 @@ using (var scope = app.Services.CreateScope())
             );",
 
             @"CREATE INDEX IF NOT EXISTS ""IX_InvoicePayments_InvoiceId""  ON ""InvoicePayments"" (""InvoiceId"");",
-            @"CREATE INDEX IF NOT EXISTS ""IX_InvoicePayments_CompanyId""  ON ""InvoicePayments"" (""CompanyId"");"
+            @"CREATE INDEX IF NOT EXISTS ""IX_InvoicePayments_CompanyId""  ON ""InvoicePayments"" (""CompanyId"");",
+
+            // Vendors table
+            @"CREATE TABLE IF NOT EXISTS ""Vendors"" (
+                ""Id""             SERIAL PRIMARY KEY,
+                ""CompanyId""      INTEGER NOT NULL,
+                ""VendorNumber""   VARCHAR(50) NOT NULL,
+                ""Name""           VARCHAR(200) NOT NULL,
+                ""Category""       VARCHAR(100),
+                ""ContactName""    VARCHAR(200),
+                ""Email""          VARCHAR(200),
+                ""Phone""          VARCHAR(30),
+                ""Address""        VARCHAR(300),
+                ""City""           VARCHAR(100),
+                ""State""          VARCHAR(50),
+                ""ZipCode""        VARCHAR(20),
+                ""Website""        VARCHAR(200),
+                ""AccountNumber""  VARCHAR(100),
+                ""PaymentTerms""   VARCHAR(30),
+                ""CreditLimit""    NUMERIC(12,2),
+                ""Notes""          VARCHAR(2000),
+                ""IsActive""       BOOLEAN NOT NULL DEFAULT TRUE,
+                ""IsPreferred""    BOOLEAN NOT NULL DEFAULT FALSE,
+                ""CreatedBy""      VARCHAR(100),
+                ""CreatedAt""      TIMESTAMPTZ NOT NULL DEFAULT now(),
+                ""UpdatedAt""      TIMESTAMPTZ NOT NULL DEFAULT now()
+            );",
+            @"CREATE INDEX IF NOT EXISTS ""IX_Vendors_CompanyId""  ON ""Vendors"" (""CompanyId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_Vendors_Name""        ON ""Vendors"" (""CompanyId"", ""Name"");",
+
+            // VendorPurchases table
+            @"CREATE TABLE IF NOT EXISTS ""VendorPurchases"" (
+                ""Id""                    SERIAL PRIMARY KEY,
+                ""VendorId""              INTEGER NOT NULL REFERENCES ""Vendors""(""Id"") ON DELETE CASCADE,
+                ""CompanyId""             INTEGER NOT NULL,
+                ""JobId""                 INTEGER,
+                ""PurchaseOrderNumber""   VARCHAR(100),
+                ""Description""           VARCHAR(2000),
+                ""Amount""                NUMERIC(12,2) NOT NULL,
+                ""Status""                VARCHAR(30) NOT NULL DEFAULT 'pending',
+                ""OrderedAt""             TIMESTAMPTZ,
+                ""ReceivedAt""            TIMESTAMPTZ,
+                ""RecordedBy""            VARCHAR(100),
+                ""CreatedAt""             TIMESTAMPTZ NOT NULL DEFAULT now(),
+                ""UpdatedAt""             TIMESTAMPTZ NOT NULL DEFAULT now()
+            );",
+            @"CREATE INDEX IF NOT EXISTS ""IX_VendorPurchases_VendorId""   ON ""VendorPurchases"" (""VendorId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_VendorPurchases_CompanyId""  ON ""VendorPurchases"" (""CompanyId"");"
         };
         foreach (var sql in addColumns)
         {
