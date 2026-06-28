@@ -157,10 +157,40 @@ const leadsApi = {
   }),
 };
 
+// Invoicing API
+const invoicesApi = {
+  getAll: async (status = 'all', search = '') =>
+    fetchWithErrorHandling(`/api/invoices?status=${status}&search=${encodeURIComponent(search)}`),
+
+  getSummary: async () => fetchWithErrorHandling('/api/invoices/summary'),
+
+  getById: async (id) => fetchWithErrorHandling(`/api/invoices/${id}`),
+
+  create: async (invoice) => fetchWithErrorHandling('/api/invoices', {
+    method: 'POST',
+    body: JSON.stringify(invoice),
+  }),
+
+  update: async (id, invoice) => fetchWithErrorHandling(`/api/invoices/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(invoice),
+  }),
+
+  send: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/send`, { method: 'POST' }),
+
+  recordPayment: async (id, payment) => fetchWithErrorHandling(`/api/invoices/${id}/payments`, {
+    method: 'POST',
+    body: JSON.stringify(payment),
+  }),
+
+  void: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/void`, { method: 'POST' }),
+};
+
 // Export the APIs
 export const apiService = {
   jobs: jobsApi,
   jobSections: jobSectionsApi,
   contacts: contactsApi,
   leads: leadsApi,
+  invoices: invoicesApi,
 };

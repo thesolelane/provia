@@ -73,6 +73,11 @@ namespace JobTracker.Data
         public DbSet<Lead> Leads { get; set; } = null!;
         public DbSet<LeadNote> LeadNotes { get; set; } = null!;
 
+        // Invoicing
+        public DbSet<Invoice> Invoices { get; set; } = null!;
+        public DbSet<InvoiceLineItem> InvoiceLineItems { get; set; } = null!;
+        public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
+
         // Municipal Integration tables
         public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
         public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
@@ -251,6 +256,37 @@ namespace JobTracker.Data
             modelBuilder.Entity<Lead>().HasIndex(l => new { l.CompanyId, l.Stage });
             modelBuilder.Entity<Lead>().HasIndex(l => new { l.CompanyId, l.LeadNumber }).IsUnique();
             modelBuilder.Entity<LeadNote>().HasIndex(n => n.LeadId);
+
+            // Configure Invoice relationships
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.LineItems)
+                .WithOne(li => li.Invoice)
+                .HasForeignKey(li => li.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.Payments)
+                .WithOne(p => p.Invoice)
+                .HasForeignKey(p => p.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Job)
+                .WithMany()
+                .HasForeignKey(i => i.JobId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Contact)
+                .WithMany()
+                .HasForeignKey(i => i.ContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Invoice>().HasIndex(i => i.CompanyId);
+            modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.Status });
+            modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.InvoiceNumber }).IsUnique();
+            modelBuilder.Entity<InvoiceLineItem>().HasIndex(li => li.InvoiceId);
+            modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.InvoiceId);
 
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);
