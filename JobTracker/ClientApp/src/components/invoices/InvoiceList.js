@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 
 const STATUS_FILTERS = ['all', 'draft', 'sent', 'partial', 'paid', 'overdue', 'void'];
@@ -22,10 +22,16 @@ function fmtDate(d) {
 }
 
 export default function InvoiceList() {
+  const location = useLocation();
+  const initialStatus = () => {
+    const param = new URLSearchParams(location.search).get('status') || 'all';
+    return STATUS_FILTERS.includes(param) ? param : 'all';
+  };
+
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
@@ -43,6 +49,12 @@ export default function InvoiceList() {
   }, [statusFilter, search]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  useEffect(() => {
+    const param = new URLSearchParams(location.search).get('status') || 'all';
+    const resolved = STATUS_FILTERS.includes(param) ? param : 'all';
+    setStatusFilter(resolved);
+  }, [location.search]);
 
   const effectiveStatus = (inv) =>
     inv.isOverdue && inv.status === 'sent' ? 'overdue' : inv.status;
