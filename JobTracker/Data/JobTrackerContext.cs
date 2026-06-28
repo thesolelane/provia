@@ -75,7 +75,6 @@ namespace JobTracker.Data
 
         // Invoicing
         public DbSet<Invoice> Invoices { get; set; } = null!;
-        public DbSet<InvoiceLineItem> InvoiceLineItems { get; set; } = null!;
         public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
 
         // Tasks
@@ -262,12 +261,6 @@ namespace JobTracker.Data
 
             // Configure Invoice relationships
             modelBuilder.Entity<Invoice>()
-                .HasMany(i => i.LineItems)
-                .WithOne(li => li.Invoice)
-                .HasForeignKey(li => li.InvoiceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Invoice>()
                 .HasMany(i => i.Payments)
                 .WithOne(p => p.Invoice)
                 .HasForeignKey(p => p.InvoiceId)
@@ -285,11 +278,17 @@ namespace JobTracker.Data
                 .HasForeignKey(i => i.ContactId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Company)
+                .WithMany()
+                .HasForeignKey(i => i.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Invoice>().HasIndex(i => i.CompanyId);
-            modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.Status });
             modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.InvoiceNumber }).IsUnique();
-            modelBuilder.Entity<InvoiceLineItem>().HasIndex(li => li.InvoiceId);
+            modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.Status });
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.InvoiceId);
+            modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.CompanyId);
 
             // Configure TaskItem relationships
             modelBuilder.Entity<TaskItem>()

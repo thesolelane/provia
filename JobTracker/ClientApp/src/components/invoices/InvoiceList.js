@@ -44,35 +44,28 @@ export default function InvoiceList() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const isOverdue = (inv) =>
-    inv.status !== 'paid' && inv.status !== 'void' && new Date(inv.dueDate) < new Date();
-
-  const effectiveStatus = (inv) => (isOverdue(inv) && inv.status === 'sent' ? 'overdue' : inv.status);
+  const effectiveStatus = (inv) =>
+    inv.isOverdue && inv.status === 'sent' ? 'overdue' : inv.status;
 
   return (
     <div>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h2 style={{ margin: 0 }}>Invoices</h2>
-          <p style={{ margin: '0.25rem 0 0', color: '#6c757d', fontSize: '0.9rem' }}>
-            Billing and payment tracking
-          </p>
+          <p style={{ margin: '0.25rem 0 0', color: '#6c757d', fontSize: '0.9rem' }}>Billing and payment tracking</p>
         </div>
         <button className="btn btn-primary" onClick={() => navigate('/invoices/new')}>+ New Invoice</button>
       </div>
 
-      {/* Summary cards */}
       {summary && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-          <SummaryCard label="Outstanding" value={fmtMoney(summary.totalOutstanding)} color="#fd7e14" />
-          <SummaryCard label="Paid This Month" value={fmtMoney(summary.paidThisMonth)} color="#198754" />
-          <SummaryCard label="Overdue" value={summary.overdueCount} color="#dc3545" isCount />
-          <SummaryCard label="Drafts" value={summary.draftCount} color="#6c757d" isCount />
+          <SummaryCard label="Outstanding"    value={fmtMoney(summary.totalOutstanding)} color="#fd7e14" />
+          <SummaryCard label="Paid This Month" value={fmtMoney(summary.paidThisMonth)}   color="#198754" />
+          <SummaryCard label="Overdue"        value={summary.overdueCount}               color="#dc3545" isCount />
+          <SummaryCard label="Drafts"         value={summary.draftCount}                 color="#6c757d" isCount />
         </div>
       )}
 
-      {/* Filters */}
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
           {STATUS_FILTERS.map(s => (
@@ -86,16 +79,10 @@ export default function InvoiceList() {
             </button>
           ))}
         </div>
-        <input
-          className="form-control"
-          placeholder="Search by number or client..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 260 }}
-        />
+        <input className="form-control" placeholder="Search by number or client..." value={search}
+          onChange={e => setSearch(e.target.value)} style={{ maxWidth: 260 }} />
       </div>
 
-      {/* Table */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>Loading...</div>
@@ -103,7 +90,7 @@ export default function InvoiceList() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                {['Invoice #', 'Client', 'Date', 'Due', 'Total', 'Paid', 'Balance', 'Status', ''].map(h => (
+                {['Invoice #', 'Client', 'Issued', 'Due', 'Total', 'Paid', 'Balance', 'Status', ''].map(h => (
                   <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, fontSize: '0.82rem', color: '#495057' }}>{h}</th>
                 ))}
               </tr>
@@ -117,23 +104,15 @@ export default function InvoiceList() {
                 const meta = STATUS_META[st] || STATUS_META.draft;
                 return (
                   <tr key={inv.id} style={{ borderBottom: '1px solid #dee2e6', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                    <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.82rem', color: '#2F5A7E', fontWeight: 700 }}>
-                      {inv.invoiceNumber}
-                    </td>
+                    <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.82rem', color: '#2F5A7E', fontWeight: 700 }}>{inv.invoiceNumber}</td>
                     <td style={{ padding: '0.75rem 1rem', fontWeight: 600, fontSize: '0.9rem' }}>{inv.clientName || '—'}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6c757d' }}>{fmtDate(inv.invoiceDate)}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: st === 'overdue' ? '#dc3545' : '#6c757d', fontWeight: st === 'overdue' ? 700 : 400 }}>
-                      {fmtDate(inv.dueDate)}
-                    </td>
+                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6c757d' }}>{fmtDate(inv.issuedAt)}</td>
+                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: st === 'overdue' ? '#dc3545' : '#6c757d', fontWeight: st === 'overdue' ? 700 : 400 }}>{fmtDate(inv.dueAt)}</td>
                     <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>{fmtMoney(inv.total)}</td>
                     <td style={{ padding: '0.75rem 1rem', color: '#198754' }}>{fmtMoney(inv.amountPaid)}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: inv.balanceDue > 0 ? '#dc3545' : '#198754' }}>
-                      {fmtMoney(inv.balanceDue)}
-                    </td>
+                    <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: inv.balanceDue > 0 ? '#dc3545' : '#198754' }}>{fmtMoney(inv.balanceDue)}</td>
                     <td style={{ padding: '0.75rem 1rem' }}>
-                      <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, background: meta.bg, color: meta.color }}>
-                        {meta.label}
-                      </span>
+                      <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.78rem', fontWeight: 700, background: meta.bg, color: meta.color }}>{meta.label}</span>
                     </td>
                     <td style={{ padding: '0.75rem 1rem' }}>
                       <button onClick={() => navigate(`/invoices/${inv.id}`)} className="btn btn-sm" style={{ fontSize: '0.8rem', padding: '3px 10px' }}>Open</button>
