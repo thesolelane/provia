@@ -326,7 +326,43 @@ using (var scope = app.Services.CreateScope())
                 ""UpdatedAt""             TIMESTAMPTZ NOT NULL DEFAULT now()
             );",
             @"CREATE INDEX IF NOT EXISTS ""IX_VendorPurchases_VendorId""   ON ""VendorPurchases"" (""VendorId"");",
-            @"CREATE INDEX IF NOT EXISTS ""IX_VendorPurchases_CompanyId""  ON ""VendorPurchases"" (""CompanyId"");"
+            @"CREATE INDEX IF NOT EXISTS ""IX_VendorPurchases_CompanyId""  ON ""VendorPurchases"" (""CompanyId"");",
+
+            // FieldPhotos table
+            @"CREATE TABLE IF NOT EXISTS ""FieldPhotos"" (
+                ""Id""               SERIAL PRIMARY KEY,
+                ""CompanyId""        INTEGER NOT NULL,
+                ""JobId""            INTEGER,
+                ""Category""         VARCHAR(100),
+                ""Caption""          VARCHAR(500),
+                ""Tags""             VARCHAR(500),
+                ""Url""              VARCHAR(1000) NOT NULL,
+                ""LocalPath""        VARCHAR(500),
+                ""IpfsCid""          VARCHAR(100),
+                ""StorageBackend""   VARCHAR(20) NOT NULL DEFAULT 'local',
+                ""OriginalFileName"" VARCHAR(100),
+                ""FileSizeBytes""    BIGINT NOT NULL DEFAULT 0,
+                ""ContentType""      VARCHAR(50),
+                ""Latitude""         NUMERIC(10,7),
+                ""Longitude""        NUMERIC(10,7),
+                ""UploadedBy""       VARCHAR(100),
+                ""TakenAt""          TIMESTAMPTZ NOT NULL DEFAULT now(),
+                ""CreatedAt""        TIMESTAMPTZ NOT NULL DEFAULT now()
+            );",
+            @"CREATE INDEX IF NOT EXISTS ""IX_FieldPhotos_CompanyId""        ON ""FieldPhotos"" (""CompanyId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_FieldPhotos_CompanyId_JobId""   ON ""FieldPhotos"" (""CompanyId"", ""JobId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_FieldPhotos_CompanyId_TakenAt"" ON ""FieldPhotos"" (""CompanyId"", ""TakenAt"" DESC);",
+
+            // PhotoStorageConfig table
+            @"CREATE TABLE IF NOT EXISTS ""PhotoStorageConfigs"" (
+                ""Id""                 SERIAL PRIMARY KEY,
+                ""CompanyId""          INTEGER NOT NULL UNIQUE,
+                ""StoragePath""        VARCHAR(500),
+                ""AllowedExtensions""  VARCHAR(200) NOT NULL DEFAULT 'jpg,jpeg,png,webp,heic,heif',
+                ""MaxFileSizeMb""      INTEGER NOT NULL DEFAULT 20,
+                ""EnableIpfs""         BOOLEAN NOT NULL DEFAULT FALSE
+            );",
+            @"CREATE INDEX IF NOT EXISTS ""IX_PhotoStorageConfigs_CompanyId"" ON ""PhotoStorageConfigs"" (""CompanyId"");"
         };
         foreach (var sql in addColumns)
         {

@@ -81,6 +81,10 @@ namespace JobTracker.Data
         public DbSet<Vendor> Vendors { get; set; } = null!;
         public DbSet<VendorPurchase> VendorPurchases { get; set; } = null!;
 
+        // Field Photos
+        public DbSet<FieldPhoto> FieldPhotos { get; set; } = null!;
+        public DbSet<PhotoStorageConfig> PhotoStorageConfigs { get; set; } = null!;
+
         // Tasks
         public DbSet<TaskItem> TaskItems { get; set; } = null!;
 
@@ -293,6 +297,33 @@ namespace JobTracker.Data
             modelBuilder.Entity<Invoice>().HasIndex(i => new { i.CompanyId, i.Status });
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.InvoiceId);
             modelBuilder.Entity<InvoicePayment>().HasIndex(p => p.CompanyId);
+
+            // PhotoStorageConfig — one per company
+            modelBuilder.Entity<PhotoStorageConfig>()
+                .HasOne(c => c.Company)
+                .WithMany()
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<PhotoStorageConfig>()
+                .HasIndex(c => c.CompanyId)
+                .IsUnique();
+
+            // Configure FieldPhoto relationships
+            modelBuilder.Entity<FieldPhoto>()
+                .HasOne(p => p.Job)
+                .WithMany()
+                .HasForeignKey(p => p.JobId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<FieldPhoto>()
+                .HasOne(p => p.Company)
+                .WithMany()
+                .HasForeignKey(p => p.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FieldPhoto>().HasIndex(p => p.CompanyId);
+            modelBuilder.Entity<FieldPhoto>().HasIndex(p => new { p.CompanyId, p.JobId });
+            modelBuilder.Entity<FieldPhoto>().HasIndex(p => new { p.CompanyId, p.TakenAt });
 
             // Configure Vendor relationships
             modelBuilder.Entity<Vendor>()
