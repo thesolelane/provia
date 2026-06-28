@@ -2,7 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 
-const TABS = ['Overview', 'Jobs', 'Activity'];
+const TABS = ['Overview', 'Jobs', 'Invoices', 'Activity'];
+
+const STATUS_META = {
+  draft:   { label: 'Draft',   color: '#6c757d', bg: '#f8f9fa' },
+  sent:    { label: 'Sent',    color: '#0d6efd', bg: '#e7f0ff' },
+  partial: { label: 'Partial', color: '#fd7e14', bg: '#fff3e0' },
+  paid:    { label: 'Paid',    color: '#198754', bg: '#e6f7ee' },
+  overdue: { label: 'Overdue', color: '#dc3545', bg: '#fdecea' },
+  void:    { label: 'Void',    color: '#adb5bd', bg: '#f8f9fa' },
+};
+
+function fmtMoney(n) {
+  return `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 function ContactDetail() {
   const { id } = useParams();
@@ -16,6 +33,7 @@ function ContactDetail() {
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+  const [invoices, setInvoices] = useState([]);
 
   const fetchContact = async () => {
     try {
@@ -37,7 +55,16 @@ function ContactDetail() {
     }
   };
 
-  useEffect(() => { fetchContact(); }, [id]);
+  const fetchInvoices = async () => {
+    try {
+      const data = await apiService.invoices.getAll('', '', null, id);
+      setInvoices(data);
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+    }
+  };
+
+  useEffect(() => { fetchContact(); fetchInvoices(); }, [id]);
 
   const handleSave = async () => {
     try {
@@ -126,6 +153,11 @@ function ContactDetail() {
             {t === 'Jobs' && contact.jobs?.length > 0 && (
               <span style={{ marginLeft: 6, background: '#2F5A7E', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>
                 {contact.jobs.length}
+              </span>
+            )}
+            {t === 'Invoices' && invoices.length > 0 && (
+              <span style={{ marginLeft: 6, background: '#FF9500', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>
+                {invoices.length}
               </span>
             )}
             {t === 'Activity' && contact.activityLogs?.length > 0 && (
@@ -236,6 +268,61 @@ function ContactDetail() {
                       <td style={tdStyle}>{new Date(j.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'Invoices' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <Link
+              to={`/invoices/new?contactId=${id}&clientName=${encodeURIComponent(contact.fullName || '')}&clientEmail=${encodeURIComponent(contact.email || '')}`}
+              className="btn btn-primary"
+            >
+              + Create Invoice
+            </Link>
+          </div>
+          {invoices.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '2rem', color: '#6c757d' }}>
+              No invoices linked to this contact yet.
+            </div>
+          ) : (
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                    {['Invoice #', 'Issued', 'Due', 'Total', 'Balance', 'Status', ''].map(h => (
+                      <th key={h} style={thStyle}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((inv, i) => {
+                    const st = (inv.isOverdue && inv.status === 'sent') ? 'overdue' : inv.status;
+                    const meta = STATUS_META[st] || STATUS_META.draft;
+                    return (
+                      <tr key={inv.id} style={{ borderBottom: '1px solid #dee2e6', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                        <td style={tdStyle}>
+                          <Link to={`/invoices/${inv.id}`} style={{ fontFamily: 'monospace', color: '#2F5A7E', textDecoration: 'none', fontWeight: 600 }}>{inv.invoiceNumber}</Link>
+                        </td>
+                        <td style={tdStyle}>{fmtDate(inv.issuedAt)}</td>
+                        <td style={tdStyle}>{fmtDate(inv.dueAt)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtMoney(inv.total)}</td>
+                        <td style={{ ...tdStyle, color: inv.balanceDue > 0 ? '#dc3545' : '#198754', fontWeight: 600 }}>{fmtMoney(inv.balanceDue)}</td>
+                        <td style={tdStyle}>
+                          <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600, background: meta.bg, color: meta.color }}>
+                            {meta.label}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <Link to={`/invoices/${inv.id}`} className="btn btn-secondary btn-sm">View</Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

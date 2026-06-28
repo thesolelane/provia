@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 
 const STATUS_META = {
@@ -51,14 +51,31 @@ const emptyForm = {
 export default function InvoiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isNew = id === 'new';
 
   const [invoice, setInvoice] = useState(null);
+  const [contextJobId, setContextJobId] = useState(null);
+  const [contextContactId, setContextContactId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [editMode, setEditMode] = useState(isNew);
   const [saving, setSaving] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [payForm, setPayForm] = useState({ amount: '', method: 'check', reference: '', paidAt: toInputDate(new Date()), notes: '' });
+
+  useEffect(() => {
+    if (!isNew) return;
+    const params = new URLSearchParams(location.search);
+    const jId = params.get('jobId');
+    const cId = params.get('contactId');
+    const name = params.get('clientName') || '';
+    const email = params.get('clientEmail') || '';
+    if (jId) setContextJobId(parseInt(jId, 10));
+    if (cId) setContextContactId(parseInt(cId, 10));
+    if (name || email) {
+      setForm(f => ({ ...f, clientName: name, clientEmail: email }));
+    }
+  }, [isNew, location.search]);
 
   const fetchInvoice = useCallback(async () => {
     if (isNew) return;
@@ -103,6 +120,8 @@ export default function InvoiceDetail() {
     taxRate: parseFloat(form.taxRate) || 0,
     notes: form.notes, terms: form.terms,
     lineItemsJson: buildLineItemsJson(form.rows.filter(r => r.description.trim())),
+    ...(contextJobId ? { jobId: contextJobId } : {}),
+    ...(contextContactId ? { contactId: contextContactId } : {}),
   });
 
   const handleSave = async () => {
