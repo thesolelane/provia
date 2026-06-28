@@ -1,0 +1,2 @@
+- [Invoice table creation pattern](invoice-table-creation.md) — tables not in original DB must be added via raw SQL in Program.cs startup block, not EnsureCreated
+- [Company model field name](company-model.md) — Company.CompanyName (not .Name); ContactEmail not Email

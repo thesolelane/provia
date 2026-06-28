@@ -74,6 +74,9 @@ builder.Services.AddScoped<JobTracker.Services.ICodeEngineService, JobTracker.Se
 builder.Services.AddScoped<JobTracker.Services.IMassGISService, JobTracker.Services.MassGISService>();
 builder.Services.AddScoped<JobTracker.Services.IPermitDocumentService, JobTracker.Services.PermitDocumentService>();
 
+// Background service: auto-mark overdue invoices hourly
+builder.Services.AddHostedService<JobTracker.Services.OverdueInvoiceService>();
+
 // SECURITY: Configure JWT Authentication
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "PROVIA-Production-SecureKey-MinimumLength-32Chars";
 var key = Encoding.ASCII.GetBytes(jwtSecret);
@@ -223,7 +226,60 @@ using (var scope = app.Services.CreateScope())
         var startupLogger = services.GetRequiredService<ILogger<Program>>();
         var addColumns = new[]
         {
-            "ALTER TABLE \"Jobs\" ADD COLUMN IF NOT EXISTS \"ContactId\" INTEGER;"
+            "ALTER TABLE \"Jobs\" ADD COLUMN IF NOT EXISTS \"ContactId\" INTEGER;",
+
+            // Invoices table (JSON line-items model)
+            @"CREATE TABLE IF NOT EXISTS ""Invoices"" (
+                ""Id""             SERIAL PRIMARY KEY,
+                ""CompanyId""      INTEGER NOT NULL,
+                ""InvoiceNumber""  VARCHAR(50) NOT NULL,
+                ""JobId""          INTEGER,
+                ""ContactId""      INTEGER,
+                ""ClientName""     VARCHAR(200),
+                ""ClientEmail""    VARCHAR(200),
+                ""ClientAddress""  VARCHAR(300),
+                ""ClientPhone""    VARCHAR(30),
+                ""Notes""          VARCHAR(2000),
+                ""Terms""          VARCHAR(2000),
+                ""LineItemsJson""  TEXT NOT NULL DEFAULT '[]',
+                ""Subtotal""       NUMERIC(12,2) NOT NULL DEFAULT 0,
+                ""TaxRate""        NUMERIC(5,2)  NOT NULL DEFAULT 0,
+                ""TaxAmount""      NUMERIC(12,2) NOT NULL DEFAULT 0,
+                ""Total""          NUMERIC(12,2) NOT NULL DEFAULT 0,
+                ""AmountPaid""     NUMERIC(12,2) NOT NULL DEFAULT 0,
+                ""BalanceDue""     NUMERIC(12,2) NOT NULL DEFAULT 0,
+                ""Status""         VARCHAR(30)   NOT NULL DEFAULT 'draft',
+                ""IssuedAt""       TIMESTAMPTZ,
+                ""DueAt""          TIMESTAMPTZ,
+                ""SentAt""         TIMESTAMPTZ,
+                ""PaidAt""         TIMESTAMPTZ,
+                ""CreatedBy""      VARCHAR(100),
+                ""CreatedAt""      TIMESTAMPTZ NOT NULL DEFAULT now(),
+                ""UpdatedAt""      TIMESTAMPTZ NOT NULL DEFAULT now()
+            );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Invoices_CompanyId_InvoiceNumber""
+                ON ""Invoices"" (""CompanyId"", ""InvoiceNumber"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Invoices_CompanyId""  ON ""Invoices"" (""CompanyId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_Invoices_Status""      ON ""Invoices"" (""CompanyId"", ""Status"");",
+
+            // InvoicePayments table
+            @"CREATE TABLE IF NOT EXISTS ""InvoicePayments"" (
+                ""Id""           SERIAL PRIMARY KEY,
+                ""InvoiceId""    INTEGER NOT NULL REFERENCES ""Invoices""(""Id"") ON DELETE CASCADE,
+                ""CompanyId""    INTEGER NOT NULL,
+                ""Amount""       NUMERIC(12,2) NOT NULL,
+                ""Method""       VARCHAR(50)   NOT NULL DEFAULT 'check',
+                ""Reference""    VARCHAR(200),
+                ""Notes""        VARCHAR(1000),
+                ""PaidAt""       TIMESTAMPTZ NOT NULL DEFAULT now(),
+                ""RecordedBy""   VARCHAR(100),
+                ""CreatedAt""    TIMESTAMPTZ NOT NULL DEFAULT now()
+            );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_InvoicePayments_InvoiceId""  ON ""InvoicePayments"" (""InvoiceId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_InvoicePayments_CompanyId""  ON ""InvoicePayments"" (""CompanyId"");"
         };
         foreach (var sql in addColumns)
         {
