@@ -75,7 +75,6 @@ namespace JobTracker.Data
 
         // Invoicing
         public DbSet<Invoice> Invoices { get; set; } = null!;
-        public DbSet<InvoiceLineItem> InvoiceLineItems { get; set; } = null!;
         public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
 
         // Tasks
@@ -85,10 +84,6 @@ namespace JobTracker.Data
         public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
         public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
         public DbSet<CompanyPortalCredential> CompanyPortalCredentials { get; set; } = null!;
-
-        // Invoicing & Payments
-        public DbSet<Invoice> Invoices { get; set; } = null!;
-        public DbSet<InvoicePayment> InvoicePayments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

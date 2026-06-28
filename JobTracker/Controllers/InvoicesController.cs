@@ -564,7 +564,7 @@ namespace JobTracker.Controllers
 <div class='header'>
   <div>
     <div class='logo'>PROVIA</div>
-    <div style='color:#888;font-size:12px;margin-top:4px;'>{company?.Name ?? "PROVIA Platform"}</div>
+    <div style='color:#888;font-size:12px;margin-top:4px;'>{company?.CompanyName ?? "PROVIA Platform"}</div>
   </div>
   <div style='text-align:right;'>
     <div style='font-size:24px;color:#2F5A7E;font-weight:bold;'>INVOICE</div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 
 const STATUS_META = {
@@ -11,7 +11,7 @@ const STATUS_META = {
   void:    { label: 'Void',    color: '#adb5bd' },
 };
 
-const PAYMENT_METHODS = ['check', 'cash', 'credit_card', 'ach', 'zelle', 'bank_transfer', 'other'];
+const PAYMENT_METHODS = ['check', 'cash', 'card', 'bank_transfer', 'zelle', 'other'];
 
 function fmtMoney(n) {
   return `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -20,470 +20,347 @@ function fmtDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
-
-function LineItemEditor({ items, onChange }) {
-  const addItem = () => onChange([...items, { description: '', quantity: 1, unitPrice: 0, amount: 0 }]);
-
-  const updateItem = (idx, field, value) => {
-    const updated = items.map((item, i) => {
-      if (i !== idx) return item;
-      const next = { ...item, [field]: value };
-      if (field === 'quantity' || field === 'unitPrice') {
-        const q = field === 'quantity' ? parseFloat(value) || 0 : parseFloat(item.quantity) || 0;
-        const u = field === 'unitPrice' ? parseFloat(value) || 0 : parseFloat(item.unitPrice) || 0;
-        next.amount = parseFloat((q * u).toFixed(2));
-      }
-      return next;
-    });
-    onChange(updated);
-  };
-
-  const removeItem = (idx) => onChange(items.filter((_, i) => i !== idx));
-
-  return (
-    <div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
-        <thead>
-          <tr style={{ background: '#f8f9fa' }}>
-            <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Description</th>
-            <th style={{ padding: '8px 10px', textAlign: 'center', fontSize: 12, color: '#666', fontWeight: 600, width: 80 }}>Qty</th>
-            <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: 12, color: '#666', fontWeight: 600, width: 120 }}>Unit Price</th>
-            <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: 12, color: '#666', fontWeight: 600, width: 110 }}>Amount</th>
-            <th style={{ width: 36 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, idx) => (
-            <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
-              <td style={{ padding: '6px 8px' }}>
-                <input
-                  value={item.description || ''}
-                  onChange={e => updateItem(idx, 'description', e.target.value)}
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid #e0e0e0', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' }}
-                  placeholder="Item description…"
-                />
-              </td>
-              <td style={{ padding: '6px 8px' }}>
-                <input type="number" min="0" step="0.01"
-                  value={item.quantity || ''}
-                  onChange={e => updateItem(idx, 'quantity', e.target.value)}
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid #e0e0e0', borderRadius: 4, fontSize: 14, textAlign: 'center', boxSizing: 'border-box' }}
-                />
-              </td>
-              <td style={{ padding: '6px 8px' }}>
-                <input type="number" min="0" step="0.01"
-                  value={item.unitPrice || ''}
-                  onChange={e => updateItem(idx, 'unitPrice', e.target.value)}
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid #e0e0e0', borderRadius: 4, fontSize: 14, textAlign: 'right', boxSizing: 'border-box' }}
-                />
-              </td>
-              <td style={{ padding: '6px 8px', textAlign: 'right', fontSize: 14, fontWeight: 500 }}>
-                {fmtMoney(item.amount || 0)}
-              </td>
-              <td style={{ padding: '6px 4px' }}>
-                <button onClick={() => removeItem(idx)} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: 18, padding: '0 4px', lineHeight: 1 }}>×</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={addItem} style={{ background: 'none', border: '1px dashed #aaa', borderRadius: 4, padding: '6px 16px', color: '#555', cursor: 'pointer', fontSize: 13 }}>
-        + Add Line Item
-      </button>
-    </div>
-  );
+function toInputDate(d) {
+  if (!d) return '';
+  return new Date(d).toISOString().slice(0, 10);
 }
+
+// Parse lineItemsJson string into array
+function parseLineItems(json) {
+  try { return JSON.parse(json || '[]'); } catch { return []; }
+}
+
+// Build lineItemsJson from form rows
+function buildLineItemsJson(rows) {
+  return JSON.stringify(rows.map(r => ({
+    description: r.description,
+    quantity: parseFloat(r.quantity) || 1,
+    unitPrice: parseFloat(r.unitPrice) || 0,
+    amount: Math.round((parseFloat(r.quantity) || 1) * (parseFloat(r.unitPrice) || 0) * 100) / 100,
+  })));
+}
+
+const emptyForm = {
+  clientName: '', clientAddress: '', clientEmail: '', clientPhone: '',
+  issuedAt: toInputDate(new Date()),
+  dueAt: toInputDate(new Date(Date.now() + 30 * 86400000)),
+  taxRate: '0', notes: '', terms: 'Payment due within 30 days.',
+  rows: [{ description: '', quantity: '1', unitPrice: '' }],
+};
 
 export default function InvoiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isNew = id === 'new';
+
   const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [lineItems, setLineItems] = useState([]);
-  const [editForm, setEditForm] = useState({});
+  const [form, setForm] = useState(emptyForm);
+  const [editMode, setEditMode] = useState(isNew);
   const [saving, setSaving] = useState(false);
-  const [actionMsg, setActionMsg] = useState('');
-  const [actionError, setActionError] = useState('');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'check', paidAt: new Date().toISOString().slice(0, 10), reference: '', notes: '' });
-  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [payForm, setPayForm] = useState({ amount: '', method: 'check', reference: '', paidAt: toInputDate(new Date()), notes: '' });
 
   const fetchInvoice = useCallback(async () => {
+    if (isNew) return;
     try {
-      setLoading(true);
       const data = await apiService.invoices.getById(id);
       setInvoice(data);
-      let items = [];
-      try { items = JSON.parse(data.lineItemsJson || '[]'); } catch (e) { items = []; }
-      setLineItems(items);
-      setEditForm({
-        clientName: data.clientName || '',
-        clientEmail: data.clientEmail || '',
-        clientAddress: data.clientAddress || '',
-        clientPhone: data.clientPhone || '',
-        notes: data.notes || '',
-        terms: data.terms || '',
-        taxRate: data.taxRate || 0,
-        issuedAt: data.issuedAt ? data.issuedAt.slice(0, 10) : '',
-        dueAt: data.dueAt ? data.dueAt.slice(0, 10) : '',
+      const rows = parseLineItems(data.lineItemsJson).map(li => ({
+        description: li.description || '',
+        quantity: String(li.quantity ?? 1),
+        unitPrice: String(li.unitPrice ?? li.amount ?? 0),
+      }));
+      setForm({
+        clientName: data.clientName || '', clientAddress: data.clientAddress || '',
+        clientEmail: data.clientEmail || '', clientPhone: data.clientPhone || '',
+        issuedAt: toInputDate(data.issuedAt), dueAt: toInputDate(data.dueAt),
+        taxRate: String(data.taxRate || 0),
+        notes: data.notes || '', terms: data.terms || '',
+        rows: rows.length ? rows : [{ description: '', quantity: '1', unitPrice: '' }],
       });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+    } catch (e) { console.error(e); }
+  }, [id, isNew]);
 
   useEffect(() => { fetchInvoice(); }, [fetchInvoice]);
 
-  const flash = (msg, isError = false) => {
-    if (isError) setActionError(msg); else setActionMsg(msg);
-    setTimeout(() => { setActionMsg(''); setActionError(''); }, 4000);
+  const calcTotals = () => {
+    const subtotal = form.rows.reduce((sum, r) => sum + (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0), 0);
+    const taxAmount = subtotal * (parseFloat(form.taxRate) / 100 || 0);
+    return { subtotal, taxAmount, total: subtotal + taxAmount };
   };
+  const { subtotal, taxAmount, total } = calcTotals();
+
+  const setRow = (idx, field, val) => setForm(f => {
+    const rows = [...f.rows]; rows[idx] = { ...rows[idx], [field]: val }; return { ...f, rows };
+  });
+  const addRow = () => setForm(f => ({ ...f, rows: [...f.rows, { description: '', quantity: '1', unitPrice: '' }] }));
+  const removeRow = (idx) => setForm(f => ({ ...f, rows: f.rows.filter((_, i) => i !== idx) }));
+
+  const buildPayload = () => ({
+    clientName: form.clientName, clientAddress: form.clientAddress,
+    clientEmail: form.clientEmail, clientPhone: form.clientPhone,
+    issuedAt: form.issuedAt || undefined, dueAt: form.dueAt || undefined,
+    taxRate: parseFloat(form.taxRate) || 0,
+    notes: form.notes, terms: form.terms,
+    lineItemsJson: buildLineItemsJson(form.rows.filter(r => r.description.trim())),
+  });
 
   const handleSave = async () => {
-    setSaving(true);
     try {
-      await apiService.invoices.update(id, {
-        ...editForm,
-        issuedAt: editForm.issuedAt ? new Date(editForm.issuedAt).toISOString() : null,
-        dueAt: editForm.dueAt ? new Date(editForm.dueAt).toISOString() : null,
-        lineItemsJson: JSON.stringify(lineItems),
-        taxRate: parseFloat(editForm.taxRate) || 0,
-      });
-      setEditMode(false);
-      flash('Invoice saved');
-      fetchInvoice();
-    } catch (e) {
-      flash(e.message || 'Save failed', true);
-    } finally {
-      setSaving(false);
-    }
+      setSaving(true);
+      if (isNew) {
+        const result = await apiService.invoices.create(buildPayload());
+        navigate(`/invoices/${result.id}`);
+      } else {
+        await apiService.invoices.update(id, buildPayload());
+        setEditMode(false);
+        fetchInvoice();
+      }
+    } catch (e) { alert('Failed: ' + e.message); }
+    finally { setSaving(false); }
   };
 
   const handleSend = async () => {
-    if (!invoice.clientEmail) { flash('Add a client email before sending', true); return; }
-    if (!window.confirm(`Send invoice ${invoice.invoiceNumber} to ${invoice.clientEmail}?`)) return;
-    try {
-      const result = await apiService.invoices.send(id);
-      flash(result.message || 'Invoice sent');
-      fetchInvoice();
-    } catch (e) {
-      flash(e.message || 'Failed to send', true);
-    }
+    if (!window.confirm('Mark as Sent?')) return;
+    try { await apiService.invoices.send(id); fetchInvoice(); }
+    catch (e) { alert('Failed: ' + e.message); }
   };
 
   const handleVoid = async () => {
     if (!window.confirm('Void this invoice? This cannot be undone.')) return;
-    try {
-      await apiService.invoices.void(id);
-      flash('Invoice voided');
-      fetchInvoice();
-    } catch (e) {
-      flash(e.message || 'Failed to void', true);
-    }
+    try { await apiService.invoices.void(id); fetchInvoice(); }
+    catch (e) { alert('Failed: ' + e.message); }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Delete this invoice permanently?')) return;
-    try {
-      await apiService.invoices.delete(id);
-      navigate('/invoices');
-    } catch (e) {
-      flash(e.message || 'Failed to delete', true);
-    }
-  };
-
-  const handleAddPayment = async (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
-    setPaymentSaving(true);
     try {
-      await apiService.invoices.addPayment(id, {
-        amount: parseFloat(paymentForm.amount),
-        method: paymentForm.method,
-        paidAt: paymentForm.paidAt ? new Date(paymentForm.paidAt).toISOString() : null,
-        reference: paymentForm.reference,
-        notes: paymentForm.notes,
+      setSaving(true);
+      await apiService.invoices.recordPayment(id, {
+        amount: parseFloat(payForm.amount),
+        method: payForm.method, reference: payForm.reference,
+        paidAt: payForm.paidAt || undefined, notes: payForm.notes,
       });
-      setShowPaymentModal(false);
-      setPaymentForm({ amount: '', method: 'check', paidAt: new Date().toISOString().slice(0, 10), reference: '', notes: '' });
-      flash('Payment recorded');
+      setShowPayment(false);
+      setPayForm({ amount: '', method: 'check', reference: '', paidAt: toInputDate(new Date()), notes: '' });
       fetchInvoice();
-    } catch (e) {
-      flash(e.message || 'Failed to record payment', true);
-    } finally {
-      setPaymentSaving(false);
-    }
+    } catch (e) { alert('Failed: ' + e.message); }
+    finally { setSaving(false); }
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    if (!window.confirm('Remove this payment?')) return;
-    try {
-      await apiService.invoices.deletePayment(id, paymentId);
-      flash('Payment removed');
-      fetchInvoice();
-    } catch (e) {
-      flash(e.message || 'Failed to remove payment', true);
-    }
-  };
+  // ── Edit / New form ──
+  if (editMode) {
+    return (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div>
+            <button onClick={() => isNew ? navigate('/invoices') : setEditMode(false)} style={linkBtn}>← Back</button>
+            <h2 style={{ margin: '0.25rem 0 0' }}>{isNew ? 'New Invoice' : `Edit ${invoice?.invoiceNumber}`}</h2>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {!isNew && <button className="btn" onClick={() => setEditMode(false)} disabled={saving}>Cancel</button>}
+            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : isNew ? 'Create Invoice' : 'Save'}</button>
+          </div>
+        </div>
 
-  const handlePrint = () => window.open(`/api/invoices/${id}/print`, '_blank');
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={secTitle}>Bill To</div>
+            <FR label="Client Name"><input className="form-control" value={form.clientName} onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))} /></FR>
+            <FR label="Address"><input className="form-control" value={form.clientAddress} onChange={e => setForm(f => ({ ...f, clientAddress: e.target.value }))} /></FR>
+            <FR label="Email"><input type="email" className="form-control" value={form.clientEmail} onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))} /></FR>
+            <FR label="Phone"><input className="form-control" value={form.clientPhone} onChange={e => setForm(f => ({ ...f, clientPhone: e.target.value }))} /></FR>
+          </div>
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={secTitle}>Invoice Details</div>
+            <FR label="Issue Date"><input type="date" className="form-control" value={form.issuedAt} onChange={e => setForm(f => ({ ...f, issuedAt: e.target.value }))} /></FR>
+            <FR label="Due Date"><input type="date" className="form-control" value={form.dueAt} onChange={e => setForm(f => ({ ...f, dueAt: e.target.value }))} /></FR>
+            <FR label="Tax Rate (%)"><input type="number" className="form-control" min="0" max="100" step="0.01" value={form.taxRate} onChange={e => setForm(f => ({ ...f, taxRate: e.target.value }))} /></FR>
+          </div>
+        </div>
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#888' }}>Loading invoice…</div>;
-  if (!invoice) return <div style={{ textAlign: 'center', padding: 60, color: '#888' }}>Invoice not found.</div>;
+        <div className="card" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
+          <div style={{ ...secTitle, marginBottom: '0.75rem' }}>Line Items</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa' }}>
+                <th style={th}>Description</th>
+                <th style={{ ...th, width: 90 }}>Qty</th>
+                <th style={{ ...th, width: 130 }}>Unit Price</th>
+                <th style={{ ...th, width: 120, textAlign: 'right' }}>Amount</th>
+                <th style={{ ...th, width: 40 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {form.rows.map((r, idx) => {
+                const amt = (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0);
+                return (
+                  <tr key={idx}>
+                    <td style={{ padding: '0.4rem' }}><input className="form-control" value={r.description} onChange={e => setRow(idx, 'description', e.target.value)} placeholder="Description of work or material" /></td>
+                    <td style={{ padding: '0.4rem' }}><input type="number" className="form-control" min="0" step="0.01" value={r.quantity} onChange={e => setRow(idx, 'quantity', e.target.value)} /></td>
+                    <td style={{ padding: '0.4rem' }}><input type="number" className="form-control" min="0" step="0.01" value={r.unitPrice} onChange={e => setRow(idx, 'unitPrice', e.target.value)} placeholder="0.00" /></td>
+                    <td style={{ padding: '0.4rem', textAlign: 'right', fontWeight: 600 }}>{fmtMoney(amt)}</td>
+                    <td style={{ padding: '0.4rem', textAlign: 'center' }}>
+                      {form.rows.length > 1 && <button onClick={() => removeRow(idx)} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <button onClick={addRow} style={{ ...linkBtn, marginTop: '0.5rem' }}>+ Add Line Item</button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            <div style={{ width: 260 }}>
+              <TR label="Subtotal" value={fmtMoney(subtotal)} />
+              {parseFloat(form.taxRate) > 0 && <TR label={`Tax (${form.taxRate}%)`} value={fmtMoney(taxAmount)} />}
+              <TR label="Total" value={fmtMoney(total)} bold />
+            </div>
+          </div>
+        </div>
 
-  const canEdit = invoice.status !== 'void';
-  const canSend = invoice.status !== 'void' && invoice.status !== 'paid';
-  const canVoid = invoice.status !== 'void';
-  const canDelete = invoice.status === 'draft' || invoice.status === 'void';
-  const isOverdue = invoice.isOverdue && invoice.status !== 'paid' && invoice.status !== 'void';
-  const displayStatus = isOverdue && invoice.status === 'sent' ? 'overdue' : invoice.status;
-  const meta = STATUS_META[displayStatus] || STATUS_META.draft;
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={secTitle}>Notes</div>
+            <textarea className="form-control" rows={4} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Visible to client..." />
+          </div>
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={secTitle}>Terms</div>
+            <textarea className="form-control" rows={4} value={form.terms} onChange={e => setForm(f => ({ ...f, terms: e.target.value }))} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const subtotal = lineItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
-  const taxRate = parseFloat(editMode ? editForm.taxRate : invoice.taxRate) || 0;
-  const taxAmount = parseFloat((subtotal * taxRate / 100).toFixed(2));
-  const total = subtotal + taxAmount;
+  // ── View mode ──
+  if (!invoice) return <div style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>Loading...</div>;
+
+  const st = invoice.status || 'draft';
+  const meta = STATUS_META[st] || STATUS_META.draft;
+  const lineItems = parseLineItems(invoice.lineItemsJson);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
-      {/* Breadcrumb */}
-      <div style={{ marginBottom: 16, fontSize: 14 }}>
-        <Link to="/invoices" style={{ color: '#2F5A7E', textDecoration: 'none' }}>← Invoices</Link>
-      </div>
-
-      {/* Flash messages */}
-      {actionMsg && <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', color: '#155724', padding: '10px 16px', borderRadius: 6, marginBottom: 16, fontSize: 14 }}>{actionMsg}</div>}
-      {actionError && <div style={{ background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '10px 16px', borderRadius: 6, marginBottom: 16, fontSize: 14 }}>{actionError}</div>}
-
-      {/* Header */}
-      <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '24px 28px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#2F5A7E' }}>{invoice.invoiceNumber}</div>
-            <div style={{ fontSize: 14, color: '#888', marginTop: 4 }}>
-              Created {fmtDate(invoice.createdAt)}
-              {invoice.jobNumber && <span> · Job <Link to={`/jobs/${invoice.jobId}`} style={{ color: '#2F5A7E' }}>{invoice.jobNumber}</Link></span>}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ background: meta.color + '22', color: meta.color, padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {meta.label}
-            </span>
-            <button onClick={handlePrint} style={{ padding: '8px 14px', background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>🖨 Print</button>
-            {canSend && <button onClick={handleSend} style={{ padding: '8px 14px', background: '#0d6efd', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>📧 Send</button>}
-            {canEdit && !editMode && <button onClick={() => setEditMode(true)} style={{ padding: '8px 14px', background: '#2F5A7E', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Edit</button>}
-            {editMode && (
-              <>
-                <button onClick={handleSave} disabled={saving} style={{ padding: '8px 14px', background: '#198754', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>{saving ? 'Saving…' : 'Save'}</button>
-                <button onClick={() => { setEditMode(false); fetchInvoice(); }} style={{ padding: '8px 14px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>Cancel</button>
-              </>
-            )}
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <button onClick={() => navigate('/invoices')} style={linkBtn}>← Back to Invoices</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem' }}>
+            <h2 style={{ margin: 0 }}>{invoice.invoiceNumber}</h2>
+            <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 700, background: meta.color + '22', color: meta.color }}>{meta.label}</span>
           </div>
         </div>
-
-        {/* Client & dates */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginTop: 24 }}>
-          <div>
-            <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Bill To</div>
-            {editMode ? (
-              <>
-                <input value={editForm.clientName} onChange={e => setEditForm(f => ({ ...f, clientName: e.target.value }))} placeholder="Client name" style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, marginBottom: 6, boxSizing: 'border-box' }} />
-                <input value={editForm.clientEmail} onChange={e => setEditForm(f => ({ ...f, clientEmail: e.target.value }))} placeholder="Email" style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, marginBottom: 6, boxSizing: 'border-box' }} />
-                <input value={editForm.clientPhone} onChange={e => setEditForm(f => ({ ...f, clientPhone: e.target.value }))} placeholder="Phone" style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, marginBottom: 6, boxSizing: 'border-box' }} />
-                <input value={editForm.clientAddress} onChange={e => setEditForm(f => ({ ...f, clientAddress: e.target.value }))} placeholder="Address" style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, boxSizing: 'border-box' }} />
-              </>
-            ) : (
-              <>
-                <div style={{ fontWeight: 600 }}>{invoice.clientName || '—'}</div>
-                {invoice.clientEmail && <div style={{ fontSize: 13, color: '#555' }}>{invoice.clientEmail}</div>}
-                {invoice.clientPhone && <div style={{ fontSize: 13, color: '#555' }}>{invoice.clientPhone}</div>}
-                {invoice.clientAddress && <div style={{ fontSize: 13, color: '#555' }}>{invoice.clientAddress}</div>}
-              </>
-            )}
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Issue Date</div>
-            {editMode
-              ? <input type="date" value={editForm.issuedAt} onChange={e => setEditForm(f => ({ ...f, issuedAt: e.target.value }))} style={{ padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14 }} />
-              : <div style={{ fontWeight: 500 }}>{fmtDate(invoice.issuedAt)}</div>}
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Due Date</div>
-            {editMode
-              ? <input type="date" value={editForm.dueAt} onChange={e => setEditForm(f => ({ ...f, dueAt: e.target.value }))} style={{ padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14 }} />
-              : <div style={{ fontWeight: 500, color: isOverdue ? '#dc3545' : '#333' }}>{fmtDate(invoice.dueAt)}</div>}
-          </div>
-        </div>
-
-        {/* Notes & Terms */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
-          <div>
-            <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Notes</div>
-            {editMode
-              ? <textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} placeholder="Notes visible to client…" />
-              : <div style={{ fontSize: 14, color: '#444' }}>{invoice.notes || <span style={{ color: '#aaa' }}>—</span>}</div>}
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Terms</div>
-            {editMode
-              ? <textarea value={editForm.terms} onChange={e => setEditForm(f => ({ ...f, terms: e.target.value }))} rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid #ddd', borderRadius: 5, fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} placeholder="Payment terms…" />
-              : <div style={{ fontSize: 14, color: '#444' }}>{invoice.terms || <span style={{ color: '#aaa' }}>—</span>}</div>}
-          </div>
-        </div>
-      </div>
-
-      {/* Line Items */}
-      <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '24px 28px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <h3 style={{ margin: '0 0 18px', color: '#2F5A7E', fontSize: 16 }}>Line Items</h3>
-        {editMode ? (
-          <LineItemEditor items={lineItems} onChange={setLineItems} />
-        ) : lineItems.length === 0 ? (
-          <div style={{ color: '#aaa', fontStyle: 'italic', fontSize: 14 }}>No line items yet. Click Edit to add items.</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8f9fa' }}>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Description</th>
-                <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: 12, color: '#666', fontWeight: 600, width: 80 }}>Qty</th>
-                <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 12, color: '#666', fontWeight: 600, width: 120 }}>Unit Price</th>
-                <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 12, color: '#666', fontWeight: 600, width: 110 }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lineItems.map((item, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '10px 12px', fontSize: 14 }}>{item.description || '—'}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 14, textAlign: 'center' }}>{item.quantity}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 14, textAlign: 'right' }}>{fmtMoney(item.unitPrice)}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 14, textAlign: 'right', fontWeight: 500 }}>{fmtMoney(item.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        {/* Totals */}
-        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ width: 280 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}>
-              <span style={{ color: '#666' }}>Subtotal</span>
-              <span>{fmtMoney(editMode ? subtotal : invoice.subtotal)}</span>
-            </div>
-            {editMode ? (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 14 }}>
-                <span style={{ color: '#666' }}>Tax Rate (%)</span>
-                <input type="number" min="0" max="100" step="0.1" value={editForm.taxRate} onChange={e => setEditForm(f => ({ ...f, taxRate: e.target.value }))} style={{ width: 80, padding: '4px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, textAlign: 'right' }} />
-              </div>
-            ) : (invoice.taxRate > 0) && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}>
-                <span style={{ color: '#666' }}>Tax ({invoice.taxRate}%)</span>
-                <span>{fmtMoney(invoice.taxAmount)}</span>
-              </div>
-            )}
-            {editMode && taxRate > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}>
-                <span style={{ color: '#666' }}>Tax ({taxRate}%)</span>
-                <span>{fmtMoney(taxAmount)}</span>
-              </div>
-            )}
-            {invoice.amountPaid > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}>
-                <span style={{ color: '#198754' }}>Amount Paid</span>
-                <span style={{ color: '#198754' }}>-{fmtMoney(invoice.amountPaid)}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#2F5A7E', color: '#fff', borderRadius: 6, fontSize: 15, fontWeight: 700, marginTop: 6 }}>
-              <span>Balance Due</span>
-              <span>{fmtMoney(editMode ? total : invoice.balanceDue)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Payments */}
-      <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '24px 28px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, color: '#2F5A7E', fontSize: 16 }}>Payments</h3>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {invoice.status === 'draft' && <button className="btn" onClick={() => setEditMode(true)}>Edit</button>}
+          {(invoice.status === 'draft' || invoice.status === 'sent') && (
+            <button className="btn btn-primary" onClick={handleSend} style={{ background: '#0d6efd', border: 'none' }}>Mark as Sent</button>
+          )}
+          {invoice.status !== 'paid' && invoice.status !== 'void' && (
+            <button className="btn btn-primary" onClick={() => setShowPayment(true)} style={{ background: '#198754', border: 'none' }}>Record Payment</button>
+          )}
           {invoice.status !== 'void' && (
-            <button onClick={() => setShowPaymentModal(true)} style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>+ Record Payment</button>
+            <button className="btn" onClick={handleVoid} style={{ color: '#dc3545', borderColor: '#dc3545' }}>Void</button>
           )}
         </div>
+      </div>
 
-        {!invoice.payments || invoice.payments.length === 0 ? (
-          <div style={{ color: '#aaa', fontStyle: 'italic', fontSize: 14 }}>No payments recorded yet.</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8f9fa' }}>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Date</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Method</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Reference</th>
-                <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 12, color: '#666', fontWeight: 600 }}>Amount</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, color: '#666', fontWeight: 600 }}>Recorded By</th>
-                <th></th>
+      <div className="card" style={{ padding: '2rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '2px solid #dee2e6', paddingBottom: '1.5rem' }}>
+          <div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#FF9500' }}>PROVIA</div>
+            <div style={{ color: '#6c757d', fontSize: '0.85rem' }}>Enterprise Construction Management</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#2F5A7E' }}>INVOICE</div>
+            <div style={{ fontFamily: 'monospace', fontWeight: 600 }}>{invoice.invoiceNumber}</div>
+            <div style={{ fontSize: '0.85rem', color: '#6c757d', marginTop: 4 }}>Issued: {fmtDate(invoice.issuedAt)}</div>
+            <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>Due: {fmtDate(invoice.dueAt)}</div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={secTitle}>Bill To</div>
+          {invoice.clientName    && <div style={{ fontWeight: 600 }}>{invoice.clientName}</div>}
+          {invoice.clientAddress && <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>{invoice.clientAddress}</div>}
+          {invoice.clientEmail   && <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>{invoice.clientEmail}</div>}
+          {invoice.clientPhone   && <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>{invoice.clientPhone}</div>}
+        </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem' }}>
+          <thead>
+            <tr style={{ background: '#2F5A7E', color: '#fff' }}>
+              <th style={{ padding: '0.6rem 1rem', textAlign: 'left', fontSize: '0.85rem' }}>Description</th>
+              <th style={{ padding: '0.6rem 1rem', textAlign: 'right', fontSize: '0.85rem', width: 80 }}>Qty</th>
+              <th style={{ padding: '0.6rem 1rem', textAlign: 'right', fontSize: '0.85rem', width: 130 }}>Unit Price</th>
+              <th style={{ padding: '0.6rem 1rem', textAlign: 'right', fontSize: '0.85rem', width: 130 }}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lineItems.map((li, i) => (
+              <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
+                <td style={{ padding: '0.65rem 1rem', fontSize: '0.9rem' }}>{li.description}</td>
+                <td style={{ padding: '0.65rem 1rem', textAlign: 'right', fontSize: '0.9rem' }}>{li.quantity}</td>
+                <td style={{ padding: '0.65rem 1rem', textAlign: 'right', fontSize: '0.9rem' }}>{fmtMoney(li.unitPrice)}</td>
+                <td style={{ padding: '0.65rem 1rem', textAlign: 'right', fontWeight: 600 }}>{fmtMoney(li.amount)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {invoice.payments.map(p => (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '10px 12px', fontSize: 14 }}>{fmtDate(p.paidAt)}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 13 }}><span style={{ background: '#f0f4f8', padding: '2px 8px', borderRadius: 4, textTransform: 'capitalize' }}>{p.method.replace(/_/g, ' ')}</span></td>
-                  <td style={{ padding: '10px 12px', fontSize: 13, color: '#555' }}>{p.reference || '—'}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 14, fontWeight: 600, textAlign: 'right', color: '#198754' }}>{fmtMoney(p.amount)}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 13, color: '#888' }}>{p.recordedBy || '—'}</td>
-                  <td style={{ padding: '10px 12px' }}>
-                    <button onClick={() => handleDeletePayment(p.id)} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: 13 }}>Remove</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+          <div style={{ width: 280, borderTop: '2px solid #dee2e6', paddingTop: '0.75rem' }}>
+            <TR label="Subtotal" value={fmtMoney(invoice.subtotal)} />
+            {invoice.taxRate > 0 && <TR label={`Tax (${invoice.taxRate}%)`} value={fmtMoney(invoice.taxAmount)} />}
+            <TR label="Total" value={fmtMoney(invoice.total)} bold />
+            <TR label="Amount Paid" value={fmtMoney(invoice.amountPaid)} color="#198754" />
+            <TR label="Balance Due" value={fmtMoney(invoice.balanceDue)} bold color={invoice.balanceDue > 0 ? '#dc3545' : '#198754'} />
+          </div>
+        </div>
+
+        {(invoice.notes || invoice.terms) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid #dee2e6', paddingTop: '1rem', fontSize: '0.85rem', color: '#6c757d' }}>
+            {invoice.notes && <div><div style={{ fontWeight: 700, color: '#495057', marginBottom: 4 }}>Notes</div>{invoice.notes}</div>}
+            {invoice.terms && <div><div style={{ fontWeight: 700, color: '#495057', marginBottom: 4 }}>Terms</div>{invoice.terms}</div>}
+          </div>
         )}
       </div>
 
-      {/* Danger zone */}
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
-        {canVoid && <button onClick={handleVoid} style={{ padding: '8px 18px', background: 'none', border: '1px solid #dc3545', color: '#dc3545', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Void Invoice</button>}
-        {canDelete && <button onClick={handleDelete} style={{ padding: '8px 18px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Delete Invoice</button>}
-      </div>
-
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowPaymentModal(false)}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 16px', color: '#2F5A7E' }}>Record Payment</h3>
-            <div style={{ background: '#f0f4f8', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 14 }}>
-              Balance Due: <strong>{fmtMoney(invoice.balanceDue)}</strong>
+      {invoice.payments?.length > 0 && (
+        <div className="card" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
+          <div style={secTitle}>Payment History</div>
+          {invoice.payments.map(p => (
+            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #f0f0f0' }}>
+              <div>
+                <span style={{ fontWeight: 600, color: '#198754' }}>{fmtMoney(p.amount)}</span>
+                <span style={{ marginLeft: 8, fontSize: '0.85rem', color: '#6c757d', textTransform: 'capitalize' }}>{p.method?.replace('_', ' ')}</span>
+                {p.reference && <span style={{ marginLeft: 8, fontSize: '0.8rem', color: '#aaa' }}>#{p.reference}</span>}
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#6c757d' }}>{fmtDate(p.paidAt)} · {p.recordedBy}</div>
             </div>
-            <form onSubmit={handleAddPayment}>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 5 }}>Amount *</label>
-                <input type="number" min="0.01" step="0.01" required value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} placeholder={String((invoice.balanceDue || 0).toFixed(2))} />
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 5 }}>Method</label>
-                <select value={paymentForm.method} onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
-                  {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>)}
+          ))}
+        </div>
+      )}
+
+      {showPayment && (
+        <div style={overlay}>
+          <div style={{ ...modal, maxWidth: 400 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h4 style={{ margin: 0 }}>Record Payment</h4>
+              <button onClick={() => setShowPayment(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#6c757d' }}>×</button>
+            </div>
+            <form onSubmit={handlePayment}>
+              <FR label="Amount *"><input type="number" className="form-control" required min="0.01" step="0.01" value={payForm.amount} onChange={e => setPayForm(f => ({ ...f, amount: e.target.value }))} placeholder={fmtMoney(invoice.balanceDue)} /></FR>
+              <FR label="Method">
+                <select className="form-control" value={payForm.method} onChange={e => setPayForm(f => ({ ...f, method: e.target.value }))}>
+                  {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>)}
                 </select>
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 5 }}>Payment Date</label>
-                <input type="date" value={paymentForm.paidAt} onChange={e => setPaymentForm(f => ({ ...f, paidAt: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 5 }}>Reference / Check #</label>
-                <input value={paymentForm.reference} onChange={e => setPaymentForm(f => ({ ...f, reference: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} placeholder="Check number, transaction ID…" />
-              </div>
-              <div style={{ marginBottom: 22 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 5 }}>Notes</label>
-                <input value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' }} placeholder="Optional notes…" />
-              </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setShowPaymentModal(false)} style={{ padding: '10px 20px', background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}>Cancel</button>
-                <button type="submit" disabled={paymentSaving} style={{ padding: '10px 24px', background: '#198754', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-                  {paymentSaving ? 'Recording…' : 'Record Payment'}
+              </FR>
+              <FR label="Date"><input type="date" className="form-control" value={payForm.paidAt} onChange={e => setPayForm(f => ({ ...f, paidAt: e.target.value }))} /></FR>
+              <FR label="Reference / Check #"><input className="form-control" value={payForm.reference} onChange={e => setPayForm(f => ({ ...f, reference: e.target.value }))} /></FR>
+              <FR label="Notes"><input className="form-control" value={payForm.notes} onChange={e => setPayForm(f => ({ ...f, notes: e.target.value }))} /></FR>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" className="btn" onClick={() => setShowPayment(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving} style={{ background: '#198754', border: 'none' }}>
+                  {saving ? 'Saving...' : 'Record Payment'}
                 </button>
               </div>
             </form>
@@ -493,3 +370,26 @@ export default function InvoiceDetail() {
     </div>
   );
 }
+
+function FR({ label, children }) {
+  return (
+    <div style={{ marginBottom: '0.75rem' }}>
+      <label style={{ fontWeight: 600, fontSize: '0.8rem', color: '#6c757d', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '0.2rem', display: 'block' }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function TR({ label, value, bold, color }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: bold ? '1rem' : '0.9rem', fontWeight: bold ? 700 : 400, color: color || 'inherit', borderTop: bold ? '1px solid #dee2e6' : 'none', marginTop: bold ? 4 : 0 }}>
+      <span>{label}</span><span>{value}</span>
+    </div>
+  );
+}
+
+const overlay = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
+const modal   = { background: '#fff', borderRadius: 8, padding: '1.75rem', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' };
+const secTitle = { fontWeight: 700, fontSize: '0.78rem', color: '#6c757d', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.6rem' };
+const linkBtn  = { background: 'none', border: 'none', color: '#2F5A7E', cursor: 'pointer', padding: 0, fontSize: '0.9rem' };
+const th = { padding: '0.6rem 1rem', textAlign: 'left', fontWeight: 600, fontSize: '0.82rem' };
