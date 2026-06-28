@@ -157,10 +157,16 @@ const leadsApi = {
   }),
 };
 
-// Invoicing API
+// Invoices API
 const invoicesApi = {
-  getAll: async (status = 'all', search = '') =>
-    fetchWithErrorHandling(`/api/invoices?status=${status}&search=${encodeURIComponent(search)}`),
+  getAll: async (status = '', search = '', jobId = null, contactId = null) => {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    if (search) params.append('search', encodeURIComponent(search));
+    if (jobId) params.append('jobId', jobId);
+    if (contactId) params.append('contactId', contactId);
+    return fetchWithErrorHandling(`/api/invoices?${params.toString()}`);
+  },
 
   getSummary: async () => fetchWithErrorHandling('/api/invoices/summary'),
 
@@ -178,12 +184,24 @@ const invoicesApi = {
 
   send: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/send`, { method: 'POST' }),
 
+  void: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/void`, { method: 'POST' }),
+
+  delete: async (id) => fetchWithErrorHandling(`/api/invoices/${id}`, { method: 'DELETE' }),
+
+  addPayment: async (id, payment) => fetchWithErrorHandling(`/api/invoices/${id}/payments`, {
+    method: 'POST',
+    body: JSON.stringify(payment),
+  }),
+
+  // Alias for compatibility
   recordPayment: async (id, payment) => fetchWithErrorHandling(`/api/invoices/${id}/payments`, {
     method: 'POST',
     body: JSON.stringify(payment),
   }),
 
-  void: async (id) => fetchWithErrorHandling(`/api/invoices/${id}/void`, { method: 'POST' }),
+  deletePayment: async (id, paymentId) => fetchWithErrorHandling(`/api/invoices/${id}/payments/${paymentId}`, {
+    method: 'DELETE',
+  }),
 };
 
 // Tasks API
