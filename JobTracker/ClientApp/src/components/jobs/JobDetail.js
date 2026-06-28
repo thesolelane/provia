@@ -2,17 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 
+const STATUS_META = {
+  draft:   { label: 'Draft',   color: '#6c757d', bg: '#f8f9fa' },
+  sent:    { label: 'Sent',    color: '#0d6efd', bg: '#e7f0ff' },
+  partial: { label: 'Partial', color: '#fd7e14', bg: '#fff3e0' },
+  paid:    { label: 'Paid',    color: '#198754', bg: '#e6f7ee' },
+  overdue: { label: 'Overdue', color: '#dc3545', bg: '#fdecea' },
+  void:    { label: 'Void',    color: '#adb5bd', bg: '#f8f9fa' },
+};
+
+function fmtMoney(n) {
+  return `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [sections, setSections] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   useEffect(() => {
     fetchJob();
     fetchJobSections();
+    fetchInvoices();
   }, [id]);
   
   const fetchJob = async () => {
@@ -35,6 +54,15 @@ function JobDetail() {
       setSections(data);
     } catch (err) {
       console.error('Error fetching job sections:', err);
+    }
+  };
+
+  const fetchInvoices = async () => {
+    try {
+      const data = await apiService.invoices.getAll('', '', id);
+      setInvoices(data);
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
     }
   };
   
@@ -240,6 +268,65 @@ function JobDetail() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Invoices */}
+      <div className="card mt-4">
+        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 className="card-title" style={{ margin: 0 }}>
+            Invoices
+            {invoices.length > 0 && (
+              <span style={{ marginLeft: 8, background: '#2F5A7E', color: '#fff', borderRadius: 10, padding: '1px 8px', fontSize: '0.75rem', fontWeight: 400 }}>
+                {invoices.length}
+              </span>
+            )}
+          </h3>
+          <Link
+            to={`/invoices/new?jobId=${id}&clientName=${encodeURIComponent(job.clientName || '')}&clientEmail=${encodeURIComponent(job.clientEmail || '')}`}
+            className="btn btn-primary"
+          >
+            + Create Invoice
+          </Link>
+        </div>
+
+        {invoices.length === 0 ? (
+          <p style={{ padding: '1rem', color: '#6c757d' }}>No invoices linked to this job yet.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                {['Invoice #', 'Issued', 'Due', 'Total', 'Balance', 'Status', ''].map(h => (
+                  <th key={h} style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 600, fontSize: '0.82rem', color: '#495057' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv, i) => {
+                const st = (inv.isOverdue && inv.status === 'sent') ? 'overdue' : inv.status;
+                const meta = STATUS_META[st] || STATUS_META.draft;
+                return (
+                  <tr key={inv.id} style={{ borderBottom: '1px solid #dee2e6', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                    <td style={{ padding: '0.65rem 1rem', fontFamily: 'monospace', color: '#2F5A7E', fontWeight: 600 }}>
+                      <Link to={`/invoices/${inv.id}`} style={{ color: '#2F5A7E', textDecoration: 'none' }}>{inv.invoiceNumber}</Link>
+                    </td>
+                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.9rem' }}>{fmtDate(inv.issuedAt)}</td>
+                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.9rem' }}>{fmtDate(inv.dueAt)}</td>
+                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.9rem', fontWeight: 600 }}>{fmtMoney(inv.total)}</td>
+                    <td style={{ padding: '0.65rem 1rem', fontSize: '0.9rem', color: inv.balanceDue > 0 ? '#dc3545' : '#198754', fontWeight: 600 }}>{fmtMoney(inv.balanceDue)}</td>
+                    <td style={{ padding: '0.65rem 1rem' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600, background: meta.bg, color: meta.color }}>
+                        {meta.label}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.65rem 1rem' }}>
+                      <Link to={`/invoices/${inv.id}`} className="btn btn-secondary btn-sm">View</Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
