@@ -18,6 +18,7 @@ import InvoiceDetail from './components/invoices/InvoiceDetail';
 import TaskList from './components/tasks/TaskList';
 import VendorList from './components/vendors/VendorList';
 import VendorDetail from './components/vendors/VendorDetail';
+import FieldPhotoGallery from './components/photos/FieldPhotoGallery';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route path="/tasks" element={<Layout><TaskList /></Layout>} />
         <Route path="/vendors" element={<Layout><VendorList /></Layout>} />
         <Route path="/vendors/:id" element={<Layout><VendorDetail /></Layout>} />
+        <Route path="/photos" element={<Layout><FieldPhotoGallery /></Layout>} />
       </Routes>
     </div>
   );

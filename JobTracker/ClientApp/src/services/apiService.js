@@ -204,6 +204,49 @@ const invoicesApi = {
   }),
 };
 
+// Field Photos API
+const photosApi = {
+  getAll: async ({ jobId, category, search, page = 1, pageSize = 48 } = {}) => {
+    const params = new URLSearchParams();
+    if (jobId)    params.set('jobId', jobId);
+    if (category && category !== 'all') params.set('category', category);
+    if (search)   params.set('search', search);
+    params.set('page', page);
+    params.set('pageSize', pageSize);
+    return fetchWithErrorHandling(`/api/fieldphotos?${params}`);
+  },
+
+  getSummary: async () => fetchWithErrorHandling('/api/fieldphotos/summary'),
+
+  getSettings: async () => fetchWithErrorHandling('/api/fieldphotos/settings'),
+
+  saveSettings: async (data) => fetchWithErrorHandling('/api/fieldphotos/settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  upload: async (formData) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/fieldphotos/upload', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || 'Upload failed');
+    }
+    return res.json();
+  },
+
+  update: async (id, data) => fetchWithErrorHandling(`/api/fieldphotos/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  delete: async (id) => fetchWithErrorHandling(`/api/fieldphotos/${id}`, { method: 'DELETE' }),
+};
+
 // Vendors API
 const vendorsApi = {
   getAll: async ({ category = '', search = '', activeOnly = false } = {}) => {
@@ -289,5 +332,6 @@ export const apiService = {
   leads: leadsApi,
   invoices: invoicesApi,
   vendors: vendorsApi,
+  photos: photosApi,
   tasks: tasksApi,
 };
