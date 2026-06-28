@@ -64,6 +64,11 @@ namespace JobTracker.Data
         public DbSet<ConstructionCode> ConstructionCodes { get; set; } = null!;
         public DbSet<CodeSyncLog> CodeSyncLogs { get; set; } = null!;
 
+        // CRM
+        public DbSet<Contact> Contacts { get; set; } = null!;
+        public DbSet<ContactDocument> ContactDocuments { get; set; } = null!;
+        public DbSet<ContactActivityLog> ContactActivityLogs { get; set; } = null!;
+
         // Municipal Integration tables
         public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
         public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
@@ -194,6 +199,30 @@ namespace JobTracker.Data
                 .WithMany()
                 .HasForeignKey(js => js.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Contact (CRM) relationships
+            modelBuilder.Entity<Contact>()
+                .HasMany(c => c.Jobs)
+                .WithOne(j => j.Contact)
+                .HasForeignKey(j => j.ContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Contact>()
+                .HasMany(c => c.Documents)
+                .WithOne(d => d.Contact)
+                .HasForeignKey(d => d.ContactId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Contact>()
+                .HasMany(c => c.ActivityLogs)
+                .WithOne(a => a.Contact)
+                .HasForeignKey(a => a.ContactId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Contact>().HasIndex(c => c.CompanyId);
+            modelBuilder.Entity<Contact>().HasIndex(c => new { c.CompanyId, c.CustomerNumber }).IsUnique();
+            modelBuilder.Entity<ContactActivityLog>().HasIndex(a => a.ContactId);
+            modelBuilder.Entity<ContactDocument>().HasIndex(d => d.ContactId);
 
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);

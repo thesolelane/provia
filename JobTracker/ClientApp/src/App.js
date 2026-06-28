@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
 
-// Import our components
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import JobList from './components/jobs/JobList';
@@ -11,6 +10,8 @@ import JobForm from './components/jobs/JobForm';
 import JobSectionForm from './components/jobs/JobSectionForm';
 import JobSectionList from './components/jobs/JobSectionList';
 import JobSectionDetail from './components/jobs/JobSectionDetail';
+import ContactList from './components/contacts/ContactList';
+import ContactDetail from './components/contacts/ContactDetail';
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
         <Route path="/sections" element={<Layout><JobSectionList /></Layout>} />
         <Route path="/sections/:id" element={<Layout><JobSectionDetail /></Layout>} />
         <Route path="/sections/:sectionId/edit" element={<Layout><JobSectionForm /></Layout>} />
+        <Route path="/contacts" element={<Layout><ContactList /></Layout>} />
+        <Route path="/contacts/:id" element={<Layout><ContactDetail /></Layout>} />
       </Routes>
     </div>
   );

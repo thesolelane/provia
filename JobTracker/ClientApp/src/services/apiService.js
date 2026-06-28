@@ -88,8 +88,40 @@ const jobSectionsApi = {
   }),
 };
 
+// Contacts (CRM) API
+const contactsApi = {
+  getAll: async (q = '', includeInactive = false) =>
+    fetchWithErrorHandling(`/api/contacts?q=${encodeURIComponent(q)}&includeInactive=${includeInactive}`),
+
+  getById: async (id) => fetchWithErrorHandling(`/api/contacts/${id}`),
+
+  create: async (contact) => fetchWithErrorHandling('/api/contacts', {
+    method: 'POST',
+    body: JSON.stringify(contact),
+  }),
+
+  update: async (id, contact) => fetchWithErrorHandling(`/api/contacts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(contact),
+  }),
+
+  deactivate: async (id) => fetchWithErrorHandling(`/api/contacts/${id}`, {
+    method: 'DELETE',
+  }),
+
+  addNote: async (id, note) => fetchWithErrorHandling(`/api/contacts/${id}/activity`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  }),
+
+  linkJob: async (contactId, jobId) => fetchWithErrorHandling(`/api/contacts/${contactId}/link-job/${jobId}`, {
+    method: 'POST',
+  }),
+};
+
 // Export the APIs
 export const apiService = {
   jobs: jobsApi,
   jobSections: jobSectionsApi,
+  contacts: contactsApi,
 };
