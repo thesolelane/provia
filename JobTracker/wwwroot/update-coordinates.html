@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Job Site Coordinates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .coordinate-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+        
+        .accuracy-display {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .coordinate-display {
+            background: #f5f5f5;
+            border-radius: 5px;
+            padding: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .btn-update {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-update:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3e8e41 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="coordinate-card">
+            <div class="text-center mb-4">
+                <h2><i class="fas fa-map-marker-alt text-success me-2"></i>Update Job Site Coordinates</h2>
+                <p class="text-muted">Use this tool when you're physically at a job site to record accurate GPS coordinates</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Select Job Site</label>
+                <select class="form-select" id="jobSelect">
+                    <option value="">Choose a job site to update...</option>
+                </select>
+            </div>
+
+            <div id="currentLocationDisplay" class="d-none">
+                <h5>Current Location Information</h5>
+                <div class="accuracy-display">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>GPS Accuracy:</strong>
+                            <div id="accuracyDisplay" class="coordinate-display">Detecting...</div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Location Status:</strong>
+                            <div id="statusDisplay" class="coordinate-display">Getting GPS...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Current Latitude:</strong>
+                        <div id="latitudeDisplay" class="coordinate-display">--</div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Current Longitude:</strong>
+                        <div id="longitudeDisplay" class="coordinate-display">--</div>
+                    </div>
+                </div>
+
+                <div id="existingCoordinates" class="mt-3">
+                    <h6>Existing Job Site Coordinates:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Stored Latitude:</strong>
+                            <div id="existingLatDisplay" class="coordinate-display">--</div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stored Longitude:</strong>
+                            <div id="existingLngDisplay" class="coordinate-display">--</div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <strong>Distance Difference:</strong>
+                        <div id="distanceDisplay" class="coordinate-display">--</div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-update btn-lg" onclick="updateCoordinates()" id="updateBtn" disabled>
+                        <i class="fas fa-save me-2"></i>Update Job Site Coordinates
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <button class="btn btn-primary" onclick="getCurrentLocation()" id="getLocationBtn">
+                    <i class="fas fa-crosshairs me-2"></i>Get Current Location
+                </button>
+            </div>
+
+            <div id="messageArea" class="mt-3"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentLocation = null;
+        let selectedJob = null;
+
+        // Load job sites on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadJobSites();
+        });
+
+        function loadJobSites() {
+            fetch('/api/jobs')
+                .then(response => response.json())
+                .then(data => {
+                    const jobSelect = document.getElementById('jobSelect');
+                    jobSelect.innerHTML = '<option value="">Choose a job site to update...</option>';
+                    
+                    data.forEach(job => {
+                        if (job.status !== 'Completed') {
+                            jobSelect.innerHTML += `
+                                <option value="${job.id}" data-lat="${job.latitude}" data-lng="${job.longitude}" data-location="${job.location}">
+                                    ${job.name} - ${job.location}
+                                </option>
+                            `;
+                        }
+                    });
+                })
+                .catch(error => {
+                    showMessage('Error loading job sites: ' + error.message, 'danger');
+                });
+        }
+
+        document.getElementById('jobSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                selectedJob = {
+                    id: selectedOption.value,
+                    latitude: parseFloat(selectedOption.dataset.lat) || 0,
+                    longitude: parseFloat(selectedOption.dataset.lng) || 0,
+                    location: selectedOption.dataset.location
+                };
+                
+                // Update existing coordinates display
+                document.getElementById('existingLatDisplay').textContent = selectedJob.latitude.toFixed(6);
+                document.getElementById('existingLngDisplay').textContent = selectedJob.longitude.toFixed(6);
+                
+                // Calculate distance if we have current location
+                if (currentLocation) {
+                    updateDistanceDisplay();
+                }
+            } else {
+                selectedJob = null;
+            }
+            
+            updateButtonState();
+        });
+
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                showMessage('Geolocation is not supported by this browser.', 'danger');
+                return;
+            }
+
+            document.getElementById('getLocationBtn').disabled = true;
+            document.getElementById('statusDisplay').textContent = 'Getting GPS location...';
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    currentLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+
+                    // Update displays
+                    document.getElementById('latitudeDisplay').textContent = currentLocation.latitude.toFixed(6);
+                    document.getElementById('longitudeDisplay').textContent = currentLocation.longitude.toFixed(6);
+                    document.getElementById('accuracyDisplay').textContent = `±${Math.round(currentLocation.accuracy)} meters`;
+                    
+                    const accuracyFeet = Math.round(currentLocation.accuracy * 3.28084);
+                    let statusClass = 'text-success';
+                    let statusText = 'Excellent GPS Signal';
+                    
+                    if (accuracyFeet > 100) {
+                        statusClass = 'text-warning';
+                        statusText = 'Moderate GPS Signal';
+                    }
+                    if (accuracyFeet > 300) {
+                        statusClass = 'text-danger';
+                        statusText = 'Poor GPS Signal';
+                    }
+                    
+                    document.getElementById('statusDisplay').innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+                    document.getElementById('currentLocationDisplay').classList.remove('d-none');
+                    document.getElementById('getLocationBtn').disabled = false;
+                    
+                    if (selectedJob) {
+                        updateDistanceDisplay();
+                    }
+                    
+                    updateButtonState();
+                    showMessage('Location acquired successfully!', 'success');
+                },
+                error => {
+                    let errorMessage = 'Unable to get location: ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Location permission denied';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timeout';
+                            break;
+                        default:
+                            errorMessage += 'Unknown error';
+                    }
+                    
+                    showMessage(errorMessage, 'danger');
+                    document.getElementById('getLocationBtn').disabled = false;
+                },
+                options
+            );
+        }
+
+        function updateDistanceDisplay() {
+            if (currentLocation && selectedJob) {
+                const distance = calculateDistance(
+                    currentLocation.latitude, currentLocation.longitude,
+                    selectedJob.latitude, selectedJob.longitude
+                );
+                
+                document.getElementById('distanceDisplay').textContent = `${Math.round(distance)} feet`;
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distanceMeters = R * c;
+            return distanceMeters * 3.28084; // Convert to feet
+        }
+
+        function updateButtonState() {
+            const updateBtn = document.getElementById('updateBtn');
+            updateBtn.disabled = !(currentLocation && selectedJob);
+        }
+
+        function updateCoordinates() {
+            if (!currentLocation || !selectedJob) {
+                showMessage('Please select a job site and get current location first.', 'warning');
+                return;
+            }
+
+            document.getElementById('updateBtn').disabled = true;
+            document.getElementById('updateBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+
+            fetch(`/api/jobs/${selectedJob.id}/update-coordinates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Job site coordinates updated successfully!', 'success');
+                    
+                    // Update the stored coordinates display
+                    selectedJob.latitude = currentLocation.latitude;
+                    selectedJob.longitude = currentLocation.longitude;
+                    document.getElementById('existingLatDisplay').textContent = selectedJob.latitude.toFixed(6);
+                    document.getElementById('existingLngDisplay').textContent = selectedJob.longitude.toFixed(6);
+                    document.getElementById('distanceDisplay').textContent = '0 feet';
+                } else {
+                    showMessage('Error updating coordinates: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showMessage('Error updating coordinates: ' + error.message, 'danger');
+            })
+            .finally(() => {
+                document.getElementById('updateBtn').disabled = false;
+                document.getElementById('updateBtn').innerHTML = '<i class="fas fa-save me-2"></i>Update Job Site Coordinates';
+            });
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

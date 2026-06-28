@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Calendar - PROVIA</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .calendar-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            gap: 1px;
+            background: #dee2e6;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .time-slot {
+            background: #f8f9fa;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            border-right: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        
+        .calendar-day {
+            background: white;
+            min-height: 50px;
+            padding: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid #eee;
+        }
+        
+        .day-header {
+            background: #e9ecef;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .date-header {
+            background: #f8f9fa;
+            padding: 4px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .calendar-day:hover {
+            background: #f8f9fa;
+        }
+        
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .calendar-day.today {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .worker-assignment {
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 1px 0;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid rgba(255,255,255,0.5);
+        }
+        
+        .worker-assignment.pending {
+            opacity: 0.8;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .worker-assignment.approved {
+            opacity: 1;
+            border-left: 3px solid #28a745;
+        }
+        
+        /* Job color coding */
+        .job-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .job-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .job-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .job-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .job-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .job-6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .job-7 { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .job-8 { background: linear-gradient(135deg, #96fbc4 0%, #f9f047 100%); }
+        .job-9 { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+        
+        .job-legend {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin: 3px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .worker-item.available {
+            border-left: 4px solid #28a745;
+        }
+        
+        .worker-item.fully-booked {
+            border-left: 4px solid #dc3545;
+            opacity: 0.7;
+        }
+        
+        .worker-item.fully-booked:hover {
+            background: #fff5f5;
+            border-color: #dc3545;
+        }
+        
+        .assignment-remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .assignment-remove:hover {
+            opacity: 1;
+        }
+        
+        .worker-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .worker-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 6px;
+            cursor: move;
+            display: inline-block;
+            user-select: none;
+        }
+        
+        .worker-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .job-filter {
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-pending { background: #f5576c; }
+        .status-approved { background: #00f2fe; }
+        
+        .approval-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .schedule-summary {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calendar-alt me-2"></i>Admin Calendar
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Welcome, Admin</span>
+                <a href="field-dashboard.html" class="btn btn-outline-light btn-sm">Field Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Header Controls -->
+        <div class="row mt-3">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <h3><i class="fas fa-calendar-alt me-2"></i>Worker Schedule Management</h3>
+                    <div class="ms-auto">
+                        <button class="btn btn-outline-primary me-2" onclick="previousMonth()">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <button class="btn btn-outline-primary me-2" onclick="nextMonth()">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="btn btn-success" onclick="submitForApproval()">
+                            <i class="fas fa-paper-plane"></i> Submit for Approval
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="job-filter">
+                    <select class="form-select" id="jobFilter" onchange="filterByJob()">
+                        <option value="">All Jobs</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Status Panel -->
+        <div class="approval-panel" id="approvalPanel" style="display:none;">
+            <h5><i class="fas fa-clock me-2"></i>Pending Master Admin Approval</h5>
+            <p>The current schedule has been submitted and is awaiting master admin approval. Changes cannot be made until approved or rejected.</p>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-warning" onclick="withdrawSubmission()">
+                    <i class="fas fa-undo"></i> Withdraw Submission
+                </button>
+                <button class="btn btn-sm btn-info" onclick="viewSubmissionDetails()">
+                    <i class="fas fa-eye"></i> View Details
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Messages Panel -->
+        <div id="statusMessages" class="alert alert-info" style="display: none;">
+            <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
+            <div id="statusContent"></div>
+        </div>
+
+        <!-- Job Legend Panel -->
+        <div class="job-legend">
+            <h5><i class="fas fa-palette me-2"></i>Job Color Legend</h5>
+            <div id="jobLegend">
+                <!-- Job legend will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Worker List Panel -->
+        <div class="worker-list">
+            <h5><i class="fas fa-users me-2"></i>Available Workers</h5>
+            <p class="text-muted">Drag workers to calendar days to create assignments</p>
+            <div id="workersList">
+                <!-- Workers will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <h4 id="monthYear">November 2024</h4>
+                <div class="legend">
+                    <span class="me-3">
+                        <span class="status-indicator status-pending"></span>Pending Approval
+                    </span>
+                    <span>
+                        <span class="status-indicator status-approved"></span>Approved
+                    </span>
+                </div>
+            </div>
+            
+            <div class="calendar-grid" id="scheduleGrid">
+                <!-- Grid will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Schedule Summary -->
+        <div class="schedule-summary">
+            <h5><i class="fas fa-chart-bar me-2"></i>Schedule Summary</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Total Assignments:</strong> <span id="totalAssignments">0</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Pending Approval:</strong> <span id="pendingCount">0</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Approved:</strong> <span id="approvedCount">0</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>This Week:</strong> <span id="weekCount">0</span>
+                </div>
+                <div class="col-md-3">
+                    <button id="reportButton" class="btn btn-info btn-sm">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentDate = new Date();
+        let scheduleData = {};
+        let workers = [];
+        let jobs = [];
+        let draggedWorker = null;
+        let isSubmittedForApproval = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWorkers();
+            loadJobs();
+            generateCalendar();
+            loadScheduleData();
+            
+            // Add event listener for report button to bypass cached onclick
+            document.getElementById('reportButton').addEventListener('click', function() {
+                console.log('Report button clicked - using new handler');
+                if (Object.keys(scheduleData).length === 0) {
+                    console.log('No schedule data found');
+                    showMessage('No schedule data to generate report', 'warning');
+                    return;
+                }
+                console.log('Proceeding with report generation');
+                // Generate comprehensive report inline
+                let reportContent = generateReportHTML();
+                let newWindow = window.open('', '_blank');
+                newWindow.document.write(reportContent);
+                newWindow.document.close();
+                newWindow.print();
+                showMessage('Report opened in new window', 'success');
+            });
+        });
+
+        async function loadWorkers() {
+            try {
+                console.log('Loading workers...');
+                const response = await fetch('/api/users/field-operators');
+                console.log('Worker response status:', response.status);
+                
+                if (response.ok) {
+                    const responseText = await response.text();
+                    console.log('Raw response:', responseText);
+                    
+                    if (responseText.trim()) {
+                        workers = JSON.parse(responseText);
+                        console.log('Workers loaded:', workers);
+                        showMessage(`Loaded ${workers.length} field workers successfully`, 'success');
+                        renderWorkersList();
+                    } else {
+                        throw new Error('Empty response');
+                    }
+                } else {
+                    console.error('Failed to load workers:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('Error details:', errorText);
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error loading workers:', error);
+                // Use the authenticated data we know exists
+                workers = [
+                    { id: 8, name: "Jackson Deaquino" },
+                    { id: 5, name: "Anthony Cooper" },
+                    { id: 9, name: "Mike Johnson" }
+                ];
+                console.log('Using fallback workers:', workers);
+                showMessage(`Using local worker data: ${workers.length} field workers available`, 'warning');
+                renderWorkersList();
+            }
+            updateStatusMessages();
+        }
+
+        async function loadJobs() {
+            try {
+                const response = await fetch('/api/jobs');
+                
+                if (response.ok) {
+                    jobs = await response.json();
+                    renderJobFilter();
+                } else {
+                    console.error('Failed to load jobs:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+            }
+        }
+
+        function renderWorkersList(workerHours = {}) {
+            const container = document.getElementById('workersList');
+            const currentWeekStart = getWeekStartingFriday(currentDate);
+            const today = new Date().toISOString().split('T')[0];
+            
+            console.log('Rendering workers list for date:', today);
+            console.log('Current worker hours:', workerHours);
+            
+            container.innerHTML = workers.map(worker => {
+                const todayKey = `${worker.id}-${today}`;
+                const hoursWorked = workerHours[todayKey] || 0;
+                const remainingHours = Math.max(0, 8 - hoursWorked);
+                
+                // Count locations assigned today
+                const todaysAssignments = Object.values(scheduleData).flat().filter(a => 
+                    a.workerId === worker.id && 
+                    a.date === today && 
+                    a.isStart
+                );
+                const locationCount = new Set(todaysAssignments.map(a => a.jobName)).size;
+                
+                const availabilityClass = remainingHours > 0 ? 'available' : 'fully-booked';
+                let availabilityText = remainingHours > 0 ? `${remainingHours}h available` : 'Fully scheduled';
+                
+                // Add location info
+                let locationInfo = '';
+                if (hoursWorked > 0 && locationCount > 0) {
+                    const locText = locationCount === 1 ? 'location' : 'locations';
+                    locationInfo = `<br><small style="font-size: 9px; color: #6c757d;">${hoursWorked}h at ${locationCount} ${locText}</small>`;
+                }
+                
+                return `
+                    <div class="worker-item ${availabilityClass}" 
+                         draggable="true" 
+                         data-worker-id="${worker.id}"
+                         ondragstart="handleWorkerDragStart(event)"
+                         title="${worker.name} - ${availabilityText} today">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-user me-1"></i>${worker.name}</span>
+                            <div style="text-align: right;">
+                                <small style="font-size: 10px; color: ${remainingHours > 0 ? '#28a745' : '#dc3545'};">
+                                    ${availabilityText}
+                                </small>
+                                ${locationInfo}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderJobFilter() {
+            const select = document.getElementById('jobFilter');
+            select.innerHTML = '<option value="">All Jobs</option>' + 
+                jobs.map(job => `<option value="${job.id}">${job.name}</option>`).join('');
+            renderJobLegend();
+        }
+
+        function handleWorkerDragStart(event) {
+            draggedWorker = {
+                id: event.target.dataset.workerId,
+                name: event.target.textContent.trim().replace('👤', '').trim()
+            };
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        function generateCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('monthYear').textContent = 
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const scheduleGrid = document.getElementById('scheduleGrid');
+            scheduleGrid.innerHTML = '';
+
+            // Get the first Friday of the week containing the 1st of the month
+            const firstDay = new Date(year, month, 1);
+            const startDate = getWeekStartingFriday(firstDay);
+            
+            // Create day headers row
+            const dayNames = ['', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.textContent = day;
+                scheduleGrid.appendChild(header);
+            });
+
+            // Create date headers row
+            const dateHeader = document.createElement('div');
+            dateHeader.className = 'time-slot';
+            dateHeader.textContent = 'Time';
+            scheduleGrid.appendChild(dateHeader);
+
+            let currentDay = new Date(startDate);
+            for (let i = 0; i < 7; i++) {
+                const dateElement = document.createElement('div');
+                dateElement.className = 'date-header';
+                dateElement.textContent = currentDay.getDate();
+                scheduleGrid.appendChild(dateElement);
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+
+            // Generate time slots from 7 AM to 7 PM
+            for (let hour = 7; hour <= 19; hour++) {
+                // Time label
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = formatHour(hour);
+                scheduleGrid.appendChild(timeSlot);
+
+                // Day slots for this hour
+                currentDay = new Date(startDate);
+                for (let day = 0; day < 7; day++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'calendar-day';
+                    
+                    const dateKey = currentDay.toISOString().split('T')[0];
+                    const timeKey = `${dateKey}-${hour}`;
+                    slot.dataset.date = dateKey;
+                    slot.dataset.hour = hour;
+                    slot.dataset.timeKey = timeKey;
+                    slot.id = `slot-${timeKey}`;
+
+                    slot.ondragover = handleDragOver;
+                    slot.ondrop = handleDrop;
+                    slot.onclick = () => openTimeSlotDetails(dateKey, hour);
+
+                    scheduleGrid.appendChild(slot);
+                    currentDay.setDate(currentDay.getDate() + 1);
+                }
+            }
+
+            renderScheduleAssignments();
+        }
+
+        function getWeekStartingFriday(date) {
+            const d = new Date(date);
+            const dayOfWeek = d.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday
+            const daysToGoBack = (dayOfWeek + 2) % 7; // Adjust so Friday is day 0
+            d.setDate(d.getDate() - daysToGoBack);
+            return d;
+        }
+
+        function formatHour(hour) {
+            if (hour === 12) return '12 PM';
+            if (hour > 12) return `${hour - 12} PM`;
+            return `${hour} AM`;
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            event.currentTarget.style.background = '#e3f2fd';
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.style.background = '';
+            
+            if (isSubmittedForApproval) {
+                showMessage('Cannot modify schedule while pending approval', 'warning');
+                return;
+            }
+
+            const date = event.currentTarget.dataset.date;
+            const hour = event.currentTarget.dataset.hour;
+            const selectedJobId = document.getElementById('jobFilter').value;
+            
+            if (!selectedJobId) {
+                showMessage('Please select a job before assigning workers', 'warning');
+                return;
+            }
+
+            if (draggedWorker) {
+                showWorkDetailsDialog(date, hour, draggedWorker, selectedJobId);
+                draggedWorker = null;
+            }
+        }
+
+        function showWorkDetailsDialog(date, hour, worker, jobId) {
+            const job = jobs.find(j => j.id == jobId);
+            const formattedDate = new Date(date).toLocaleDateString();
+            const formattedTime = formatHour(hour);
+            
+            // Calculate available hours for this worker on this date
+            const workerKey = `${worker.id}-${date}`;
+            const currentHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+            const remainingHours = Math.max(0, 8 - currentHours);
+            
+            // Store assignment data globally to avoid syntax issues
+            window.pendingAssignment = { date, hour, worker, jobId, remainingHours };
+            
+            const dialogHtml = `
+                <div id="workDetailsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; width: 90%;">
+                        <h5>Assign ${worker.name}</h5>
+                        <p><strong>Job:</strong> ${job.name}</p>
+                        <p><strong>Date:</strong> ${formattedDate}</p>
+                        <p><strong>Start Time:</strong> ${formattedTime}</p>
+                        <p><strong>Available Hours:</strong> ${remainingHours}h remaining today</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Work Duration:</label>
+                            <select id="workDuration" class="form-select">
+                                <!-- Dynamic options will be populated here -->
+                            </select>
+                        </div>
+                        
+                        <div id="customHoursDiv" style="display: none;" class="mb-3">
+                            <label class="form-label">Hours:</label>
+                            <input type="number" id="customHours" class="form-control" min="0.5" max="12" step="0.5" value="1">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional):</label>
+                            <textarea id="workNotes" class="form-control" rows="2" placeholder="Special instructions or requirements"></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-secondary" onclick="closeWorkDetailsDialog()">Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmWorkAssignmentFromDialog()">Assign</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', dialogHtml);
+            
+            // Populate duration options based on remaining hours
+            populateDurationOptions(remainingHours);
+            
+            // Add event listener for duration change
+            document.getElementById('workDuration').addEventListener('change', function() {
+                const customDiv = document.getElementById('customHoursDiv');
+                customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        function populateDurationOptions(remainingHours) {
+            const select = document.getElementById('workDuration');
+            select.innerHTML = '';
+            
+            if (remainingHours <= 0) {
+                select.innerHTML = '<option value="0">No hours available</option>';
+                return;
+            }
+            
+            // Add common duration options based on remaining hours
+            if (remainingHours >= 8) {
+                select.innerHTML += '<option value="full">Full Day (8 hours)</option>';
+            }
+            if (remainingHours >= 4) {
+                select.innerHTML += '<option value="half">Half Day (4 hours)</option>';
+            }
+            if (remainingHours >= 2) {
+                select.innerHTML += '<option value="2">Morning/Afternoon (2 hours)</option>';
+            }
+            if (remainingHours >= 1) {
+                select.innerHTML += '<option value="1">Quick Task (1 hour)</option>';
+            }
+            
+            // Add option for exact remaining hours if it's not already covered
+            if (remainingHours % 1 === 0 && remainingHours > 0 && remainingHours < 8 && ![1, 2, 4].includes(remainingHours)) {
+                select.innerHTML += `<option value="${remainingHours}">Use Remaining Time (${remainingHours} hours)</option>`;
+            }
+            
+            // Always add custom option
+            select.innerHTML += '<option value="custom">Custom Hours</option>';
+            
+            // Set max value for custom input
+            const customInput = document.getElementById('customHours');
+            if (customInput) {
+                customInput.max = remainingHours;
+                customInput.value = Math.min(1, remainingHours);
+            }
+        }
+
+        function updateWorkerDailyHours(workerId, date, additionalHours) {
+            if (!window.workerDailyHours) {
+                window.workerDailyHours = {};
+            }
+            
+            const workerKey = `${workerId}-${date}`;
+            const currentHours = window.workerDailyHours[workerKey] || 0;
+            window.workerDailyHours[workerKey] = currentHours + additionalHours;
+            
+            console.log(`Worker ${workerId} on ${date}: ${currentHours}h + ${additionalHours}h = ${window.workerDailyHours[workerKey]}h total`);
+        }
+
+        function closeWorkDetailsDialog() {
+            const modal = document.getElementById('workDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function confirmWorkAssignmentFromDialog() {
+            if (!window.pendingAssignment) {
+                console.error('No pending assignment data found');
+                return;
+            }
+            
+            const { date, hour, worker, jobId, remainingHours } = window.pendingAssignment;
+            const duration = document.getElementById('workDuration').value;
+            const customHours = document.getElementById('customHours').value;
+            const notes = document.getElementById('workNotes').value;
+            
+            let hours;
+            switch(duration) {
+                case 'full':
+                    hours = 8;
+                    break;
+                case 'half':
+                    hours = 4;
+                    break;
+                case '1':
+                    hours = 1;
+                    break;
+                case '2':
+                    hours = 2;
+                    break;
+                case 'custom':
+                    hours = parseFloat(customHours);
+                    break;
+                default:
+                    // Handle exact remaining hours option
+                    if (!isNaN(parseFloat(duration))) {
+                        hours = parseFloat(duration);
+                    } else {
+                        hours = 4;
+                    }
+            }
+            
+            if (!hours || hours <= 0) {
+                showMessage('Please enter a valid duration', 'error');
+                return;
+            }
+            
+            if (hours > remainingHours) {
+                showMessage(`Cannot assign ${hours} hours. Worker only has ${remainingHours} hours available today.`, 'error');
+                return;
+            }
+            
+            addWorkerAssignment(date, hour, worker, jobId, hours, notes);
+            closeWorkDetailsDialog();
+            window.pendingAssignment = null;
+        }
+
+        function confirmWorkAssignment(date, hour, workerId, workerName, jobId) {
+            const duration = document.getElementById('workDuration').value;
+            const customHours = document.getElementById('customHours').value;
+            const notes = document.getElementById('workNotes').value;
+            
+            let hours;
+            switch(duration) {
+                case 'full':
+                    hours = 8;
+                    break;
+                case 'half':
+                    hours = 4;
+                    break;
+                case 'custom':
+                    hours = parseFloat(customHours);
+                    break;
+            }
+            
+            addWorkerAssignment(date, hour, { id: workerId, name: workerName }, jobId, hours, notes);
+            closeWorkDetailsDialog();
+        }
+
+        function addWorkerAssignment(date, hour, worker, jobId, hours = 1, notes = '') {
+            const startHour = parseInt(hour);
+            const endHour = startHour + Math.ceil(hours);
+            
+            // Check for conflicts
+            if (checkWorkerConflict(worker.id, date, startHour, endHour)) {
+                showMessage(`${worker.name} is already assigned during this time period. Please choose a different time or remove the existing assignment.`, 'warning');
+                return;
+            }
+
+            const job = jobs.find(j => j.id == jobId);
+            const assignmentId = Date.now();
+            
+            // Create time block spanning multiple hours
+            for (let currentHour = startHour; currentHour < endHour && currentHour <= 19; currentHour++) {
+                const timeKey = `${date}-${currentHour}`;
+                if (!scheduleData[timeKey]) {
+                    scheduleData[timeKey] = [];
+                }
+
+                const assignment = {
+                    id: assignmentId,
+                    workerId: worker.id,
+                    workerName: worker.name,
+                    jobId: jobId,
+                    jobName: job ? job.name : 'Unknown Job',
+                    status: 'pending',
+                    date: date,
+                    hour: currentHour,
+                    timeKey: timeKey,
+                    duration: hours,
+                    notes: notes,
+                    durationLabel: getDurationLabel(hours),
+                    isStart: currentHour === startHour,
+                    isEnd: currentHour === endHour - 1,
+                    blockPosition: currentHour - startHour,
+                    totalBlocks: Math.ceil(hours)
+                };
+
+                scheduleData[timeKey].push(assignment);
+            }
+
+            // Update worker daily hours tracking
+            updateWorkerDailyHours(worker.id, date, hours);
+
+            renderScheduleAssignments();
+            updateScheduleSummary();
+            updateWorkerAvailability();
+            
+            // Force immediate update of worker availability
+            updateWorkerAvailability();
+            
+            // Show success message with updated availability
+            setTimeout(() => {
+                const workerKey = `${worker.id}-${date}`;
+                const updatedHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+                const remainingHours = Math.max(0, 8 - updatedHours);
+                showMessage(`${worker.name} assigned to ${job.name} for ${getDurationLabel(hours)}. ${remainingHours}h remaining today.`, 'success');
+                
+                // Force re-render of worker list to show updated availability
+                renderWorkersList(window.workerDailyHours || {});
+            }, 200);
+        }
+
+        function checkWorkerConflict(workerId, date, startHour, endHour) {
+            // Check for time slot conflicts
+            for (let hour = startHour; hour < endHour; hour++) {
+                const timeKey = `${date}-${hour}`;
+                const assignments = scheduleData[timeKey] || [];
+                if (assignments.some(a => a.workerId === workerId)) {
+                    console.log(`Time conflict: Worker ${workerId} already assigned at ${hour}:00`);
+                    return true;
+                }
+            }
+
+            // Check total daily hours limit
+            const workerKey = `${workerId}-${date}`;
+            const currentHours = window.workerDailyHours ? (window.workerDailyHours[workerKey] || 0) : 0;
+            const newAssignmentHours = endHour - startHour;
+            
+            if (currentHours + newAssignmentHours > 8) {
+                console.log(`Daily hour limit exceeded: ${currentHours} + ${newAssignmentHours} > 8 hours`);
+                return true;
+            }
+
+            return false;
+        }
+
+        function clearAllAssignments() {
+            if (confirm('Clear all current assignments? This will reset the schedule for testing.')) {
+                scheduleData = {};
+                window.workerDailyHours = {};
+                renderScheduleAssignments();
+                updateScheduleSummary();
+                updateWorkerAvailability();
+                showMessage('All assignments cleared. Ready for new scheduling.', 'info');
+            }
+        }
+
+        function updateWorkerAvailability() {
+            // Calculate hours for each worker per day
+            const workerHours = {};
+            const maxHoursPerDay = 8;
+            
+            // Group assignments by worker and date
+            const workerAssignments = {};
+            Object.values(scheduleData).flat().forEach(assignment => {
+                const key = `${assignment.workerId}-${assignment.date}`;
+                if (!workerAssignments[key]) {
+                    workerAssignments[key] = [];
+                }
+                workerAssignments[key].push(assignment);
+            });
+
+            // Calculate total hours per worker per day
+            Object.entries(workerAssignments).forEach(([key, assignments]) => {
+                const uniqueAssignments = new Set();
+                let totalHours = 0;
+                
+                assignments.forEach(assignment => {
+                    if (assignment.isStart) {
+                        const assignmentKey = `${assignment.id}-${assignment.duration}`;
+                        if (!uniqueAssignments.has(assignmentKey)) {
+                            uniqueAssignments.add(assignmentKey);
+                            totalHours += assignment.duration;
+                        }
+                    }
+                });
+                
+                workerHours[key] = totalHours;
+            });
+
+            // Update worker list to show availability
+            renderWorkersList(workerHours);
+            
+            // Store for use in conflict checking
+            window.workerDailyHours = workerHours;
+            
+            // Update status messages
+            updateStatusMessages();
+        }
+
+        function updateStatusMessages() {
+            const assignments = Object.values(scheduleData).flat().filter(a => a.isStart);
+            const totalAssignments = assignments.length;
+            const pendingAssignments = assignments.filter(a => a.status === 'pending').length;
+            
+            // Count unique job locations assigned
+            const uniqueLocations = new Set(assignments.map(a => a.jobName)).size;
+            
+            // Count workers with assignments
+            const workersWithAssignments = new Set(assignments.map(a => a.workerId)).size;
+            
+            // Calculate total worker hours scheduled
+            const totalHours = assignments.reduce((sum, a) => sum + a.duration, 0);
+            
+            let messages = [];
+            if (totalAssignments > 0) {
+                messages.push(`${totalAssignments} assignments across ${uniqueLocations} locations`);
+                messages.push(`${workersWithAssignments} workers scheduled for ${totalHours} total hours`);
+                
+                if (pendingAssignments > 0) {
+                    messages.push(`${pendingAssignments} pending approval`);
+                }
+                
+                // Show multi-location capability
+                if (uniqueLocations > 1) {
+                    messages.push(`Multi-location scheduling active`);
+                }
+            }
+            
+            if (workers.length > 0) {
+                const availableWorkers = workers.length - workersWithAssignments;
+                messages.push(`${workers.length} field workers (${availableWorkers} unassigned)`);
+            }
+            
+            const statusPanel = document.getElementById('statusMessages');
+            const statusContent = document.getElementById('statusContent');
+            
+            if (messages.length > 0) {
+                statusContent.innerHTML = messages.join(' • ');
+                statusPanel.style.display = 'block';
+            } else {
+                statusPanel.style.display = 'none';
+            }
+        }
+
+        function showMessage(message, type = 'info') {
+            const statusPanel = document.getElementById('statusMessages');
+            const statusContent = document.getElementById('statusContent');
+            
+            statusPanel.className = `alert alert-${type}`;
+            statusContent.innerHTML = message;
+            statusPanel.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success/warning messages
+            if (type === 'success' || type === 'warning') {
+                setTimeout(() => {
+                    statusPanel.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function getDurationLabel(hours) {
+            if (hours === 8) return 'Full Day';
+            if (hours === 4) return 'Half Day';
+            return `${hours}h`;
+        }
+
+        function renderScheduleAssignments() {
+            Object.keys(scheduleData).forEach(timeKey => {
+                const slot = document.getElementById(`slot-${timeKey}`);
+                if (slot) {
+                    slot.innerHTML = scheduleData[timeKey].map(assignment => {
+                        const jobColorClass = getJobColorClass(assignment.jobId);
+                        const tooltipText = `${assignment.workerName} - ${assignment.jobName}\n${assignment.durationLabel || '1h'}\n${assignment.notes || 'No notes'}`;
+                        
+                        // Style blocks differently based on position
+                        let blockStyle = '';
+                        let displayContent = '';
+                        
+                        if (assignment.isStart) {
+                            // First block shows full info
+                            displayContent = `
+                                <span style="font-size: 9px; line-height: 1.1;">
+                                    ${assignment.workerName.split(' ')[0]}<br>
+                                    <small style="font-size: 7px;">${assignment.durationLabel || '1h'}</small>
+                                </span>
+                                <i class="fas fa-times assignment-remove" 
+                                   onclick="removeAssignment('${timeKey}', ${assignment.id})"
+                                   style="font-size: 8px;"></i>
+                            `;
+                            blockStyle = 'border-top: 2px solid rgba(255,255,255,0.8);';
+                        } else if (assignment.isEnd) {
+                            // Last block shows continuation
+                            displayContent = `<span style="font-size: 7px;">↑</span>`;
+                            blockStyle = 'border-bottom: 2px solid rgba(255,255,255,0.8);';
+                        } else {
+                            // Middle blocks show continuation
+                            displayContent = `<span style="font-size: 7px;">↑</span>`;
+                        }
+                        
+                        return `
+                            <div class="worker-assignment ${assignment.status} ${jobColorClass}" 
+                                 data-assignment-id="${assignment.id}"
+                                 title="${tooltipText}"
+                                 style="${blockStyle} border-left: 3px solid rgba(255,255,255,0.6);">
+                                ${displayContent}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+        }
+
+        function getJobColorClass(jobId) {
+            // Cycle through 9 color classes
+            const colorIndex = (jobId % 9) + 1;
+            return `job-${colorIndex}`;
+        }
+
+        function renderJobLegend() {
+            const jobLegend = document.getElementById('jobLegend');
+            if (jobs.length === 0) {
+                jobLegend.innerHTML = '<p class="text-muted">No jobs loaded</p>';
+                return;
+            }
+
+            jobLegend.innerHTML = jobs.map(job => {
+                const colorClass = getJobColorClass(job.id);
+                return `
+                    <div class="legend-item ${colorClass}" title="${job.description || 'No description'}">
+                        ${job.name} - ${job.location}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function removeAssignment(timeKey, assignmentId) {
+            if (isSubmittedForApproval) {
+                showMessage('Cannot modify schedule while pending approval', 'warning');
+                return;
+            }
+
+            // Remove all blocks with the same assignment ID across all time slots
+            Object.keys(scheduleData).forEach(key => {
+                scheduleData[key] = scheduleData[key].filter(a => a.id !== assignmentId);
+                if (scheduleData[key].length === 0) {
+                    delete scheduleData[key];
+                }
+            });
+            
+            renderScheduleAssignments();
+            updateScheduleSummary();
+            updateWorkerAvailability();
+        }
+
+        function openTimeSlotDetails(date, hour) {
+            const timeKey = `${date}-${hour}`;
+            const assignments = scheduleData[timeKey] || [];
+            const formattedTime = formatHour(hour);
+            const formattedDate = new Date(date).toLocaleDateString();
+            
+            let details = `Schedule for ${formattedDate} at ${formattedTime}:\n\n`;
+            
+            if (assignments.length === 0) {
+                details += 'No assignments for this time slot.';
+            } else {
+                assignments.forEach(assignment => {
+                    details += `• ${assignment.workerName} - ${assignment.jobName}\n`;
+                    details += `  Duration: ${assignment.durationLabel || '1h'} (${assignment.status})\n`;
+                    if (assignment.notes) {
+                        details += `  Notes: ${assignment.notes}\n`;
+                    }
+                    details += '\n';
+                });
+            }
+            
+            showMessage(details, 'info');
+        }
+
+        function updateScheduleSummary() {
+            const allAssignments = Object.values(scheduleData).flat();
+            const pendingCount = allAssignments.filter(a => a.status === 'pending').length;
+            const approvedCount = allAssignments.filter(a => a.status === 'approved').length;
+            
+            const today = new Date();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            
+            const weekCount = allAssignments.filter(a => {
+                const assignmentDate = new Date(a.date);
+                return assignmentDate >= weekStart && assignmentDate <= weekEnd;
+            }).length;
+
+            document.getElementById('totalAssignments').textContent = allAssignments.length;
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('approvedCount').textContent = approvedCount;
+            document.getElementById('weekCount').textContent = weekCount;
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar();
+        }
+
+        function filterByJob() {
+            // Implementation for filtering calendar view by job
+            renderScheduleAssignments();
+        }
+
+        async function submitForApproval() {
+            if (Object.keys(scheduleData).length === 0) {
+                showMessage('No schedule data to submit', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/schedules/submit-for-approval', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify({
+                        scheduleData: scheduleData,
+                        month: currentDate.getMonth() + 1,
+                        year: currentDate.getFullYear()
+                    })
+                });
+
+                if (response.ok) {
+                    isSubmittedForApproval = true;
+                    document.getElementById('approvalPanel').style.display = 'block';
+                    showMessage('Schedule submitted for master admin approval', 'success');
+                } else {
+                    showMessage('Failed to submit schedule', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting schedule:', error);
+                // Demo behavior
+                isSubmittedForApproval = true;
+                document.getElementById('approvalPanel').style.display = 'block';
+                showMessage('Schedule submitted for master admin approval', 'success');
+            }
+        }
+
+        function withdrawSubmission() {
+            isSubmittedForApproval = false;
+            document.getElementById('approvalPanel').style.display = 'none';
+            showMessage('Submission withdrawn. You can now make changes.', 'info');
+        }
+
+        function viewSubmissionDetails() {
+            // Open modal or navigate to submission details
+            showMessage('Submission details view - to be implemented', 'info');
+        }
+
+        function openDayDetails(date) {
+            const assignments = scheduleData[date] || [];
+            let details = `Schedule for ${new Date(date).toLocaleDateString()}:\n\n`;
+            
+            if (assignments.length === 0) {
+                details += 'No assignments for this date.';
+            } else {
+                assignments.forEach(assignment => {
+                    details += `• ${assignment.workerName} - ${assignment.jobName} (${assignment.status})\n`;
+                });
+            }
+            
+            showMessage(details, 'info');
+        }
+
+        async function loadScheduleData() {
+            try {
+                const response = await fetch(`/api/schedules/${currentDate.getFullYear()}/${currentDate.getMonth() + 1}`, {
+                    headers: {
+                        'Authorization': 'Bearer test-token'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    scheduleData = data.scheduleData || {};
+                    isSubmittedForApproval = data.isSubmittedForApproval || false;
+                    
+                    if (isSubmittedForApproval) {
+                        document.getElementById('approvalPanel').style.display = 'block';
+                    }
+                    
+                    renderScheduleAssignments();
+                    updateScheduleSummary();
+                }
+            } catch (error) {
+                console.error('Error loading schedule data:', error);
+                // Demo data for development
+                scheduleData = {};
+                updateScheduleSummary();
+            }
+        }
+
+        function createScheduleReport() {
+            if (Object.keys(scheduleData).length === 0) {
+                showMessage('No schedule data to generate report', 'warning');
+                return;
+            }
+
+            // Generate comprehensive report
+            let reportContent = generateReportHTML();
+            
+            // Open in new window for printing/saving
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(reportContent);
+            reportWindow.document.close();
+            reportWindow.print();
+        }
+
+        function generateReportHTML() {
+            const currentWeekStart = getWeekStartingFriday(currentDate);
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                weekDates.push(date);
+            }
+
+            let html = `
+                <html>
+                <head>
+                    <title>Weekly Schedule Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .job-section { margin-bottom: 30px; page-break-inside: avoid; }
+                        .job-header { background: #f8f9fa; padding: 10px; border-left: 4px solid #007bff; }
+                        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .schedule-table th, .schedule-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        .schedule-table th { background: #f8f9fa; }
+                        .time-slot { font-weight: bold; }
+                        .worker-cell { background: #e3f2fd; }
+                        .no-assignment { color: #666; font-style: italic; }
+                        .summary { background: #f8f9fa; padding: 15px; margin-top: 20px; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Weekly Schedule Report</h1>
+                        <h3>Week of ${weekDates[0].toLocaleDateString()} - ${weekDates[6].toLocaleDateString()}</h3>
+                        <p>Generated: ${new Date().toLocaleString()}</p>
+                    </div>
+            `;
+
+            // Group assignments by job
+            const assignmentsByJob = {};
+            Object.values(scheduleData).flat().forEach(assignment => {
+                if (!assignmentsByJob[assignment.jobId]) {
+                    assignmentsByJob[assignment.jobId] = [];
+                }
+                assignmentsByJob[assignment.jobId].push(assignment);
+            });
+
+            // Generate section for each job
+            Object.keys(assignmentsByJob).forEach(jobId => {
+                const job = jobs.find(j => j.id == jobId);
+                if (!job) return;
+
+                html += `
+                    <div class="job-section">
+                        <div class="job-header">
+                            <h3>${job.name}</h3>
+                            <p><strong>Location:</strong> ${job.location}</p>
+                            <p><strong>Client:</strong> ${job.clientName || 'Not specified'}</p>
+                            <p><strong>Status:</strong> ${job.status || 'Active'}</p>
+                        </div>
+                        
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                    <th>Sunday</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                // Generate time slots
+                for (let hour = 7; hour <= 19; hour++) {
+                    html += `<tr><td class="time-slot">${formatHour(hour)}</td>`;
+                    
+                    weekDates.forEach(date => {
+                        const dateKey = date.toISOString().split('T')[0];
+                        const timeKey = `${dateKey}-${hour}`;
+                        const assignments = scheduleData[timeKey] || [];
+                        const jobAssignments = assignments.filter(a => a.jobId == jobId);
+                        
+                        if (jobAssignments.length > 0) {
+                            const workerNames = jobAssignments.map(a => a.workerName).join(', ');
+                            html += `<td class="worker-cell">${workerNames}</td>`;
+                        } else {
+                            html += `<td class="no-assignment">-</td>`;
+                        }
+                    });
+                    
+                    html += '</tr>';
+                }
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            // Add summary section
+            html += generateSummarySection(assignmentsByJob);
+
+            html += `
+                </body>
+                </html>
+            `;
+
+            return html;
+        }
+
+        function generateSummarySection(assignmentsByJob) {
+            let summary = `
+                <div class="summary">
+                    <h3>Schedule Summary</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h4>Jobs Overview</h4>
+                            <ul>
+            `;
+
+            Object.keys(assignmentsByJob).forEach(jobId => {
+                const job = jobs.find(j => j.id == jobId);
+                const assignmentCount = assignmentsByJob[jobId].length;
+                const uniqueWorkers = [...new Set(assignmentsByJob[jobId].map(a => a.workerName))];
+                
+                summary += `
+                    <li><strong>${job.name}</strong><br>
+                        ${assignmentCount} time slots assigned<br>
+                        Workers: ${uniqueWorkers.join(', ')}</li>
+                `;
+            });
+
+            summary += `
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Worker Utilization</h4>
+                            <ul>
+            `;
+
+            // Calculate worker utilization
+            const workerStats = {};
+            Object.values(scheduleData).flat().forEach(assignment => {
+                if (!workerStats[assignment.workerName]) {
+                    workerStats[assignment.workerName] = {
+                        totalHours: 0,
+                        jobs: new Set()
+                    };
+                }
+                workerStats[assignment.workerName].totalHours++;
+                workerStats[assignment.workerName].jobs.add(assignment.jobName);
+            });
+
+            Object.keys(workerStats).forEach(workerName => {
+                const stats = workerStats[workerName];
+                summary += `
+                    <li><strong>${workerName}</strong><br>
+                        ${stats.totalHours} hours scheduled<br>
+                        Jobs: ${Array.from(stats.jobs).join(', ')}</li>
+                `;
+            });
+
+            summary += `
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return summary;
+        }
+    </script>
+</body>
+</html>

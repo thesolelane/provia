@@ -1,0 +1,83 @@
+# ============================================================
+# PROVIA - .gitignore
+# .NET 6 + Node.js + PostgreSQL project
+# ============================================================
+
+# ----- .NET build output -----
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+_ReSharper*/
+*.resharper
+*.DotSettings.user
+
+# ----- .NET publish output -----
+publish/
+out/
+
+# ----- NuGet -----
+*.nupkg
+*.snupkg
+[Pp]ackages/
+nuget.config
+
+# ----- Node.js -----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ----- Environment / Secrets -----
+.env
+.env.local
+.env.*.local
+*.env
+
+# ----- Uploaded files (server-side storage, not source) -----
+JobTracker/wwwroot/uploads/
+
+# ----- Logs -----
+*.log
+logs/
+/tmp/
+
+# ----- OS generated -----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ----- IDE / Editor -----
+.idea/
+*.swp
+*.swo
+*~
+.vscode/settings.json
+.vscode/launch.json
+
+# ----- Docker local overrides -----
+docker-compose.override.yml
+
+# ----- Test results -----
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# ----- Replit-specific (development environment only) -----
+.replit
+replit.nix
+.local/
+attached_assets/

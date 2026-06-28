@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PROVIA</title>
+    <style>
+        :root {
+            --primary-color: #FF9500;
+            --secondary-color: #2F5A7E;
+            --accent-color: #764ba2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-section h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .company-logo {
+            height: 40px;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            text-align: right;
+        }
+
+        .user-name strong {
+            display: block;
+            color: #333;
+        }
+
+        .user-name small {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .logout-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #E68900;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin: 15px 0;
+            font-size: 20px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .card-link {
+            color: #FF9500;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .admin-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+        }
+
+        .card-link {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <img id="companyLogo" class="company-logo" style="display: none;">
+                <h1 id="companyTitle">PROVIA</h1>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+            <div class="user-info">
+                <div class="user-name">
+                    <strong id="userName">Admin User</strong>
+                    <small>Company Admin</small>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="stats-section">
+            <h2>Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-number" id="totalUsers">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Pending Jobs</div>
+                    <div class="stat-number" id="pendingJobs">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Active Jobs</div>
+                    <div class="stat-number" id="activeJobs">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Field Workers</div>
+                    <div class="stat-number" id="fieldWorkers">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Contractors</div>
+                    <div class="stat-number" id="contractors">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card" onclick="navigate('/admin-user-management.html')">
+                <div class="card-icon">👥</div>
+                <h2>Team Management</h2>
+                <p>Add, edit, and manage team members and roles</p>
+                <a href="/admin-user-management.html" class="card-link">Manage →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-jobs.html')">
+                <div class="card-icon">📋</div>
+                <h2>Jobs Management</h2>
+                <p>Create and manage construction jobs and contracts</p>
+                <a href="/admin-jobs.html" class="card-link">Manage →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-scheduler.html')">
+                <div class="card-icon">📅</div>
+                <h2>Scheduler</h2>
+                <p>Schedule workers and manage shifts</p>
+                <a href="/admin-scheduler.html" class="card-link">Schedule →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-calendar.html')">
+                <div class="card-icon">🗓️</div>
+                <h2>Calendar</h2>
+                <p>View company calendar and events</p>
+                <a href="/admin-calendar.html" class="card-link">Calendar →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/update-coordinates.html')">
+                <div class="card-icon">📍</div>
+                <h2>Locations</h2>
+                <p>Manage job sites and GPS coordinates</p>
+                <a href="/update-coordinates.html" class="card-link">Manage →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/reports.html')">
+                <div class="card-icon">📊</div>
+                <h2>Reports</h2>
+                <p>Generate analytics and reports</p>
+                <a href="/reports.html" class="card-link">Reports →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-company-settings.html')">
+                <div class="card-icon">⚙️</div>
+                <h2>Company Settings</h2>
+                <p>Branding, logo, and company information</p>
+                <a href="/admin-company-settings.html" class="card-link">Settings →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        async function loadDashboardMetrics() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                // First get the current user to know their companyId
+                const userResponse = await fetch('/api/user/current', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!userResponse.ok) {
+                    console.error('Failed to get current user');
+                    return;
+                }
+                
+                const currentUser = await userResponse.json();
+                const companyId = currentUser.companyId;
+
+                // Fetch all jobs
+                const jobsResponse = await fetch('/api/jobs', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const jobs = await jobsResponse.json();
+
+                if (Array.isArray(jobs)) {
+                    // Count pending jobs (imported from Wave/other software, waiting for admin approval)
+                    const pending = jobs.filter(j => 
+                        j.status === 'PendingApproval'
+                    ).length;
+                    document.getElementById('pendingJobs').textContent = pending;
+
+                    // Count active jobs (InProgress, InspectionPending)
+                    const active = jobs.filter(j => 
+                        j.status === 'InProgress' || j.status === 'InspectionPending'
+                    ).length;
+                    document.getElementById('activeJobs').textContent = active;
+                }
+
+                // Fetch company users using the correct endpoint with companyId
+                const usersResponse = await fetch(`/api/WorkingAuth/company-users/${companyId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    if (Array.isArray(users)) {
+                        document.getElementById('totalUsers').textContent = users.length;
+                        
+                        // Count field workers (role 2001)
+                        const fieldWorkers = users.filter(u => u.role === 2001).length;
+                        document.getElementById('fieldWorkers').textContent = fieldWorkers;
+
+                        // Count contractors (role 2010)
+                        const contractors = users.filter(u => u.role === 2010).length;
+                        document.getElementById('contractors').textContent = contractors;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard metrics:', error);
+            }
+        }
+
+        function navigate(path) {
+            window.location.href = path;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        async function loadBranding() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/company/settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    // Apply colors
+                    if (settings.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+                    }
+                    if (settings.secondaryColor) {
+                        document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
+                    }
+                    if (settings.accentColor) {
+                        document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+                    }
+
+                    // Apply company name
+                    if (settings.companyName) {
+                        document.getElementById('companyTitle').textContent = settings.companyName;
+                        document.title = `Admin Dashboard - ${settings.companyName}`;
+                    }
+
+                    // Apply logo
+                    if (settings.logoUrl) {
+                        const logoEl = document.getElementById('companyLogo');
+                        logoEl.src = settings.logoUrl;
+                        logoEl.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading branding:', error);
+            }
+        }
+
+        // Load data on page load
+        loadBranding();
+        loadUserInfo();
+        loadDashboardMetrics();
+    </script>
+</body>
+</html>

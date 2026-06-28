@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permit Management - PROVIA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .detail-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #FF9500;
+        }
+        .permit-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid #ccc;
+            transition: all 0.3s ease;
+        }
+        .permit-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .permit-card.status-pending { border-left-color: #ffc107; }
+        .permit-card.status-preparing { border-left-color: #17a2b8; }
+        .permit-card.status-submitted { border-left-color: #007bff; }
+        .permit-card.status-under_review { border-left-color: #6f42c1; }
+        .permit-card.status-approved { border-left-color: #28a745; }
+        .permit-card.status-denied { border-left-color: #dc3545; }
+        .permit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .permit-type {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+        }
+        .permit-code-ref {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 10px;
+        }
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-preparing { background: #d1ecf1; color: #0c5460; }
+        .status-submitted { background: #cce5ff; color: #004085; }
+        .status-under_review { background: #e2d9f3; color: #5a3e85; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-denied { background: #f8d7da; color: #721c24; }
+        .checklist-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .checklist-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        .checklist-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .checklist-item.complete i { color: #28a745; }
+        .checklist-item.incomplete i { color: #dc3545; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .info-label {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .btn-primary-custom {
+            background: #FF9500;
+            border: none;
+            color: white;
+        }
+        .btn-primary-custom:hover {
+            background: #E68900;
+            color: white;
+        }
+        .btn-outline-custom {
+            border: 2px solid #FF9500;
+            color: #FF9500;
+            background: transparent;
+        }
+        .btn-outline-custom:hover {
+            background: #FF9500;
+            color: white;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .quick-assign-section {
+            background: rgba(47, 90, 126, 0.05);
+            border: 1px dashed #2F5A7E;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .quick-assign-section label {
+            color: #2F5A7E;
+            font-weight: 500;
+        }
+        .quick-assign-section .form-select {
+            border-color: #2F5A7E;
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 60px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        .empty-state i {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .workflow-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        .workflow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: -20px;
+            width: 40px;
+            height: 2px;
+            background: #ddd;
+        }
+        .workflow-step.active::after {
+            background: #28a745;
+        }
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ddd;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .workflow-step.completed .step-circle { background: #28a745; }
+        .workflow-step.active .step-circle { background: #007bff; }
+        .step-label {
+            font-size: 0.75em;
+            color: #666;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <a href="job-detail.html" class="text-white text-decoration-none mb-2 d-inline-block" id="backLink">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Job
+                </a>
+                <h2 class="mb-0" id="pageTitle">Permit Management</h2>
+                <p class="mb-0 opacity-75" id="jobInfo">Loading...</p>
+            </div>
+            <div>
+                <button class="btn btn-light" onclick="initializePermits()">
+                    <i class="fas fa-sync me-2"></i>Refresh Permits
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-card mb-4">
+            <h3 class="section-title">
+                <i class="fas fa-map-marker-alt me-2"></i>Property Data (MassGIS)
+            </h3>
+            <p class="text-muted mb-3">Property information retrieved from Massachusetts public records. This data auto-fills permit applications.</p>
+            
+            <div id="propertyDataSection">
+                <div class="row" id="propertyDataContent" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="info-item mb-2">
+                            <div class="info-label">Parcel ID</div>
+                            <div class="info-value" id="gisParcelId">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Map/Lot</div>
+                            <div class="info-value" id="gisMapLot">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Owner of Record</div>
+                            <div class="info-value" id="gisOwner">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Owner Address</div>
+                            <div class="info-value" id="gisOwnerAddress">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item mb-2">
+                            <div class="info-label">Lot Size</div>
+                            <div class="info-value" id="gisLotSize">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Use Code</div>
+                            <div class="info-value" id="gisUseCode">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Total Assessed Value</div>
+                            <div class="info-value" id="gisTotalValue">-</div>
+                        </div>
+                        <div class="info-item mb-2">
+                            <div class="info-label">Year Built</div>
+                            <div class="info-value" id="gisYearBuilt">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="propertyDataEmpty" class="text-center py-3">
+                    <i class="fas fa-database text-muted fa-2x mb-2"></i>
+                    <p class="text-muted mb-0">No property data loaded yet</p>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary-custom" id="fetchGisBtn" onclick="fetchPropertyData()">
+                        <i class="fas fa-download me-2"></i>Fetch from MassGIS
+                    </button>
+                    <small class="text-muted ms-2" id="gisLastFetched"></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <h3 class="section-title">
+                <i class="fas fa-clipboard-list me-2"></i>Permit Workflow
+            </h3>
+            <p class="text-muted mb-3">Track and manage required permits for this job. Click on a permit to update its status and details.</p>
+            
+            <div id="permitsList">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading permits...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="permitModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i><span id="modalPermitType">Permit</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="permitForm">
+                        <input type="hidden" id="permitId">
+                        
+                        <div class="mb-3 p-3 rounded" id="permitHolderInfo" style="background: #e8f4f8; border-left: 4px solid #17a2b8;">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                <span id="permitHolderText">Loading permit holder info...</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Status</label>
+                                <select class="form-select" id="permitStatus">
+                                    <option value="PENDING">Pending - Not Started</option>
+                                    <option value="PREPARING">Preparing Application</option>
+                                    <option value="SUBMITTED">Submitted to Municipality</option>
+                                    <option value="UNDER_REVIEW">Under Review</option>
+                                    <option value="APPROVED">Approved</option>
+                                    <option value="DENIED">Denied</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Permit Number</label>
+                                <input type="text" class="form-control" id="permitNumber" placeholder="Assigned after approval">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="subcontractorSection">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-hard-hat me-1"></i>Assigned Subcontractor (License Holder)
+                                </label>
+                                <select class="form-select" id="assignedSubcontractor">
+                                    <option value="">-- Select Subcontractor --</option>
+                                </select>
+                                <small class="text-muted">The subcontractor with the required license who will pull this permit</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Issuing Authority</label>
+                                <input type="text" class="form-control" id="issuingAuthority" placeholder="e.g., Boston Building Department">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Application Fee</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="applicationFee" step="0.01">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" id="feePaid" class="form-check-input me-2">
+                                        <label class="form-check-label" for="feePaid">Paid</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Application Date</label>
+                                <input type="date" class="form-control" id="applicationDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Submitted Date</label>
+                                <input type="date" class="form-control" id="submittedDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Approved Date</label>
+                                <input type="date" class="form-control" id="approvedDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Expiration Date</label>
+                                <input type="date" class="form-control" id="expirationDate">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Required Documents Checklist</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="hasPlotPlan">
+                                        <label class="form-check-label" for="hasPlotPlan">Plot Plan / Site Drawing</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="hasConstructionDrawings">
+                                        <label class="form-check-label" for="hasConstructionDrawings">Construction Drawings</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="hasContractorLicense">
+                                        <label class="form-check-label" for="hasContractorLicense">Contractor License Copy</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="hasOwnerAuthorization">
+                                        <label class="form-check-label" for="hasOwnerAuthorization">Owner Authorization Letter</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notes</label>
+                            <textarea class="form-control" id="permitNotes" rows="3" placeholder="Add notes about this permit application..."></textarea>
+                        </div>
+
+                        <div class="mb-3" id="denialReasonSection" style="display: none;">
+                            <label class="form-label fw-bold text-danger">Denial Reason</label>
+                            <textarea class="form-control border-danger" id="denialReason" rows="2" placeholder="Reason for denial..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="savePermit()">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('jobId');
+        let permits = [];
+        let jobData = null;
+        let subcontractors = [];
+        let permitHolderInfo = {};
+
+        const PERMIT_HOLDER_MAP = {
+            'BUILDING': { pulledBy: 'GC', description: 'Pulled by General Contractor', license: 'Construction Supervisor License' },
+            'ELECTRICAL': { pulledBy: 'SUB', description: 'Pulled by Licensed Electrician', license: 'Electrician License (527 CMR)' },
+            'PLUMBING': { pulledBy: 'SUB', description: 'Pulled by Licensed Plumber', license: 'Plumber License (248 CMR)' },
+            'GAS': { pulledBy: 'SUB', description: 'Pulled by Licensed Gas Fitter', license: 'Gas Fitter License (248 CMR)' },
+            'HVAC': { pulledBy: 'SUB', description: 'Pulled by Licensed HVAC Installer', license: 'Refrigeration License' },
+            'SHEET_METAL': { pulledBy: 'SUB', description: 'Pulled by Licensed Sheet Metal Worker', license: 'Sheet Metal License' },
+            'OIL_BURNER': { pulledBy: 'SUB', description: 'Pulled by Licensed Oil Burner Tech', license: 'Oil Burner License' },
+            'FIRE': { pulledBy: 'SUB', description: 'Pulled by Licensed Fire Protection', license: 'Fire Protection License' }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!jobId) {
+                document.getElementById('permitsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>No Job Selected</h4>
+                        <p>Please access this page from a job detail page.</p>
+                        <a href="dashboard.html" class="btn btn-primary-custom">Go to Dashboard</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('backLink').href = `job-detail.html?id=${jobId}`;
+            loadJobAndPermits();
+            loadSubcontractors();
+
+            document.getElementById('permitStatus').addEventListener('change', function() {
+                document.getElementById('denialReasonSection').style.display = 
+                    this.value === 'DENIED' ? 'block' : 'none';
+            });
+        });
+
+        async function loadSubcontractors() {
+            try {
+                const response = await fetch('/api/codeengine/subcontractors', {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    subcontractors = data.subcontractors || [];
+                }
+            } catch (error) {
+                console.error('Error loading subcontractors:', error);
+            }
+        }
+
+        function populateSubcontractorDropdown(selectedId) {
+            const dropdown = document.getElementById('assignedSubcontractor');
+            dropdown.innerHTML = '<option value="">-- Select Subcontractor --</option>';
+            
+            subcontractors.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.userId;
+                option.textContent = `${sub.name} (${sub.email})`;
+                if (sub.userId == selectedId) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        }
+
+        function updatePermitHolderInfo(permitType) {
+            const info = PERMIT_HOLDER_MAP[permitType] || { pulledBy: 'Unknown', description: 'License holder required', license: 'Check requirements' };
+            const infoEl = document.getElementById('permitHolderText');
+            const sectionEl = document.getElementById('subcontractorSection');
+            
+            if (info.pulledBy === 'GC') {
+                infoEl.innerHTML = `<strong>GC Responsibility:</strong> ${info.description} - <em>${info.license}</em>`;
+                sectionEl.style.display = 'none';
+            } else {
+                infoEl.innerHTML = `<strong>Subcontractor Required:</strong> ${info.description} - <em>${info.license}</em>`;
+                sectionEl.style.display = 'block';
+            }
+        }
+
+        function getSubcontractorName(userId) {
+            if (!userId) return null;
+            const sub = subcontractors.find(s => s.userId == userId);
+            return sub ? sub.name : null;
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        async function loadJobAndPermits() {
+            try {
+                const jobResponse = await fetch(`/api/jobs/${jobId}`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (jobResponse.ok) {
+                    jobData = await jobResponse.json();
+                    document.getElementById('pageTitle').textContent = `Permit Management - ${jobData.name || jobData.jobNumber}`;
+                    document.getElementById('jobInfo').textContent = `${jobData.jobNumber} | ${jobData.location || 'No location'}`;
+                }
+
+                await loadPermits();
+                await loadPropertyData();
+            } catch (error) {
+                console.error('Error loading job:', error);
+            }
+        }
+
+        async function loadPermits() {
+            try {
+                const response = await fetch(`/api/codeengine/job/${jobId}/permits`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load permits');
+                
+                const data = await response.json();
+                permits = data.permits || [];
+                
+                if (permits.length === 0) {
+                    await initializePermits();
+                } else {
+                    renderPermits();
+                }
+            } catch (error) {
+                console.error('Error loading permits:', error);
+                document.getElementById('permitsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h4>Error Loading Permits</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary-custom" onclick="loadPermits()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function initializePermits() {
+            try {
+                document.getElementById('permitsList').innerHTML = `
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                        <p class="mt-3">Initializing permits...</p>
+                    </div>
+                `;
+
+                const response = await fetch(`/api/codeengine/job/${jobId}/permits/initialize`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to initialize permits');
+                
+                const data = await response.json();
+                permits = data.permits || [];
+                renderPermits();
+            } catch (error) {
+                console.error('Error initializing permits:', error);
+                document.getElementById('permitsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <h4>No Permits Required</h4>
+                        <p>Configure job scopes in the Job Options Wizard to identify required permits.</p>
+                        <a href="job-scope-wizard.html?jobId=${jobId}" class="btn btn-primary-custom">
+                            <i class="fas fa-magic me-2"></i>Open Job Options Wizard
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function renderPermits() {
+            if (permits.length === 0) {
+                document.getElementById('permitsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <h4>No Permits Required</h4>
+                        <p>Configure job scopes in the Job Options Wizard to identify required permits.</p>
+                        <a href="job-scope-wizard.html?jobId=${jobId}" class="btn btn-primary-custom">
+                            <i class="fas fa-magic me-2"></i>Open Job Options Wizard
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = permits.map(permit => {
+                const statusClass = `status-${permit.status.toLowerCase()}`;
+                const statusLabel = getStatusLabel(permit.status);
+                const progressPercent = getProgressPercent(permit);
+                const docsComplete = countDocsComplete(permit);
+                const holderInfo = PERMIT_HOLDER_MAP[permit.permitType] || { pulledBy: 'SUB' };
+                const subName = getSubcontractorName(permit.assignedUserId);
+                const holderDisplay = holderInfo.pulledBy === 'GC' 
+                    ? '<span class="badge bg-primary">GC</span>' 
+                    : (subName ? `<span class="badge bg-info">${subName}</span>` : '<span class="badge bg-warning text-dark">Assign Sub</span>');
+                
+                return `
+                    <div class="permit-card ${statusClass}" onclick="openPermitModal(${permit.id})">
+                        <div class="permit-header">
+                            <div>
+                                <span class="permit-type">${formatPermitType(permit.permitType)}</span>
+                                ${permit.codeReference ? `<span class="permit-code-ref">(${permit.codeReference})</span>` : ''}
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Permit Holder:</small> ${holderDisplay}
+                        </div>
+                        
+                        <div class="workflow-steps">
+                            <div class="workflow-step ${getStepClass(permit.status, 'PENDING')}">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Pending</div>
+                            </div>
+                            <div class="workflow-step ${getStepClass(permit.status, 'PREPARING')}">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Preparing</div>
+                            </div>
+                            <div class="workflow-step ${getStepClass(permit.status, 'SUBMITTED')}">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Submitted</div>
+                            </div>
+                            <div class="workflow-step ${getStepClass(permit.status, 'APPROVED')}">
+                                <div class="step-circle">4</div>
+                                <div class="step-label">Approved</div>
+                            </div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Permit Number</div>
+                                <div class="info-value">${permit.permitNumber || 'Not assigned'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Issuing Authority</div>
+                                <div class="info-value">${permit.issuingAuthority || 'Not specified'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Documents Ready</div>
+                                <div class="info-value">${docsComplete}/4 complete</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Fee</div>
+                                <div class="info-value">${permit.applicationFee ? `$${permit.applicationFee.toFixed(2)}` : 'Not set'} ${permit.feePaid ? '<span class="badge bg-success">Paid</span>' : ''}</div>
+                            </div>
+                        </div>
+
+                        ${holderInfo.pulledBy === 'SUB' ? `
+                        <div class="quick-assign-section" onclick="event.stopPropagation();">
+                            <label class="form-label mb-1"><small><i class="fas fa-user-hard-hat me-1"></i>Assign Subcontractor:</small></label>
+                            <select class="form-select form-select-sm" id="quickAssign_${permit.id}" onchange="quickAssignSubcontractor(${permit.id}, this.value)">
+                                <option value="">-- Select --</option>
+                                ${subcontractors.map(sub => `<option value="${sub.userId}" ${sub.userId == permit.assignedUserId ? 'selected' : ''}>${sub.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
+
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-outline-custom" onclick="event.stopPropagation(); openPermitModal(${permit.id})">
+                                <i class="fas fa-edit me-1"></i>Edit Details
+                            </button>
+                            ${permit.status === 'PENDING' ? `
+                                <button class="btn btn-sm btn-primary-custom" onclick="event.stopPropagation(); quickStatusUpdate(${permit.id}, 'PREPARING')">
+                                    <i class="fas fa-play me-1"></i>Start Preparing
+                                </button>
+                            ` : ''}
+                            ${permit.status === 'PREPARING' ? `
+                                <button class="btn btn-sm btn-primary-custom" onclick="event.stopPropagation(); quickStatusUpdate(${permit.id}, 'SUBMITTED')">
+                                    <i class="fas fa-paper-plane me-1"></i>Mark as Submitted
+                                </button>
+                            ` : ''}
+                            ${permit.status === 'SUBMITTED' || permit.status === 'UNDER_REVIEW' ? `
+                                <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); quickStatusUpdate(${permit.id}, 'APPROVED')">
+                                    <i class="fas fa-check me-1"></i>Mark Approved
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('permitsList').innerHTML = html;
+        }
+
+        function formatPermitType(type) {
+            return type.charAt(0) + type.slice(1).toLowerCase() + ' Permit';
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'PENDING': 'Pending',
+                'PREPARING': 'Preparing',
+                'SUBMITTED': 'Submitted',
+                'UNDER_REVIEW': 'Under Review',
+                'APPROVED': 'Approved',
+                'DENIED': 'Denied'
+            };
+            return labels[status] || status;
+        }
+
+        function getStepClass(currentStatus, stepStatus) {
+            const order = ['PENDING', 'PREPARING', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED'];
+            const currentIndex = order.indexOf(currentStatus);
+            const stepIndex = order.indexOf(stepStatus);
+            
+            if (stepIndex < currentIndex) return 'completed';
+            if (stepIndex === currentIndex) return 'active';
+            return '';
+        }
+
+        function getProgressPercent(permit) {
+            const statusProgress = {
+                'PENDING': 10,
+                'PREPARING': 30,
+                'SUBMITTED': 60,
+                'UNDER_REVIEW': 80,
+                'APPROVED': 100,
+                'DENIED': 0
+            };
+            return statusProgress[permit.status] || 0;
+        }
+
+        function countDocsComplete(permit) {
+            let count = 0;
+            if (permit.hasPlotPlan) count++;
+            if (permit.hasConstructionDrawings) count++;
+            if (permit.hasContractorLicense) count++;
+            if (permit.hasOwnerAuthorization) count++;
+            return count;
+        }
+
+        function openPermitModal(permitId) {
+            const permit = permits.find(p => p.id === permitId);
+            if (!permit) return;
+
+            document.getElementById('permitId').value = permit.id;
+            document.getElementById('modalPermitType').textContent = formatPermitType(permit.permitType);
+            document.getElementById('permitStatus').value = permit.status;
+            document.getElementById('permitNumber').value = permit.permitNumber || '';
+            document.getElementById('issuingAuthority').value = permit.issuingAuthority || '';
+            document.getElementById('applicationFee').value = permit.applicationFee || '';
+            document.getElementById('feePaid').checked = permit.feePaid || false;
+            document.getElementById('applicationDate').value = permit.applicationDate ? permit.applicationDate.split('T')[0] : '';
+            document.getElementById('submittedDate').value = permit.submittedDate ? permit.submittedDate.split('T')[0] : '';
+            document.getElementById('approvedDate').value = permit.approvedDate ? permit.approvedDate.split('T')[0] : '';
+            document.getElementById('expirationDate').value = permit.expirationDate ? permit.expirationDate.split('T')[0] : '';
+            document.getElementById('hasPlotPlan').checked = permit.hasPlotPlan || false;
+            document.getElementById('hasConstructionDrawings').checked = permit.hasConstructionDrawings || false;
+            document.getElementById('hasContractorLicense').checked = permit.hasContractorLicense || false;
+            document.getElementById('hasOwnerAuthorization').checked = permit.hasOwnerAuthorization || false;
+            document.getElementById('permitNotes').value = permit.notes || '';
+            document.getElementById('denialReason').value = permit.denialReason || '';
+            
+            document.getElementById('denialReasonSection').style.display = 
+                permit.status === 'DENIED' ? 'block' : 'none';
+
+            updatePermitHolderInfo(permit.permitType);
+            populateSubcontractorDropdown(permit.assignedUserId);
+
+            const modal = new bootstrap.Modal(document.getElementById('permitModal'));
+            modal.show();
+        }
+
+        async function savePermit() {
+            const permitId = document.getElementById('permitId').value;
+            const assignedSub = document.getElementById('assignedSubcontractor').value;
+            
+            const updateData = {
+                status: document.getElementById('permitStatus').value,
+                permitNumber: document.getElementById('permitNumber').value || null,
+                issuingAuthority: document.getElementById('issuingAuthority').value || null,
+                applicationFee: document.getElementById('applicationFee').value ? parseFloat(document.getElementById('applicationFee').value) : null,
+                feePaid: document.getElementById('feePaid').checked,
+                applicationDate: document.getElementById('applicationDate').value || null,
+                submittedDate: document.getElementById('submittedDate').value || null,
+                approvedDate: document.getElementById('approvedDate').value || null,
+                expirationDate: document.getElementById('expirationDate').value || null,
+                hasPlotPlan: document.getElementById('hasPlotPlan').checked,
+                hasConstructionDrawings: document.getElementById('hasConstructionDrawings').checked,
+                hasContractorLicense: document.getElementById('hasContractorLicense').checked,
+                hasOwnerAuthorization: document.getElementById('hasOwnerAuthorization').checked,
+                notes: document.getElementById('permitNotes').value || null,
+                denialReason: document.getElementById('denialReason').value || null,
+                assignedUserId: assignedSub ? parseInt(assignedSub) : null
+            };
+
+            try {
+                const response = await fetch(`/api/codeengine/permits/${permitId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) throw new Error('Failed to update permit');
+
+                bootstrap.Modal.getInstance(document.getElementById('permitModal')).hide();
+                await loadPermits();
+            } catch (error) {
+                console.error('Error saving permit:', error);
+                alert('Error saving permit: ' + error.message);
+            }
+        }
+
+        async function quickStatusUpdate(permitId, newStatus) {
+            try {
+                const response = await fetch(`/api/codeengine/permits/${permitId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) throw new Error('Failed to update status');
+                await loadPermits();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating status: ' + error.message);
+            }
+        }
+
+        async function quickAssignSubcontractor(permitId, userId) {
+            try {
+                const response = await fetch(`/api/codeengine/permits/${permitId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ assignedUserId: userId ? parseInt(userId) : null })
+                });
+
+                if (!response.ok) throw new Error('Failed to assign subcontractor');
+                await loadPermits();
+            } catch (error) {
+                console.error('Error assigning subcontractor:', error);
+                alert('Error assigning subcontractor: ' + error.message);
+            }
+        }
+
+        async function loadPropertyData() {
+            try {
+                const response = await fetch(`/api/codeengine/job/${jobId}/property-data`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.exists && data.propertyProfile) {
+                        displayPropertyData(data.propertyProfile);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading property data:', error);
+            }
+        }
+
+        function displayPropertyData(profile) {
+            document.getElementById('propertyDataContent').style.display = 'flex';
+            document.getElementById('propertyDataEmpty').style.display = 'none';
+            
+            document.getElementById('gisParcelId').textContent = profile.parcelId || '-';
+            document.getElementById('gisMapLot').textContent = profile.mapLot || '-';
+            document.getElementById('gisOwner').textContent = profile.ownerName || '-';
+            document.getElementById('gisOwnerAddress').textContent = profile.ownerAddress || '-';
+            document.getElementById('gisLotSize').textContent = profile.lotAreaSqFt ? `${profile.lotAreaSqFt.toLocaleString()} sq ft` : '-';
+            document.getElementById('gisUseCode').textContent = profile.useDescription ? `${profile.useCode} - ${profile.useDescription}` : (profile.useCode || '-');
+            document.getElementById('gisTotalValue').textContent = profile.totalAssessedValue ? `$${profile.totalAssessedValue.toLocaleString()}` : '-';
+            document.getElementById('gisYearBuilt').textContent = profile.yearBuilt || '-';
+            
+            if (profile.gisFetchedAt) {
+                const fetchDate = new Date(profile.gisFetchedAt);
+                document.getElementById('gisLastFetched').textContent = `Last updated: ${fetchDate.toLocaleDateString()}`;
+            }
+        }
+
+        async function fetchPropertyData() {
+            const btn = document.getElementById('fetchGisBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Fetching...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/codeengine/job/${jobId}/property-data/fetch`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.propertyProfile) {
+                        displayPropertyData(data.propertyProfile);
+                        alert('Property data fetched successfully from MassGIS!');
+                    } else {
+                        alert(data.message || 'Could not fetch property data. Check the job address.');
+                    }
+                } else {
+                    throw new Error('Failed to fetch property data');
+                }
+            } catch (error) {
+                console.error('Error fetching property data:', error);
+                alert('Error fetching property data: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

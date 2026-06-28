@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs Management - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .job-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #007bff;
+        }
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .status-planning { background-color: #d3d3f1; color: #5a4a99; }
+        .status-permits { background-color: #fff3cd; color: #856404; }
+        .status-progress { background-color: #cfe2ff; color: #084298; }
+        .status-inspection { background-color: #fff5e1; color: #f5a602; }
+        .status-completed { background-color: #d1e7dd; color: #0f5132; }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+    <div class="container-fluid">
+        <div style="background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <a href="/admin-dashboard.html" style="color: #FF9500; text-decoration: none; font-weight: 600;"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            </div>
+            <h3 style="margin: 0; color: #333;">PROVIA - Jobs Management</h3>
+            <div></div>
+        </div>
+        <div class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-briefcase me-2"></i>Jobs Management</h2>
+                <button class="btn btn-primary" onclick="showCreateJobModal()">
+                    <i class="fas fa-plus me-2"></i>New Job
+                </button>
+            </div>
+
+            <div id="jobsList">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Job Modal -->
+    <div class="modal fade" id="createJobModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Create New Job</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createJobForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Job Name *</label>
+                                <input type="text" class="form-control" id="jobName" placeholder="e.g., Kitchen Renovation" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Job Number *</label>
+                                <input type="text" class="form-control" id="jobNumber" placeholder="Auto-generated" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="jobDescription" rows="2" placeholder="Job details and scope"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" id="jobLocation" placeholder="Address" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Name *</label>
+                                <input type="text" class="form-control" id="clientName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Email *</label>
+                                <input type="email" class="form-control" id="clientEmail" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Phone *</label>
+                                <input type="tel" class="form-control" id="clientPhone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="startDate" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Target Completion Date</label>
+                                <input type="date" class="form-control" id="completionDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Budget ($) *</label>
+                                <input type="number" class="form-control" id="budget" step="0.01" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="jobStatus">
+                                <option value="Planning">Planning</option>
+                                <option value="PermitsPending">Permits Pending</option>
+                                <option value="InProgress">In Progress</option>
+                                <option value="InspectionPending">Inspection Pending</option>
+                                <option value="OnHold">On Hold</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            After creating the job, you'll be able to set scope, add team assignments, and track inspections.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createJob()">
+                        <i class="fas fa-save me-2"></i>Create Job
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showNotification(message, type = 'success', duration = 5000) {
+            const container = document.getElementById('notificationContainer');
+            const icons = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-circle'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="notification-icon ${icons[type]}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(notification);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.remove();
+                }, duration);
+            }
+        }
+
+        function generateJobNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000);
+            return `${year}${month}${day}-${random.toString().padStart(3, '0')}`;
+        }
+
+        function showCreateJobModal() {
+            document.getElementById('createJobForm').reset();
+            document.getElementById('jobNumber').value = generateJobNumber();
+            document.getElementById('startDate').valueAsDate = new Date();
+            new bootstrap.Modal(document.getElementById('createJobModal')).show();
+        }
+
+        function createJob() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) {
+                showNotification('Session expired. Please log in again.', 'error');
+                return;
+            }
+
+            const jobData = {
+                name: document.getElementById('jobName').value.trim(),
+                jobNumber: document.getElementById('jobNumber').value,
+                description: document.getElementById('jobDescription').value.trim(),
+                location: document.getElementById('jobLocation').value.trim(),
+                clientName: document.getElementById('clientName').value.trim(),
+                clientEmail: document.getElementById('clientEmail').value.trim(),
+                clientPhone: document.getElementById('clientPhone').value.trim(),
+                startDate: document.getElementById('startDate').value,
+                targetCompletionDate: document.getElementById('completionDate').value || null,
+                status: document.getElementById('jobStatus').value,
+                budget: document.getElementById('budget').value ? parseFloat(document.getElementById('budget').value) : null,
+                actualCost: 0
+            };
+
+            // Validate all required fields with specific error messages
+            const missingFields = [];
+            
+            if (!jobData.name) missingFields.push('Job Name');
+            if (!jobData.location) missingFields.push('Location');
+            if (!jobData.clientName) missingFields.push('Client Name');
+            if (!jobData.clientEmail) {
+                missingFields.push('Client Email');
+            } else if (!jobData.clientEmail.includes('@')) {
+                showNotification('Error: Client Email must be a valid email address', 'error');
+                return;
+            }
+            if (!jobData.clientPhone) missingFields.push('Client Phone');
+            if (!jobData.startDate) missingFields.push('Start Date');
+            if (!jobData.budget || isNaN(jobData.budget) || jobData.budget <= 0) missingFields.push('Budget');
+
+            if (missingFields.length > 0) {
+                const fieldsList = missingFields.join(', ');
+                showNotification(`Missing required fields: ${fieldsList}`, 'error', 7000);
+                return;
+            }
+
+            fetch('/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(jobData)
+            })
+            .then(r => {
+                if (r.ok) {
+                    return r.json().then(data => ({success: true, data: data}));
+                } else {
+                    return r.text().then(text => {
+                        try {
+                            return {success: false, data: JSON.parse(text)};
+                        } catch {
+                            return {success: false, data: {error: text}};
+                        }
+                    });
+                }
+            })
+            .then(response => {
+                if (response.success && (response.data.id || response.data.name)) {
+                    showNotification('✓ Job created successfully', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createJobModal')).hide();
+                    setTimeout(loadJobs, 500); // Give it time to settle
+                } else {
+                    const errorMsg = response.data.error || response.data.message || 'Failed to create job';
+                    showNotification('Error: ' + errorMsg, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error creating job:', err);
+                showNotification('Error: ' + err.message, 'error');
+            });
+        }
+
+        function loadJobs() {
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) {
+                document.getElementById('jobsList').innerHTML = '<div class="alert alert-danger">Session expired</div>';
+                return;
+            }
+
+            fetch('/api/jobs', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(r => r.json())
+            .then(jobs => {
+                if (!Array.isArray(jobs) || jobs.length === 0) {
+                    document.getElementById('jobsList').innerHTML = '<div class="alert alert-info">No jobs yet. <a href="#" onclick="showCreateJobModal(); return false;">Create your first job</a></div>';
+                    return;
+                }
+
+                let html = '';
+                jobs.forEach(job => {
+                    const statusClass = `status-${job.status?.toLowerCase() || 'planning'}`;
+                    html += `
+                        <div class="job-card">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5>${job.name}</h5>
+                                    <p class="text-muted mb-2">${job.jobNumber}</p>
+                                    <p>${job.description || ''}</p>
+                                    <small><strong>Location:</strong> ${job.location}</small><br>
+                                    <small><strong>Client:</strong> ${job.clientName} • ${job.clientEmail}</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="status-badge ${statusClass}">${job.status || 'Planning'}</span>
+                                    <div class="mt-3">
+                                        <p class="mb-1"><strong>Budget:</strong> $${(job.budget || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                                        <p class="mb-1"><strong>Spent:</strong> $${(job.actualCost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewJob(${job.id})">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('jobsList').innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error loading jobs:', err);
+                document.getElementById('jobsList').innerHTML = '<div class="alert alert-danger">Error loading jobs</div>';
+            });
+        }
+
+        function viewJob(jobId) {
+            window.location.href = `/job-detail.html?id=${jobId}`;
+        }
+
+        // Load jobs on page load
+        window.addEventListener('load', loadJobs);
+    </script>
+</body>
+</html>

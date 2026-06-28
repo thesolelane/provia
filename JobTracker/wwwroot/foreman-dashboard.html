@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foreman Dashboard - PROVIA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #2F5A7E 0%, #1a3a52 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-section h1 {
+            color: #FF9500;
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            text-align: right;
+        }
+
+        .user-name strong {
+            display: block;
+            color: #333;
+        }
+
+        .user-name small {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .logout-btn {
+            background: #FF9500;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #E68900;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin: 15px 0;
+            font-size: 20px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .card-link {
+            color: #2F5A7E;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #2F5A7E 0%, #1a3a52 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .foreman-badge {
+            background: #2F5A7E;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>PROVIA</h1>
+                <span class="foreman-badge">FOREMAN</span>
+            </div>
+            <div class="user-info">
+                <div class="user-name">
+                    <strong id="userName">Foreman User</strong>
+                    <small>Project Foreman</small>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="stats-section">
+            <h2>Your Teams</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Supervisors</div>
+                    <div class="stat-number" id="supervisors">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Field Operators</div>
+                    <div class="stat-number" id="operators">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Active Jobs</div>
+                    <div class="stat-number" id="activeJobs">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Contractors</div>
+                    <div class="stat-number" id="contractors">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card" onclick="navigate('/supervisor-dashboard.html')">
+                <div class="card-icon">👨‍💼</div>
+                <h2>Team Management</h2>
+                <p>Manage supervisors and field operators</p>
+                <a href="/supervisor-dashboard.html" class="card-link">Manage →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/dashboard.html')">
+                <div class="card-icon">📋</div>
+                <h2>Jobs</h2>
+                <p>View and assign project jobs</p>
+                <a href="/dashboard.html" class="card-link">View →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-scheduler.html')">
+                <div class="card-icon">📅</div>
+                <h2>Scheduling</h2>
+                <p>Schedule team work and shifts</p>
+                <a href="/admin-scheduler.html" class="card-link">Schedule →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/contractor-dashboard.html')">
+                <div class="card-icon">🤝</div>
+                <h2>Contractors</h2>
+                <p>Manage sub-contractors and bids</p>
+                <a href="/contractor-dashboard.html" class="card-link">Manage →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/field-operator-dashboard.html')">
+                <div class="card-icon">⏱️</div>
+                <h2>Time Tracking</h2>
+                <p>Monitor field worker time entries</p>
+                <a href="/field-operator-dashboard.html" class="card-link">View →</a>
+            </div>
+
+            <div class="card" onclick="navigate('/admin-calendar.html')">
+                <div class="card-icon">🗓️</div>
+                <h2>Calendar</h2>
+                <p>View project calendar and deadlines</p>
+                <a href="/admin-calendar.html" class="card-link">Calendar →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user/current');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        function navigate(path) {
+            window.location.href = path;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        loadUserInfo();
+    </script>
+</body>
+</html>

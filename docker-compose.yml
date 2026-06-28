@@ -1,0 +1,128 @@
+# ============================================================
+# PROVIA - Docker Compose
+# Self-hosted deployment: App + PostgreSQL + Nginx
+# Usage: Copy .env.example to .env, fill values, then run:
+#   docker compose up -d --build
+# ============================================================
+
+version: "3.9"
+
+services:
+
+  # ----------------------------------------------------------
+  # PostgreSQL database
+  # Data is persisted in a named volume across container restarts
+  # ----------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: provia_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PGDATABASE}
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - provia_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER} -d ${PGDATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------
+  # PROVIA .NET application
+  # ----------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: provia_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Database (connects to the db service above)
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${PGDATABASE}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+
+      # Auth
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+      # CORS — set to your actual domain in production
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+
+      # Email
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+
+      # SMS
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+
+      # AI (optional)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+
+      # WhatsApp via 360Dialog (optional)
+      DIALOG360_API_KEY: ${DIALOG360_API_KEY}
+      DIALOG360_PHONE_NUMBER: ${DIALOG360_PHONE_NUMBER}
+
+      # Runtime
+      ASPNETCORE_ENVIRONMENT: Production
+    volumes:
+      # Persist uploaded files (logos, permits, photos) outside the container
+      - uploads_data:/app/wwwroot/uploads
+    networks:
+      - provia_internal
+      - provia_public
+
+  # ----------------------------------------------------------
+  # Nginx reverse proxy
+  # Routes external HTTPS traffic to the .NET app on port 5000
+  # ----------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: provia_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # Let's Encrypt certificate storage (if using Certbot)
+      - certbot_data:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
+    networks:
+      - provia_public
+
+# ----------------------------------------------------------
+# Named volumes — data survives container restarts/rebuilds
+# ----------------------------------------------------------
+volumes:
+  postgres_data:
+    name: provia_postgres_data
+  uploads_data:
+    name: provia_uploads_data
+  certbot_data:
+    name: provia_certbot_data
+  certbot_webroot:
+    name: provia_certbot_webroot
+
+# ----------------------------------------------------------
+# Networks
+# ----------------------------------------------------------
+networks:
+  provia_internal:
+    name: provia_internal
+    internal: true
+  provia_public:
+    name: provia_public

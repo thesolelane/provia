@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROVIA - Construction Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #FF9500 !important;
+        }
+        
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 2rem;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        .logo-large {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #FF9500 0%, #2F5A7E 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-description {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+        
+        .btn-hero {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            margin: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-hero {
+            background: linear-gradient(135deg, #FF9500 0%, #2F5A7E 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 149, 0, 0.3);
+            color: white;
+        }
+        
+        .btn-secondary-hero {
+            background: white;
+            border: 2px solid #FF9500;
+            color: #FF9500;
+        }
+        
+        .btn-secondary-hero:hover {
+            background: #FF9500;
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        .features-section {
+            padding: 5rem 2rem;
+            background: #f8f9fa;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #FF9500;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-text {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: #333;
+            margin-bottom: 3rem;
+        }
+        
+        .footer {
+            background: #333;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-text {
+            margin-bottom: 1rem;
+        }
+        
+        .social-links {
+            margin: 1.5rem 0;
+        }
+        
+        .social-links a {
+            color: white;
+            margin: 0 0.5rem;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            color: #FF9500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid px-5">
+            <a class="navbar-brand" href="/">
+                <svg width="30" height="30" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.5rem;">
+                    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="26">
+                        <path d="M80 48 L176 128 L80 208" stroke="#FF9500"/>
+                        <path d="M176 48 L272 128 L176 208" stroke="#2E8CCF"/>
+                        <path d="M272 48 L368 128 L272 208" stroke="#163853"/>
+                    </g>
+                </svg>
+                PROVIA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login.html">Employee Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary-hero text-white ms-2" href="/company-signup.html">
+                            <i class="fas fa-building me-2"></i>Register Company
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="logo-large">
+                <svg width="100" height="100" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="26">
+                        <path d="M80 48 L176 128 L80 208" stroke="#FF9500"/>
+                        <path d="M176 48 L272 128 L176 208" stroke="#2E8CCF"/>
+                        <path d="M272 48 L368 128 L272 208" stroke="#163853"/>
+                    </g>
+                </svg>
+            </div>
+            <h1 class="hero-title">PROVIA</h1>
+            <p class="hero-subtitle">Enterprise Construction Management Platform</p>
+            <p class="hero-description">
+                Streamline job tracking, workforce management, scheduling, and real-time location monitoring across your construction projects. 
+                Built for modern construction companies with enterprise-grade security and multi-site support.
+            </p>
+            <div>
+                <a href="/company-signup.html" class="btn btn-hero btn-primary-hero">
+                    <i class="fas fa-rocket me-2"></i>Get Started Now
+                </a>
+                <a href="/login.html" class="btn btn-hero btn-secondary-hero">
+                    <i class="fas fa-sign-in-alt me-2"></i>Employee Login
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose PROVIA?</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h3 class="feature-title">Job Tracking</h3>
+                        <p class="feature-text">Real-time project updates, phase management, and issue tracking in one unified platform.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="feature-title">Workforce Management</h3>
+                        <p class="feature-text">Time tracking, attendance, scheduling, and team coordination with mobile app support.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-location-dot"></i>
+                        </div>
+                        <h3 class="feature-title">GPS Tracking</h3>
+                        <p class="feature-text">Real-time location monitoring, geo-fencing, and attendance verification for field teams.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Enterprise Security</h3>
+                        <p class="feature-text">Multi-tenant architecture, role-based access control, and encrypted data isolation.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Analytics & Reports</h3>
+                        <p class="feature-text">Comprehensive dashboards, performance metrics, and data-driven insights for better decisions.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Mobile Ready</h3>
+                        <p class="feature-text">Native mobile app for field teams with offline mode and real-time synchronization.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">&copy; 2025 PROVIA - Enterprise Construction Management. All rights reserved.</p>
+            <p class="footer-text" style="font-size: 0.9rem; color: #ccc;">
+                For support, contact: <a href="mailto:support@provia.com" style="color: #FF9500;">support@provia.com</a>
+            </p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
