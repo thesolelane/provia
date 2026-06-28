@@ -16,6 +16,8 @@ import LeadPipeline from './components/leads/LeadPipeline';
 import InvoiceList from './components/invoices/InvoiceList';
 import InvoiceDetail from './components/invoices/InvoiceDetail';
 import TaskList from './components/tasks/TaskList';
+import VendorList from './components/vendors/VendorList';
+import VendorDetail from './components/vendors/VendorDetail';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
         <Route path="/invoices" element={<Layout><InvoiceList /></Layout>} />
         <Route path="/invoices/:id" element={<Layout><InvoiceDetail /></Layout>} />
         <Route path="/tasks" element={<Layout><TaskList /></Layout>} />
+        <Route path="/vendors" element={<Layout><VendorList /></Layout>} />
+        <Route path="/vendors/:id" element={<Layout><VendorDetail /></Layout>} />
       </Routes>
     </div>
   );

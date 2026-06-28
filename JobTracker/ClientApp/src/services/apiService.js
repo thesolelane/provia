@@ -204,6 +204,45 @@ const invoicesApi = {
   }),
 };
 
+// Vendors API
+const vendorsApi = {
+  getAll: async ({ category = '', search = '', activeOnly = false } = {}) => {
+    const params = new URLSearchParams();
+    if (category && category !== 'all') params.set('category', category);
+    if (search) params.set('search', search);
+    if (activeOnly) params.set('activeOnly', 'true');
+    return fetchWithErrorHandling(`/api/vendors?${params}`);
+  },
+
+  getSummary: async () => fetchWithErrorHandling('/api/vendors/summary'),
+
+  getById: async (id) => fetchWithErrorHandling(`/api/vendors/${id}`),
+
+  create: async (vendor) => fetchWithErrorHandling('/api/vendors', {
+    method: 'POST',
+    body: JSON.stringify(vendor),
+  }),
+
+  update: async (id, vendor) => fetchWithErrorHandling(`/api/vendors/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(vendor),
+  }),
+
+  activate:   async (id) => fetchWithErrorHandling(`/api/vendors/${id}/activate`,   { method: 'POST' }),
+  deactivate: async (id) => fetchWithErrorHandling(`/api/vendors/${id}/deactivate`, { method: 'POST' }),
+
+  addPurchase: async (id, purchase) => fetchWithErrorHandling(`/api/vendors/${id}/purchases`, {
+    method: 'POST',
+    body: JSON.stringify(purchase),
+  }),
+
+  deletePurchase: async (id, purchaseId) => fetchWithErrorHandling(`/api/vendors/${id}/purchases/${purchaseId}`, {
+    method: 'DELETE',
+  }),
+
+  delete: async (id) => fetchWithErrorHandling(`/api/vendors/${id}`, { method: 'DELETE' }),
+};
+
 // Tasks API
 const tasksApi = {
   getAll: async ({ view = 'all', jobId, contactId, leadId } = {}) => {
@@ -249,5 +288,6 @@ export const apiService = {
   contacts: contactsApi,
   leads: leadsApi,
   invoices: invoicesApi,
+  vendors: vendorsApi,
   tasks: tasksApi,
 };
