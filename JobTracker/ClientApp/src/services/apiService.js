@@ -119,9 +119,48 @@ const contactsApi = {
   }),
 };
 
+// Leads Pipeline API
+const leadsApi = {
+  getAll: async (includeArchived = false) =>
+    fetchWithErrorHandling(`/api/leads?includeArchived=${includeArchived}`),
+
+  getById: async (id) => fetchWithErrorHandling(`/api/leads/${id}`),
+
+  create: async (lead) => fetchWithErrorHandling('/api/leads', {
+    method: 'POST',
+    body: JSON.stringify(lead),
+  }),
+
+  update: async (id, lead) => fetchWithErrorHandling(`/api/leads/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(lead),
+  }),
+
+  changeStage: async (id, stage, appointmentAt = null) =>
+    fetchWithErrorHandling(`/api/leads/${id}/stage`, {
+      method: 'POST',
+      body: JSON.stringify({ stage, appointmentAt }),
+    }),
+
+  addNote: async (id, body) => fetchWithErrorHandling(`/api/leads/${id}/notes`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  }),
+
+  archive: async (id, reason) => fetchWithErrorHandling(`/api/leads/${id}/archive`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  }),
+
+  graduate: async (id) => fetchWithErrorHandling(`/api/leads/${id}/graduate`, {
+    method: 'POST',
+  }),
+};
+
 // Export the APIs
 export const apiService = {
   jobs: jobsApi,
   jobSections: jobSectionsApi,
   contacts: contactsApi,
+  leads: leadsApi,
 };

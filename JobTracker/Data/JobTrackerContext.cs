@@ -69,6 +69,10 @@ namespace JobTracker.Data
         public DbSet<ContactDocument> ContactDocuments { get; set; } = null!;
         public DbSet<ContactActivityLog> ContactActivityLogs { get; set; } = null!;
 
+        // Leads Pipeline
+        public DbSet<Lead> Leads { get; set; } = null!;
+        public DbSet<LeadNote> LeadNotes { get; set; } = null!;
+
         // Municipal Integration tables
         public DbSet<MunicipalPortal> MunicipalPortals { get; set; } = null!;
         public DbSet<PermitAuditLog> PermitAuditLogs { get; set; } = null!;
@@ -223,6 +227,30 @@ namespace JobTracker.Data
             modelBuilder.Entity<Contact>().HasIndex(c => new { c.CompanyId, c.CustomerNumber }).IsUnique();
             modelBuilder.Entity<ContactActivityLog>().HasIndex(a => a.ContactId);
             modelBuilder.Entity<ContactDocument>().HasIndex(d => d.ContactId);
+
+            // Configure Lead relationships
+            modelBuilder.Entity<Lead>()
+                .HasMany(l => l.Notes)
+                .WithOne(n => n.Lead)
+                .HasForeignKey(n => n.LeadId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Lead>()
+                .HasOne(l => l.Contact)
+                .WithMany()
+                .HasForeignKey(l => l.ContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Lead>()
+                .HasOne(l => l.Job)
+                .WithMany()
+                .HasForeignKey(l => l.JobId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Lead>().HasIndex(l => l.CompanyId);
+            modelBuilder.Entity<Lead>().HasIndex(l => new { l.CompanyId, l.Stage });
+            modelBuilder.Entity<Lead>().HasIndex(l => new { l.CompanyId, l.LeadNumber }).IsUnique();
+            modelBuilder.Entity<LeadNote>().HasIndex(n => n.LeadId);
 
             // Add indexes for better performance
             modelBuilder.Entity<Job>().HasIndex(j => j.Status);

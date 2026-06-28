@@ -27,6 +27,9 @@ function Layout({ children }) {
               <li className={isActive('/contacts')}>
                 <Link to="/contacts">Contacts</Link>
               </li>
+              <li className={isActive('/leads')}>
+                <Link to="/leads">Leads</Link>
+              </li>
               <li className={isActive('/sections')}>
                 <Link to="/sections">Sections</Link>
               </li>
