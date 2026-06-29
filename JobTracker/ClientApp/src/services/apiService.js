@@ -170,6 +170,8 @@ const invoicesApi = {
 
   getSummary: async () => fetchWithErrorHandling('/api/invoices/summary'),
 
+  getRevenueTrend: async () => fetchWithErrorHandling('/api/dashboard/revenue-trend'),
+
   getById: async (id) => fetchWithErrorHandling(`/api/invoices/${id}`),
 
   create: async (invoice) => fetchWithErrorHandling('/api/invoices', {
@@ -202,6 +204,15 @@ const invoicesApi = {
   deletePayment: async (id, paymentId) => fetchWithErrorHandling(`/api/invoices/${id}/payments/${paymentId}`, {
     method: 'DELETE',
   }),
+};
+
+// Analytics API
+const analyticsApi = {
+  getOverview: async () => fetchWithErrorHandling('/api/analytics/overview'),
+  getJobs:     async () => fetchWithErrorHandling('/api/analytics/jobs'),
+  getLeads:    async () => fetchWithErrorHandling('/api/analytics/leads'),
+  getRevenue:  async () => fetchWithErrorHandling('/api/analytics/revenue'),
+  getVendors:  async () => fetchWithErrorHandling('/api/analytics/vendors'),
 };
 
 // Field Photos API
@@ -333,5 +344,6 @@ export const apiService = {
   invoices: invoicesApi,
   vendors: vendorsApi,
   photos: photosApi,
+  analytics: analyticsApi,
   tasks: tasksApi,
 };

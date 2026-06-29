@@ -157,6 +157,52 @@ namespace JobTracker.Controllers
         }
 
         /// <summary>
+        /// Get last 6 months of collected (paid) revenue grouped by month
+        /// </summary>
+        [HttpGet("api/dashboard/revenue-trend")]
+        public async Task<ActionResult<object>> GetRevenueTrend()
+        {
+            try
+            {
+                var companyId = _tenantContext.GetCurrentCompanyId();
+                var now = DateTime.UtcNow;
+
+                // Build the 6 month buckets (oldest → newest)
+                var months = Enumerable.Range(0, 6)
+                    .Select(i => now.AddMonths(-5 + i))
+                    .Select(d => new DateTime(d.Year, d.Month, 1, 0, 0, 0, DateTimeKind.Utc))
+                    .ToList();
+
+                var windowStart = months.First();
+
+                var paidInvoices = await _context.Invoices
+                    .Where(i => i.CompanyId == companyId
+                                && i.Status == "paid"
+                                && i.PaidAt != null
+                                && i.PaidAt >= windowStart)
+                    .Select(i => new { i.Total, i.PaidAt })
+                    .ToListAsync();
+
+                var trend = months.Select(m => new
+                {
+                    year  = m.Year,
+                    month = m.Month,
+                    label = m.ToString("MMM yyyy"),
+                    total = paidInvoices
+                        .Where(i => i.PaidAt!.Value.Year == m.Year && i.PaidAt!.Value.Month == m.Month)
+                        .Sum(i => i.Total)
+                }).ToList();
+
+                return Ok(trend);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching revenue trend");
+                return StatusCode(500, new { message = "Error retrieving revenue trend" });
+            }
+        }
+
+        /// <summary>
         /// Get available job bids for a sub-contractor
         /// </summary>
         [HttpGet("api/contractor/available-bids")]

@@ -86,7 +86,18 @@ namespace JobTracker.Controllers
                 var query = _context.Invoices.Where(i => i.CompanyId == companyId);
 
                 if (!string.IsNullOrWhiteSpace(status) && status != "all")
-                    query = query.Where(i => i.Status == status);
+                {
+                    if (status == "overdue")
+                    {
+                        var cutoff = DateTime.UtcNow;
+                        query = query.Where(i => i.Status == InvoiceStatuses.Sent
+                            && i.DueAt.HasValue && i.DueAt.Value < cutoff);
+                    }
+                    else
+                    {
+                        query = query.Where(i => i.Status == status);
+                    }
+                }
                 if (!string.IsNullOrWhiteSpace(search))
                     query = query.Where(i => i.InvoiceNumber.Contains(search) || (i.ClientName != null && i.ClientName.Contains(search)));
                 if (jobId.HasValue)
@@ -138,9 +149,12 @@ namespace JobTracker.Controllers
 
                 return Ok(new
                 {
-                    TotalOutstanding = invoices.Where(i => i.Status != InvoiceStatuses.Paid).Sum(i => i.BalanceDue),
+                    // Outstanding = sent invoices (current + overdue) + partially-paid invoices
+                    TotalOutstanding = invoices
+                        .Where(i => i.Status == InvoiceStatuses.Sent || i.Status == InvoiceStatuses.Partial)
+                        .Sum(i => i.BalanceDue),
                     PaidThisMonth = invoices.Where(i => i.Status == InvoiceStatuses.Paid && i.UpdatedAt >= monthStart).Sum(i => i.Total),
-                    OverdueCount = invoices.Count(i => i.Status != InvoiceStatuses.Paid && i.DueAt.HasValue && i.DueAt.Value < now),
+                    OverdueCount = invoices.Count(i => i.Status == InvoiceStatuses.Sent && i.DueAt.HasValue && i.DueAt.Value < now),
                     DraftCount = invoices.Count(i => i.Status == InvoiceStatuses.Draft),
                     TotalInvoiced = invoices.Sum(i => i.Total)
                 });

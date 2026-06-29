@@ -19,6 +19,7 @@ import TaskList from './components/tasks/TaskList';
 import VendorList from './components/vendors/VendorList';
 import VendorDetail from './components/vendors/VendorDetail';
 import FieldPhotoGallery from './components/photos/FieldPhotoGallery';
+import Analytics from './components/analytics/Analytics';
 
 function App() {
   return (
@@ -41,7 +42,8 @@ function App() {
         <Route path="/tasks" element={<Layout><TaskList /></Layout>} />
         <Route path="/vendors" element={<Layout><VendorList /></Layout>} />
         <Route path="/vendors/:id" element={<Layout><VendorDetail /></Layout>} />
-        <Route path="/photos" element={<Layout><FieldPhotoGallery /></Layout>} />
+        <Route path="/photos"     element={<Layout><FieldPhotoGallery /></Layout>} />
+        <Route path="/analytics"  element={<Layout><Analytics /></Layout>} />
       </Routes>
     </div>
   );
