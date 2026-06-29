@@ -163,12 +163,30 @@ function Dashboard() {
     }
   }, []);
 
+  const fetchJobStats = useCallback(async () => {
+    try {
+      const jobsData = await apiService.jobs.getAll();
+      const sortedJobs = [...jobsData].sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+      ).slice(0, 5);
+      setRecentJobs(sortedJobs);
+      setJobStats({
+        total: jobsData.length,
+        inProgress: jobsData.filter(job => job.status.toLowerCase() === 'in progress').length,
+        completed: jobsData.filter(job => job.status.toLowerCase() === 'completed').length,
+        delayed: jobsData.filter(job => job.status.toLowerCase() === 'delayed').length,
+      });
+    } catch {
+    }
+  }, []);
+
   const startPolling = useCallback(() => {
     if (pollTimer.current) clearInterval(pollTimer.current);
     pollTimer.current = setInterval(() => {
       fetchRevenueSummary({ silent: true });
+      fetchJobStats();
     }, REVENUE_POLL_INTERVAL);
-  }, [fetchRevenueSummary]);
+  }, [fetchRevenueSummary, fetchJobStats]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -176,6 +194,7 @@ function Dashboard() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         fetchRevenueSummary({ silent: true });
+        fetchJobStats();
         startPolling();
       } else {
         if (pollTimer.current) clearInterval(pollTimer.current);
