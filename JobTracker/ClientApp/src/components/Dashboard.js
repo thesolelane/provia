@@ -133,6 +133,17 @@ function RevenueTrendChart({ data }) {
   );
 }
 
+const STALENESS_THRESHOLD_MS = 10 * 60 * 1000;
+
+function formatRelativeTime(ts) {
+  if (!ts) return null;
+  const diffMs = Date.now() - ts;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin === 1) return '1 minute ago';
+  return `${diffMin} minutes ago`;
+}
+
 function Dashboard() {
   const [recentJobs, setRecentJobs] = useState([]);
   const [jobStats, setJobStats] = useState({
@@ -146,7 +157,21 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [revenueRefreshing, setRevenueRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [lastRevenueUpdate, setLastRevenueUpdate] = useState(null);
+  const [lastUpdatedLabel, setLastUpdatedLabel] = useState(null);
   const pollTimer = useRef(null);
+  const labelTimer = useRef(null);
+
+  useEffect(() => {
+    if (labelTimer.current) clearInterval(labelTimer.current);
+    setLastUpdatedLabel(formatRelativeTime(lastRevenueUpdate));
+    if (lastRevenueUpdate) {
+      labelTimer.current = setInterval(() => {
+        setLastUpdatedLabel(formatRelativeTime(lastRevenueUpdate));
+      }, 60_000);
+    }
+    return () => { if (labelTimer.current) clearInterval(labelTimer.current); };
+  }, [lastRevenueUpdate]);
 
   const fetchRevenueSummary = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setRevenueRefreshing(true);
@@ -157,6 +182,7 @@ function Dashboard() {
       ]);
       setInvoiceSummary(summaryData);
       if (trendData) setRevenueTrend(trendData);
+      setLastRevenueUpdate(Date.now());
     } catch {
     } finally {
       if (!silent) setRevenueRefreshing(false);
@@ -233,6 +259,7 @@ function Dashboard() {
 
       setInvoiceSummary(summaryData);
       if (trendData) setRevenueTrend(trendData);
+      if (summaryData) setLastRevenueUpdate(Date.now());
       setError(null);
       startPolling();
     } catch (err) {
@@ -288,7 +315,7 @@ function Dashboard() {
       {invoiceSummary && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <div className="card-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
               <h3 className="card-title" style={{ margin: 0 }}>Revenue Summary</h3>
               <button
                 onClick={() => fetchRevenueSummary()}
@@ -314,6 +341,25 @@ function Dashboard() {
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                 </svg>
               </button>
+              {lastUpdatedLabel && (
+                <span style={{
+                  fontSize: '0.73rem',
+                  color: lastRevenueUpdate && (Date.now() - lastRevenueUpdate) > STALENESS_THRESHOLD_MS
+                    ? '#c0392b'
+                    : '#888',
+                  fontWeight: lastRevenueUpdate && (Date.now() - lastRevenueUpdate) > STALENESS_THRESHOLD_MS
+                    ? 600
+                    : 400,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}>
+                  {lastRevenueUpdate && (Date.now() - lastRevenueUpdate) > STALENESS_THRESHOLD_MS && (
+                    <span title="Data may be stale" aria-label="Stale data warning">⚠️</span>
+                  )}
+                  Updated {lastUpdatedLabel}
+                </span>
+              )}
             </div>
             <Link to="/invoices" className="btn btn-primary">View Invoices</Link>
           </div>
