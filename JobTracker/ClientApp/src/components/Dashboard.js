@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
+
+const REVENUE_POLL_INTERVAL = 60_000;
 
 function Dashboard() {
   const [recentJobs, setRecentJobs] = useState([]);
@@ -12,11 +14,47 @@ function Dashboard() {
   });
   const [invoiceSummary, setInvoiceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [revenueRefreshing, setRevenueRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const pollTimer = useRef(null);
+
+  const fetchRevenueSummary = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setRevenueRefreshing(true);
+    try {
+      const summaryData = await apiService.invoices.getSummary();
+      setInvoiceSummary(summaryData);
+    } catch {
+    } finally {
+      if (!silent) setRevenueRefreshing(false);
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    if (pollTimer.current) clearInterval(pollTimer.current);
+    pollTimer.current = setInterval(() => {
+      fetchRevenueSummary({ silent: true });
+    }, REVENUE_POLL_INTERVAL);
+  }, [fetchRevenueSummary]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchRevenueSummary({ silent: true });
+        startPolling();
+      } else {
+        if (pollTimer.current) clearInterval(pollTimer.current);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (pollTimer.current) clearInterval(pollTimer.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchDashboardData = async () => {
     try {
@@ -41,6 +79,7 @@ function Dashboard() {
 
       setInvoiceSummary(summaryData);
       setError(null);
+      startPolling();
     } catch (err) {
       setError('Failed to load dashboard data. Please try again later.');
       console.error('Error fetching dashboard data:', err);
@@ -94,7 +133,33 @@ function Dashboard() {
       {invoiceSummary && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <div className="card-header">
-            <h3 className="card-title">Revenue Summary</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <h3 className="card-title" style={{ margin: 0 }}>Revenue Summary</h3>
+              <button
+                onClick={() => fetchRevenueSummary()}
+                disabled={revenueRefreshing}
+                title="Refresh revenue data"
+                style={refreshBtnStyle(revenueRefreshing)}
+                aria-label="Refresh revenue summary"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ animation: revenueRefreshing ? 'provia-spin 0.8s linear infinite' : 'none' }}
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
+            </div>
             <Link to="/invoices" className="btn btn-primary">View Invoices</Link>
           </div>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', padding: '1rem 0' }}>
@@ -211,5 +276,28 @@ const summaryLinkStyle = {
   textDecoration: 'none',
   marginTop: '0.25rem',
 };
+
+const refreshBtnStyle = (spinning) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'none',
+  border: '1px solid #ddd',
+  borderRadius: '50%',
+  width: '26px',
+  height: '26px',
+  cursor: spinning ? 'default' : 'pointer',
+  color: spinning ? '#aaa' : '#2F5A7E',
+  padding: 0,
+  transition: 'color 0.2s, border-color 0.2s',
+  flexShrink: 0,
+});
+
+if (typeof document !== 'undefined' && !document.getElementById('provia-spin-style')) {
+  const style = document.createElement('style');
+  style.id = 'provia-spin-style';
+  style.textContent = '@keyframes provia-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+}
 
 export default Dashboard;
