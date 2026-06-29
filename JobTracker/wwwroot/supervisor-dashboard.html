@@ -320,6 +320,27 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Revenue Trend -->
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="dashboard-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>Collected Revenue — Last 6 Months
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshRevenueTrend()" id="revenueTrendRefreshBtn" title="Refresh">
+                                        <i class="fas fa-sync-alt" id="revenueTrendRefreshIcon"></i>
+                                    </button>
+                                </div>
+                                <div id="revenueTrendContainer" style="min-height:140px; display:flex; align-items:center; justify-content:center;">
+                                    <span class="text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading revenue trend…</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Field Operators Tab -->
@@ -667,7 +688,8 @@
                 loadRecentActivity(),
                 loadFieldOperators(),
                 loadLocations(),
-                loadSupervisionData()
+                loadSupervisionData(),
+                loadRevenueTrend()
             ]);
         }
 
@@ -1040,6 +1062,105 @@
 
         function editLocation(locationId) {
             alert(`Editing location ${locationId}... (Demo mode)`);
+        }
+
+        // Revenue Trend Chart
+        async function loadRevenueTrend() {
+            const container = document.getElementById('revenueTrendContainer');
+            if (!container) return;
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                container.innerHTML = '<span class="text-muted">Sign in to view revenue trend.</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/dashboard/revenue-trend', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch revenue trend');
+
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<span class="text-muted">No revenue data available yet.</span>';
+                    return;
+                }
+
+                container.style.display = 'block';
+                container.innerHTML = renderRevenueTrendSVG(data);
+            } catch (err) {
+                console.error('Revenue trend error:', err);
+                container.innerHTML = '<span class="text-muted"><i class="fas fa-exclamation-triangle me-1"></i>Could not load revenue data.</span>';
+            }
+        }
+
+        function renderRevenueTrendSVG(data) {
+            const svgWidth = 600;
+            const svgHeight = 130;
+            const padLeft = 8;
+            const padRight = 8;
+            const padTop = 14;
+            const padBottom = 34;
+            const chartW = svgWidth - padLeft - padRight;
+            const chartH = svgHeight - padTop - padBottom;
+            const barCount = data.length;
+            const gap = 10;
+            const barW = (chartW - gap * (barCount - 1)) / barCount;
+            const maxVal = Math.max(...data.map(function(d) { return d.total; }), 1);
+
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
+
+            function formatK(v) {
+                if (v === 0) return '$0';
+                if (v >= 1000) return '$' + (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+                return '$' + v;
+            }
+
+            let bars = '';
+            data.forEach(function(d, i) {
+                const x = padLeft + i * (barW + gap);
+                const barH = d.total === 0 ? 2 : Math.max(4, (d.total / maxVal) * chartH);
+                const y = padTop + chartH - barH;
+                const isCurrent = d.month === currentMonth && d.year === currentYear;
+                const fill = isCurrent ? '#FF9500' : '#2F5A7E';
+                const fillLight = isCurrent ? '#FF950033' : '#2F5A7E22';
+                const labelParts = d.label.split(' ');
+                const month = labelParts[0] || '';
+                const year = labelParts[1] || '';
+                const labelColor = isCurrent ? '#FF9500' : '#555';
+                const labelWeight = isCurrent ? '700' : '400';
+
+                bars += '<rect x="' + x + '" y="' + padTop + '" width="' + barW + '" height="' + chartH + '" fill="' + fillLight + '" rx="4"/>';
+                bars += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" fill="' + fill + '" rx="4"/>';
+                bars += '<text x="' + (x + barW / 2) + '" y="' + (svgHeight - padBottom + 14) + '" text-anchor="middle" font-size="10" fill="' + labelColor + '" font-weight="' + labelWeight + '">' + month + '</text>';
+                bars += '<text x="' + (x + barW / 2) + '" y="' + (svgHeight - padBottom + 25) + '" text-anchor="middle" font-size="9" fill="#999">' + year + '</text>';
+                if (d.total > 0) {
+                    bars += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" font-size="9" fill="' + fill + '" font-weight="600">' + formatK(d.total) + '</text>';
+                }
+            });
+
+            return '<div style="width:100%;max-width:' + svgWidth + 'px;">'
+                + '<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" style="width:100%;height:auto;display:block;overflow:visible;" aria-label="Revenue trend chart">'
+                + bars
+                + '</svg></div>';
+        }
+
+        async function refreshRevenueTrend() {
+            const icon = document.getElementById('revenueTrendRefreshIcon');
+            const btn = document.getElementById('revenueTrendRefreshBtn');
+            if (icon) icon.classList.add('fa-spin');
+            if (btn) btn.disabled = true;
+            try {
+                await loadRevenueTrend();
+            } finally {
+                if (icon) icon.classList.remove('fa-spin');
+                if (btn) btn.disabled = false;
+            }
         }
     </script>
 </body>

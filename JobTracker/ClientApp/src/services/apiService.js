@@ -206,6 +206,23 @@ const invoicesApi = {
   }),
 };
 
+// AI API
+const aiApi = {
+  status: async () => fetchWithErrorHandling('/api/ai/status'),
+
+  generateScope: async ({ jobName, location, clientName, budget, tradeHint }) =>
+    fetchWithErrorHandling('/api/ai/generate-scope', {
+      method: 'POST',
+      body: JSON.stringify({ jobName, location, clientName, budget: budget || 0, tradeHint }),
+    }),
+
+  generateInvoiceItems: async ({ workDescription, totalBudget }) =>
+    fetchWithErrorHandling('/api/ai/generate-invoice-items', {
+      method: 'POST',
+      body: JSON.stringify({ workDescription, totalBudget: totalBudget || 0 }),
+    }),
+};
+
 // Analytics API
 const analyticsApi = {
   getOverview: async () => fetchWithErrorHandling('/api/analytics/overview'),
@@ -337,6 +354,7 @@ const tasksApi = {
 
 // Export the APIs
 export const apiService = {
+  ai: aiApi,
   jobs: jobsApi,
   jobSections: jobSectionsApi,
   contacts: contactsApi,
