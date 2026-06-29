@@ -5,7 +5,7 @@ import { apiService } from '../../services/apiService';
 const STAGES = [
   { key: 'incoming',          label: 'New Lead',       staleDays: 1,  color: '#6c757d' },
   { key: 'callback_done',     label: 'Callback Done',  staleDays: 2,  color: '#0d6efd' },
-  { key: 'appointment_booked',label: 'Appt. Booked',  staleDays: 2,  color: '#6610f2' },
+  { key: 'appointment_booked',label: 'Appt. Booked',   staleDays: 2,  color: '#6610f2' },
   { key: 'site_visit_done',   label: 'Site Visited',   staleDays: 3,  color: '#fd7e14' },
   { key: 'quote_sent',        label: 'Quote Sent',     staleDays: 7,  color: '#d63384' },
   { key: 'follow_up',         label: 'Following Up',   staleDays: 7,  color: '#0dcaf0' },
@@ -15,19 +15,44 @@ const STAGES = [
 const SOURCES = ['Direct', 'Referral', 'Website', 'Google', 'Social Media', 'Marblism', 'Other'];
 const ARCHIVE_REASONS = ['Price', 'Timing', 'Competitor', 'Ghosted', 'Mistake', 'Out of service area'];
 
+const TIER_META = {
+  Hot:  { emoji: '🔴', color: '#dc3545', bg: '#fdecea', label: 'Hot' },
+  Warm: { emoji: '🟡', color: '#856404', bg: '#fff3cd', label: 'Warm' },
+  Cold: { emoji: '⚪', color: '#6c757d', bg: '#f8f9fa', label: 'Cold' },
+};
+
+function ScoreBadge({ score }) {
+  if (!score) return null;
+  const meta = TIER_META[score.tier] || TIER_META.Cold;
+  return (
+    <span title={score.reason} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      fontSize: '0.7rem', fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+      background: meta.bg, color: meta.color, cursor: 'help',
+    }}>
+      {meta.emoji} {score.score}
+    </span>
+  );
+}
+
 export default function LeadPipeline() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [showNew, setShowNew] = useState(false);
+  const [leads,       setLeads]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [selected,    setSelected]    = useState(null);
+  const [showNew,     setShowNew]     = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const [view, setView] = useState('board'); // 'board' | 'list'
-  const [note, setNote] = useState('');
+  const [view,        setView]        = useState('board');
+  const [note,        setNote]        = useState('');
   const [archiveReason, setArchiveReason] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [saving,      setSaving]      = useState(false);
   const [form, setForm] = useState({ callerName: '', callerPhone: '', callerEmail: '', source: 'Direct', jobAddress: '', jobCity: '', jobType: 'Residential', jobScope: '', initialNote: '' });
-  const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({});
+  const [editMode,    setEditMode]    = useState(false);
+  const [editForm,    setEditForm]    = useState({});
+
+  // ── AI scoring ──
+  const [scores,      setScores]      = useState({}); // { [leadId]: { score, tier, reason } }
+  const [scoringAll,  setScoringAll]  = useState(false);
+  const [scoringId,   setScoringId]   = useState(null);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -51,6 +76,60 @@ export default function LeadPipeline() {
       setEditMode(false);
       setNote('');
     } catch (e) { console.error(e); }
+  };
+
+  // ── Score a single lead ──────────────────────────────────────────────────────
+  const scoreLead = async (lead) => {
+    try {
+      const result = await apiService.ai.scoreLead({
+        callerName:  lead.callerName,
+        source:      lead.source,
+        stage:       lead.stage,
+        daysInStage: lead.daysInStage || 0,
+        jobType:     lead.jobType,
+        jobScope:    lead.jobScope,
+        hasEmail:    !!lead.callerEmail,
+        hasPhone:    !!lead.callerPhone,
+      });
+      return { id: lead.id, ...result };
+    } catch {
+      return null;
+    }
+  };
+
+  // ── Score all active leads ────────────────────────────────────────────────────
+  const handleScoreAll = async () => {
+    const activeLeads = leads.filter(l => l.stage !== 'signed');
+    if (activeLeads.length === 0) return;
+    setScoringAll(true);
+    try {
+      const results = await Promise.allSettled(activeLeads.map(scoreLead));
+      const newScores = { ...scores };
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value) {
+          const { id, ...rest } = r.value;
+          newScores[id] = rest;
+        }
+      });
+      setScores(newScores);
+    } finally {
+      setScoringAll(false);
+    }
+  };
+
+  // ── Score selected lead ───────────────────────────────────────────────────────
+  const handleScoreSelected = async () => {
+    if (!selected) return;
+    setScoringId(selected.id);
+    try {
+      const result = await scoreLead(selected);
+      if (result) {
+        const { id, ...rest } = result;
+        setScores(prev => ({ ...prev, [id]: rest }));
+      }
+    } finally {
+      setScoringId(null);
+    }
   };
 
   const handleCreate = async (e) => {
@@ -136,13 +215,29 @@ export default function LeadPipeline() {
             {leads.filter(l => l.stage !== 'signed').length} active · {leads.filter(l => l.stage === 'signed').length} signed
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={handleScoreAll} disabled={scoringAll || leads.length === 0} className="btn"
+            title="Score all active leads by conversion likelihood"
+            style={{ fontSize: '0.82rem', background: scoringAll ? '#f8f9fa' : 'linear-gradient(135deg, #f0f4ff, #fff8f0)', border: '1px solid #dee2e6' }}>
+            {scoringAll ? '⏳ Scoring...' : '✨ Score Leads'}
+          </button>
           <button onClick={() => setView(view === 'board' ? 'list' : 'board')} className="btn" style={{ fontSize: '0.85rem' }}>
             {view === 'board' ? '☰ List' : '⊞ Board'}
           </button>
           <button onClick={() => setShowNew(true)} className="btn btn-primary">+ New Lead</button>
         </div>
       </div>
+
+      {/* Score legend — shown once any score exists */}
+      {Object.keys(scores).length > 0 && (
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem', color: '#6c757d', flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: 600 }}>AI Score:</span>
+          {Object.entries(TIER_META).map(([tier, m]) => (
+            <span key={tier} style={{ color: m.color }}>{m.emoji} {m.label}</span>
+          ))}
+          <span>· hover badge for detail</span>
+        </div>
+      )}
 
       {/* Board view */}
       {view === 'board' && (
@@ -157,8 +252,12 @@ export default function LeadPipeline() {
                 </div>
                 <div style={{ background: '#f8f9fa', borderRadius: '0 0 6px 6px', minHeight: 80, padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {stageItems.map(lead => (
-                    <div key={lead.id} onClick={() => openLead(lead.id)} style={{ background: '#fff', border: '1px solid #dee2e6', borderRadius: 6, padding: '0.6rem 0.75rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderLeft: `3px solid ${stage.color}` }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 2 }}>{lead.callerName}</div>
+                    <div key={lead.id} onClick={() => openLead(lead.id)}
+                      style={{ background: '#fff', border: '1px solid #dee2e6', borderRadius: 6, padding: '0.6rem 0.75rem', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderLeft: `3px solid ${stage.color}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4, marginBottom: 2 }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{lead.callerName}</div>
+                        {scores[lead.id] && <ScoreBadge score={scores[lead.id]} />}
+                      </div>
                       {lead.callerPhone && <div style={{ fontSize: '0.78rem', color: '#6c757d' }}>{lead.callerPhone}</div>}
                       {lead.jobCity && <div style={{ fontSize: '0.78rem', color: '#6c757d' }}>{lead.jobCity}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.4rem' }}>
@@ -185,7 +284,7 @@ export default function LeadPipeline() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                {['#', 'Name', 'Phone', 'City', 'Scope', 'Stage', 'Days', ''].map(h => (
+                {['#', 'Name', 'Phone', 'City', 'Scope', 'Stage', 'Days', 'Score', ''].map(h => (
                   <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, fontSize: '0.85rem', color: '#495057' }}>{h}</th>
                 ))}
               </tr>
@@ -207,6 +306,9 @@ export default function LeadPipeline() {
                       {isStale(lead) ? <span style={{ color: '#856404', fontWeight: 600 }}>⚠ {lead.daysInStage}d</span> : <span style={{ color: '#aaa' }}>{lead.daysInStage}d</span>}
                     </td>
                     <td style={{ padding: '0.75rem 1rem' }}>
+                      <ScoreBadge score={scores[lead.id]} />
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem' }}>
                       <button onClick={() => openLead(lead.id)} className="btn btn-sm" style={{ fontSize: '0.8rem', padding: '3px 10px' }}>Open</button>
                     </td>
                   </tr>
@@ -224,13 +326,23 @@ export default function LeadPipeline() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#6c757d' }}>{selected.leadNumber}</div>
-                <h3 style={{ margin: '0.1rem 0 0' }}>{selected.callerName}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.1rem' }}>
+                  <h3 style={{ margin: 0 }}>{selected.callerName}</h3>
+                  {scores[selected.id] && <ScoreBadge score={scores[selected.id]} />}
+                </div>
                 {selected.contactId && (
                   <Link to={`/contacts/${selected.contactId}`} style={{ fontSize: '0.8rem', color: '#2F5A7E' }}>→ View Contact</Link>
                 )}
               </div>
               <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6c757d' }}>×</button>
             </div>
+
+            {/* AI score insight strip */}
+            {scores[selected.id] && (
+              <div style={{ background: TIER_META[scores[selected.id].tier]?.bg || '#f8f9fa', border: `1px solid ${TIER_META[scores[selected.id].tier]?.color}33`, borderRadius: 6, padding: '0.5rem 0.75rem', marginBottom: '1rem', fontSize: '0.82rem', color: TIER_META[scores[selected.id].tier]?.color }}>
+                <strong>{TIER_META[scores[selected.id].tier]?.emoji} {scores[selected.id].tier} lead ({scores[selected.id].score}/100)</strong> — {scores[selected.id].reason}
+              </div>
+            )}
 
             {/* Stage strip */}
             <div style={{ display: 'flex', gap: 4, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
@@ -315,6 +427,10 @@ export default function LeadPipeline() {
                   <button className="btn" onClick={() => setEditMode(false)} style={{ fontSize: '0.85rem' }}>Cancel</button>
                 </>
               )}
+              <button className="btn" onClick={handleScoreSelected} disabled={scoringId === selected.id}
+                style={{ fontSize: '0.82rem', background: 'linear-gradient(135deg, #f0f4ff, #fff8f0)', border: '1px solid #dee2e6' }}>
+                {scoringId === selected.id ? '⏳ Scoring...' : '✨ Score'}
+              </button>
               {!selected.contactId && (
                 <button className="btn" onClick={handleGraduate} style={{ fontSize: '0.85rem', color: '#198754', borderColor: '#198754' }}>→ Graduate to Contact</button>
               )}
@@ -415,5 +531,5 @@ function Field({ label, value }) {
 }
 
 const overlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
-const modalStyle = { background: '#fff', borderRadius: 8, padding: '1.75rem', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' };
-const labelStyle = { fontWeight: 600, fontSize: '0.8rem', color: '#6c757d', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '0.2rem', display: 'block' };
+const modalStyle   = { background: '#fff', borderRadius: 8, padding: '1.75rem', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' };
+const labelStyle   = { fontWeight: 600, fontSize: '0.8rem', color: '#6c757d', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '0.2rem', display: 'block' };

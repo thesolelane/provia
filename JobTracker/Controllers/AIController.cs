@@ -48,6 +48,37 @@ namespace JobTracker.Controllers
             }
         }
 
+        // POST: api/ai/score-lead
+        [HttpPost("score-lead")]
+        public async Task<ActionResult<object>> ScoreLead([FromBody] ScoreLeadRequest req)
+        {
+            try
+            {
+                var result = await _ai.ScoreLeadAsync(
+                    req.CallerName ?? "Unknown",
+                    req.Source,
+                    req.Stage,
+                    req.DaysInStage,
+                    req.JobType,
+                    req.JobScope,
+                    req.HasEmail,
+                    req.HasPhone);
+
+                return Ok(new
+                {
+                    result.Score,
+                    result.Tier,
+                    result.Reason,
+                    AiPowered = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY")),
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error scoring lead");
+                return StatusCode(500, new { message = "Error scoring lead" });
+            }
+        }
+
         // POST: api/ai/generate-invoice-items
         [HttpPost("generate-invoice-items")]
         public async Task<ActionResult<object>> GenerateInvoiceItems([FromBody] GenerateInvoiceRequest req)
@@ -83,6 +114,18 @@ namespace JobTracker.Controllers
                 Features   = new[] { "job-scope", "invoice-items", "fire-blocking" },
             });
         }
+    }
+
+    public class ScoreLeadRequest
+    {
+        public string? CallerName  { get; set; }
+        public string? Source      { get; set; }
+        public string? Stage       { get; set; }
+        public int     DaysInStage { get; set; }
+        public string? JobType     { get; set; }
+        public string? JobScope    { get; set; }
+        public bool    HasEmail    { get; set; }
+        public bool    HasPhone    { get; set; }
     }
 
     public class GenerateScopeRequest
