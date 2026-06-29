@@ -412,7 +412,38 @@ function Dashboard() {
               <div style={{ fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#666', marginBottom: '0.6rem' }}>
                 Collected Revenue — Last 6 Months
               </div>
-              <RevenueTrendChart data={revenueTrend} />
+              <div style={{ position: 'relative' }}>
+                <RevenueTrendChart data={revenueTrend} />
+                {revenueRefreshing && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(255,255,255,0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '6px',
+                    zIndex: 5,
+                  }}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#2F5A7E"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ animation: 'provia-spin 0.8s linear infinite' }}
+                    >
+                      <polyline points="23 4 23 10 17 10" />
+                      <polyline points="1 20 1 14 7 14" />
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
