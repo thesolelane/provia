@@ -206,6 +206,15 @@ const invoicesApi = {
   }),
 };
 
+// Analytics API
+const analyticsApi = {
+  getOverview: async () => fetchWithErrorHandling('/api/analytics/overview'),
+  getJobs:     async () => fetchWithErrorHandling('/api/analytics/jobs'),
+  getLeads:    async () => fetchWithErrorHandling('/api/analytics/leads'),
+  getRevenue:  async () => fetchWithErrorHandling('/api/analytics/revenue'),
+  getVendors:  async () => fetchWithErrorHandling('/api/analytics/vendors'),
+};
+
 // Field Photos API
 const photosApi = {
   getAll: async ({ jobId, category, search, page = 1, pageSize = 48 } = {}) => {
@@ -335,5 +344,6 @@ export const apiService = {
   invoices: invoicesApi,
   vendors: vendorsApi,
   photos: photosApi,
+  analytics: analyticsApi,
   tasks: tasksApi,
 };
