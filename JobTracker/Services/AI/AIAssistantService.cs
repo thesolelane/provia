@@ -2,6 +2,13 @@ using System.Text.Json;
 
 namespace JobTracker.Services.AI
 {
+    public class LeadScoreResult
+    {
+        public int    Score  { get; set; }
+        public string Tier   { get; set; } = "Cold";
+        public string Reason { get; set; } = string.Empty;
+    }
+
     public class JobScopeResult
     {
         public string Description { get; set; } = string.Empty;
@@ -102,6 +109,135 @@ Respond ONLY with valid JSON in this exact format, no other text:
             };
             var notes = $"Budget ${budget:N0}. Confirm permit requirements with local building department before start. Schedule inspections per MA 780 CMR.";
             return new JobScopeResult { Description = desc[..Math.Min(desc.Length, 490)], Notes = notes[..Math.Min(notes.Length, 190)] };
+        }
+
+        // ── Lead Scoring ─────────────────────────────────────────────────────────
+        public async Task<LeadScoreResult> ScoreLeadAsync(
+            string callerName, string? source, string? stage, int daysInStage,
+            string? jobType, string? jobScope, bool hasEmail, bool hasPhone)
+        {
+            if (string.IsNullOrEmpty(_openAiApiKey))
+                return GetLocalLeadScore(source, stage, daysInStage, jobScope, hasEmail, hasPhone);
+
+            try
+            {
+                var prompt = $@"
+You are a construction sales expert scoring a lead for follow-up priority.
+
+Lead details:
+- Name: {callerName}
+- Source: {source ?? "Unknown"}
+- Current stage: {stage ?? "incoming"}
+- Days in current stage: {daysInStage}
+- Job type: {jobType ?? "Unknown"}
+- Scope of work: {(string.IsNullOrWhiteSpace(jobScope) ? "Not provided" : jobScope)}
+- Has email: {hasEmail}
+- Has phone: {hasPhone}
+
+Score this lead from 0-100 based on:
+- Engagement level (stage progression, how far along they are)
+- Information completeness (scope detail, contact info provided)
+- Source quality (Referral > Google > Direct > Social Media > Other)
+- Urgency indicators (days in stage — stale leads score lower)
+- Job type (Commercial often higher value than Residential)
+
+Respond ONLY with this exact JSON, no other text:
+{{""score"": 75, ""tier"": ""Hot"", ""reason"": ""one sentence max""}}
+
+tier must be exactly one of: Hot, Warm, Cold";
+
+                var request = new
+                {
+                    model = "gpt-4o",
+                    messages = new[]
+                    {
+                        new { role = "system", content = "You are a construction sales expert. Respond only with the requested JSON." },
+                        new { role = "user", content = prompt }
+                    },
+                    max_tokens = 80,
+                    temperature = 0.2
+                };
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_openAiApiKey}");
+
+                var response = await _httpClient.PostAsJsonAsync("https://api.openai.com/v1/chat/completions", request);
+                if (!response.IsSuccessStatusCode)
+                    return GetLocalLeadScore(source, stage, daysInStage, jobScope, hasEmail, hasPhone);
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var aiResponse  = JsonSerializer.Deserialize<JsonElement>(jsonResponse);
+                var content     = aiResponse.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "";
+
+                content = content.Trim().TrimStart('`');
+                if (content.StartsWith("json")) content = content[4..];
+                content = content.TrimEnd('`').Trim();
+
+                var result = JsonSerializer.Deserialize<LeadScoreResult>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return result ?? GetLocalLeadScore(source, stage, daysInStage, jobScope, hasEmail, hasPhone);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error scoring lead");
+                return GetLocalLeadScore(source, stage, daysInStage, jobScope, hasEmail, hasPhone);
+            }
+        }
+
+        private static LeadScoreResult GetLocalLeadScore(string? source, string? stage, int daysInStage, string? jobScope, bool hasEmail, bool hasPhone)
+        {
+            int score = 0;
+
+            // Stage progression (0-40 pts)
+            score += stage switch
+            {
+                "signed"             => 40,
+                "quote_sent"         => 35,
+                "follow_up"          => 30,
+                "site_visit_done"    => 25,
+                "appointment_booked" => 20,
+                "callback_done"      => 12,
+                _                    => 5,   // incoming
+            };
+
+            // Source quality (0-20 pts)
+            score += (source ?? "").ToLower() switch
+            {
+                "referral"     => 20,
+                "google"       => 14,
+                "direct"       => 10,
+                "website"      => 10,
+                "social media" => 6,
+                _              => 4,
+            };
+
+            // Contact completeness (0-15 pts)
+            if (hasEmail) score += 7;
+            if (hasPhone) score += 8;
+
+            // Scope detail (0-15 pts)
+            if (!string.IsNullOrWhiteSpace(jobScope)) score += jobScope.Length > 50 ? 15 : 8;
+
+            // Freshness penalty
+            var staleDays = stage switch
+            {
+                "incoming" => 1, "callback_done" => 2, "appointment_booked" => 2,
+                "site_visit_done" => 3, "quote_sent" => 7, "follow_up" => 7,
+                _ => 30
+            };
+            if (daysInStage > staleDays * 2) score -= 15;
+            else if (daysInStage > staleDays) score -= 7;
+
+            score = Math.Clamp(score, 0, 100);
+
+            var tier   = score >= 65 ? "Hot" : score >= 35 ? "Warm" : "Cold";
+            var reason = tier switch
+            {
+                "Hot"  => "Strong pipeline stage, good contact info, and quality source.",
+                "Warm" => "Mid-funnel lead — follow up to keep momentum.",
+                _      => "Early-stage or stale lead — needs re-engagement.",
+            };
+
+            return new LeadScoreResult { Score = score, Tier = tier, Reason = reason };
         }
 
         // ── Invoice Line-Item Assistant ──────────────────────────────────────────

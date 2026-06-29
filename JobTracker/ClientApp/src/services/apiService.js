@@ -221,6 +221,12 @@ const aiApi = {
       method: 'POST',
       body: JSON.stringify({ workDescription, totalBudget: totalBudget || 0 }),
     }),
+
+  scoreLead: async ({ callerName, source, stage, daysInStage, jobType, jobScope, hasEmail, hasPhone }) =>
+    fetchWithErrorHandling('/api/ai/score-lead', {
+      method: 'POST',
+      body: JSON.stringify({ callerName, source, stage, daysInStage: daysInStage || 0, jobType, jobScope, hasEmail: !!hasEmail, hasPhone: !!hasPhone }),
+    }),
 };
 
 // Analytics API
