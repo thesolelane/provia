@@ -4,6 +4,135 @@ import { apiService } from '../services/apiService';
 
 const REVENUE_POLL_INTERVAL = 60_000;
 
+function RevenueTrendChart({ data }) {
+  const [tooltip, setTooltip] = useState(null);
+
+  if (!data || data.length === 0) return null;
+
+  const maxVal = Math.max(...data.map(d => d.total), 1);
+  const svgWidth = 480;
+  const svgHeight = 120;
+  const padLeft = 8;
+  const padRight = 8;
+  const padTop = 12;
+  const padBottom = 32;
+  const chartW = svgWidth - padLeft - padRight;
+  const chartH = svgHeight - padTop - padBottom;
+  const barCount = data.length;
+  const gap = 10;
+  const barW = (chartW - gap * (barCount - 1)) / barCount;
+
+  const formatK = (v) => {
+    if (v === 0) return '$0';
+    if (v >= 1000) return `$${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`;
+    return `$${v}`;
+  };
+
+  const formatFull = (v) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <div style={{ position: 'relative', width: '100%', maxWidth: svgWidth }}>
+      <svg
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
+        aria-label="Revenue trend chart"
+      >
+        {data.map((d, i) => {
+          const x = padLeft + i * (barW + gap);
+          const barH = d.total === 0 ? 2 : Math.max(4, (d.total / maxVal) * chartH);
+          const y = padTop + chartH - barH;
+          const isCurrent = d.month === currentMonth && d.year === currentYear;
+          const fill = isCurrent ? '#FF9500' : '#2F5A7E';
+          const fillLight = isCurrent ? '#FF950033' : '#2F5A7E22';
+
+          return (
+            <g key={`${d.year}-${d.month}`}
+              onMouseEnter={() => setTooltip({ i, label: d.label, total: d.total })}
+              onMouseLeave={() => setTooltip(null)}
+              style={{ cursor: 'default' }}
+            >
+              <rect
+                x={x}
+                y={padTop}
+                width={barW}
+                height={chartH}
+                fill={fillLight}
+                rx={4}
+              />
+              <rect
+                x={x}
+                y={y}
+                width={barW}
+                height={barH}
+                fill={fill}
+                rx={4}
+                opacity={tooltip && tooltip.i !== i ? 0.55 : 1}
+                style={{ transition: 'opacity 0.15s' }}
+              />
+              <text
+                x={x + barW / 2}
+                y={svgHeight - padBottom + 14}
+                textAnchor="middle"
+                fontSize={10}
+                fill={isCurrent ? '#FF9500' : '#555'}
+                fontWeight={isCurrent ? 700 : 400}
+              >
+                {d.label.split(' ')[0]}
+              </text>
+              <text
+                x={x + barW / 2}
+                y={svgHeight - padBottom + 25}
+                textAnchor="middle"
+                fontSize={9}
+                fill="#999"
+              >
+                {d.label.split(' ')[1]}
+              </text>
+              {d.total > 0 && (
+                <text
+                  x={x + barW / 2}
+                  y={y - 3}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fill={fill}
+                  fontWeight={600}
+                >
+                  {formatK(d.total)}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+
+      {tooltip && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: `${((tooltip.i + 0.5) / data.length) * 100}%`,
+          transform: 'translate(-50%, -110%)',
+          background: '#1a2b3c',
+          color: '#fff',
+          padding: '5px 10px',
+          borderRadius: 6,
+          fontSize: '0.78rem',
+          fontWeight: 600,
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          zIndex: 10,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        }}>
+          {tooltip.label}: {formatFull(tooltip.total)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Dashboard() {
   const [recentJobs, setRecentJobs] = useState([]);
   const [jobStats, setJobStats] = useState({
@@ -13,6 +142,7 @@ function Dashboard() {
     delayed: 0
   });
   const [invoiceSummary, setInvoiceSummary] = useState(null);
+  const [revenueTrend, setRevenueTrend] = useState(null);
   const [loading, setLoading] = useState(true);
   const [revenueRefreshing, setRevenueRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -21,8 +151,12 @@ function Dashboard() {
   const fetchRevenueSummary = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setRevenueRefreshing(true);
     try {
-      const summaryData = await apiService.invoices.getSummary();
+      const [summaryData, trendData] = await Promise.all([
+        apiService.invoices.getSummary(),
+        apiService.invoices.getRevenueTrend().catch(() => null),
+      ]);
       setInvoiceSummary(summaryData);
+      if (trendData) setRevenueTrend(trendData);
     } catch {
     } finally {
       if (!silent) setRevenueRefreshing(false);
@@ -59,9 +193,10 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [jobsData, summaryData] = await Promise.all([
+      const [jobsData, summaryData, trendData] = await Promise.all([
         apiService.jobs.getAll(),
         apiService.invoices.getSummary().catch(() => null),
+        apiService.invoices.getRevenueTrend().catch(() => null),
       ]);
 
       const sortedJobs = [...jobsData].sort((a, b) =>
@@ -78,6 +213,7 @@ function Dashboard() {
       });
 
       setInvoiceSummary(summaryData);
+      if (trendData) setRevenueTrend(trendData);
       setError(null);
       startPolling();
     } catch (err) {
@@ -204,6 +340,16 @@ function Dashboard() {
               </Link>
             </div>
           </div>
+
+          {/* Revenue Trend Chart */}
+          {revenueTrend && revenueTrend.length > 0 && (
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#666', marginBottom: '0.6rem' }}>
+                Collected Revenue — Last 6 Months
+              </div>
+              <RevenueTrendChart data={revenueTrend} />
+            </div>
+          )}
         </div>
       )}
 

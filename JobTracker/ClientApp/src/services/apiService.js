@@ -170,6 +170,8 @@ const invoicesApi = {
 
   getSummary: async () => fetchWithErrorHandling('/api/invoices/summary'),
 
+  getRevenueTrend: async () => fetchWithErrorHandling('/api/dashboard/revenue-trend'),
+
   getById: async (id) => fetchWithErrorHandling(`/api/invoices/${id}`),
 
   create: async (invoice) => fetchWithErrorHandling('/api/invoices', {
