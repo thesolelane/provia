@@ -61,6 +61,10 @@ export default function InvoiceDetail() {
   const [editMode, setEditMode] = useState(isNew);
   const [saving, setSaving] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiMsg, setAiMsg] = useState(null);
+  const [aiWorkDesc, setAiWorkDesc] = useState('');
+  const [aiTotalBudget, setAiTotalBudget] = useState('');
   const [payForm, setPayForm] = useState({ amount: '', method: 'check', reference: '', paidAt: toInputDate(new Date()), notes: '' });
 
   useEffect(() => {
@@ -112,6 +116,34 @@ export default function InvoiceDetail() {
   });
   const addRow = () => setForm(f => ({ ...f, rows: [...f.rows, { description: '', quantity: '1', unitPrice: '' }] }));
   const removeRow = (idx) => setForm(f => ({ ...f, rows: f.rows.filter((_, i) => i !== idx) }));
+
+  const handleAiGenerateItems = async () => {
+    const desc   = aiWorkDesc.trim() || form.clientName || 'construction work';
+    const budget = parseFloat(aiTotalBudget) || subtotal || 0;
+    setAiGenerating(true);
+    setAiMsg(null);
+    try {
+      const result = await apiService.ai.generateInvoiceItems({ workDescription: desc, totalBudget: budget });
+      const parsed = JSON.parse(result.lineItemsJson || '[]');
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('empty');
+      setForm(f => ({
+        ...f,
+        rows: parsed.map(li => ({
+          description: li.description || '',
+          quantity:    String(li.quantity ?? 1),
+          unitPrice:   String(li.unitPrice ?? 0),
+        })),
+      }));
+      setAiMsg({
+        type: 'success',
+        text: result.aiPowered ? '✨ Line items generated with GPT-4o — edit as needed.' : '✨ Generated from trade templates — add OPENAI_API_KEY for smarter results.',
+      });
+    } catch {
+      setAiMsg({ type: 'error', text: 'Generation failed. Fill in line items manually.' });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const buildPayload = () => ({
     clientName: form.clientName, clientAddress: form.clientAddress,
@@ -195,6 +227,45 @@ export default function InvoiceDetail() {
             <FR label="Issue Date"><input type="date" className="form-control" value={form.issuedAt} onChange={e => setForm(f => ({ ...f, issuedAt: e.target.value }))} /></FR>
             <FR label="Due Date"><input type="date" className="form-control" value={form.dueAt} onChange={e => setForm(f => ({ ...f, dueAt: e.target.value }))} /></FR>
             <FR label="Tax Rate (%)"><input type="number" className="form-control" min="0" max="100" step="0.01" value={form.taxRate} onChange={e => setForm(f => ({ ...f, taxRate: e.target.value }))} /></FR>
+          </div>
+        </div>
+
+        <div style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #fff8f0 100%)', border: '1px solid #dee2e6', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#2F5A7E', marginBottom: '0.6rem' }}>✨ AI Line Item Generator</div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: '2 1 200px' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', display: 'block', marginBottom: 3 }}>Describe the work</label>
+              <input className="form-control" style={{ fontSize: '0.85rem' }}
+                value={aiWorkDesc} onChange={e => setAiWorkDesc(e.target.value)}
+                placeholder={form.clientName ? `e.g. electrical rough-in for ${form.clientName}` : 'e.g. plumbing rough-in and fixture install'} />
+            </div>
+            <div style={{ flex: '1 1 120px' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', display: 'block', marginBottom: 3 }}>Target total ($)</label>
+              <input type="number" className="form-control" style={{ fontSize: '0.85rem' }}
+                value={aiTotalBudget} onChange={e => setAiTotalBudget(e.target.value)}
+                placeholder="e.g. 8500" min="0" step="100" />
+            </div>
+            <button type="button" onClick={handleAiGenerateItems} disabled={aiGenerating}
+              style={{
+                background: aiGenerating ? '#aaa' : 'linear-gradient(135deg, #2F5A7E, #FF9500)',
+                color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px',
+                fontWeight: 700, fontSize: '0.82rem', cursor: aiGenerating ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap', flexShrink: 0,
+              }}>
+              {aiGenerating ? '⏳ Generating...' : '✨ Generate Line Items'}
+            </button>
+          </div>
+          {aiMsg && (
+            <div style={{
+              marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 600, padding: '6px 10px', borderRadius: 5,
+              background: aiMsg.type === 'success' ? '#e6f7ee' : '#fdecea',
+              color:      aiMsg.type === 'success' ? '#198754' : '#dc3545',
+            }}>
+              {aiMsg.text}
+            </div>
+          )}
+          <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#6c757d' }}>
+            Describe the work and enter a target total — AI will split it into line items. You can edit, add, or remove them after.
           </div>
         </div>
 
