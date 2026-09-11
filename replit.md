@@ -60,6 +60,15 @@ PROVIA is an enterprise-grade, multi-tenant SaaS platform for construction manag
 - **Construction Control Documents:** Official MA 10th Edition forms (Initial/Final Construction Control, Checklist, Contractor Letter, Structural Review Guidance) required by 780 CMR Section 107.6 for buildings ≥ 35,000 cubic feet.
 - **Document Requirements System:** `DocumentRequirements` table links templates to job scopes with phase tracking (EXISTING/PROPOSED) and format types (PHOTO/DRAWING/FORM/CERTIFICATE). Exterior existing conditions typically use photos; proposed work uses drawings. Documents are selected based on job scope and permit type.
 
+## AI Tenant Isolation Guardrail
+
+- Every AI assistant, bot, prompt, retrieval flow, generated response, and AI-triggered action must respect `CompanyId` as the canonical tenant boundary.
+- AI may only access and reference records, files, settings, messages, credentials, metrics, and knowledge belonging to the authenticated user's `CompanyId`.
+- AI responses must never reveal, infer, summarize, compare, or confirm another company's information, even when prompted directly or indirectly.
+- Company ownership must be resolved from the authenticated tenant context, never from an AI prompt, request body, query parameter, or model-generated value.
+- Cross-company joins, retrieval results, cached context, conversation history, tool calls, logs, and generated documents must be company-scoped before reaching the model.
+- If ownership cannot be verified, the AI operation must refuse or return no company-specific information rather than fall back to broader data.
+
 ## External Dependencies
 - **Database:** PostgreSQL (Neon-backed via Replit)
 - **Email Service:** SendGrid
