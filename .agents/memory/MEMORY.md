@@ -1,3 +1,4 @@
 - [Invoice table creation pattern](invoice-table-creation.md) — tables not in original DB must be added via raw SQL in Program.cs startup block, not EnsureCreated
 - [Company model field name](company-model.md) — Company.CompanyName (not .Name); ContactEmail not Email
 - [TraydBook integration](traydbook-integration.md) — construction trade network (dev.traydbook.com), 3-tier integration plan with PROVIA; defer until user decides to build
+- [AI webhook tenant resolution](ai-webhook-tenant-resolution.md) — unauthenticated provider webhooks must fail closed until a trusted company mapping exists

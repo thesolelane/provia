@@ -1,28 +1,38 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using JobTracker.Data;
 using JobTracker.Services;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace JobTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MessagingController : ControllerBase
     {
         private readonly ILogger<MessagingController> _logger;
         private readonly IMessagingService _messagingService;
         private readonly IWhatsAppService _whatsAppService;
         private readonly IAIMessagingService _aiMessagingService;
+        private readonly ITenantContext _tenantContext;
+        private readonly JobTrackerContext _context;
 
         public MessagingController(
             ILogger<MessagingController> logger,
             IMessagingService messagingService,
             IWhatsAppService whatsAppService,
-            IAIMessagingService aiMessagingService)
+            IAIMessagingService aiMessagingService,
+            ITenantContext tenantContext,
+            JobTrackerContext context)
         {
             _logger = logger;
             _messagingService = messagingService;
             _whatsAppService = whatsAppService;
             _aiMessagingService = aiMessagingService;
+            _tenantContext = tenantContext;
+            _context = context;
         }
 
         [HttpPost("send-sms")]
@@ -30,6 +40,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                RequireTenant();
+
                 var success = await _messagingService.SendSmsAsync(request.PhoneNumber, request.Message);
                 if (success)
                 {
@@ -39,6 +51,9 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+
                 _logger.LogError(ex, "Error sending SMS");
                 return StatusCode(500, new { message = "Internal server error" });
             }
@@ -49,6 +64,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                RequireTenant();
+
                 var success = await _whatsAppService.SendWhatsAppMessageAsync(request.PhoneNumber, request.Message);
                 if (success)
                 {
@@ -58,12 +75,16 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+
                 _logger.LogError(ex, "Error sending WhatsApp message");
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }
 
         [HttpPost("whatsapp-webhook")]
+        [AllowAnonymous]
         public async Task<IActionResult> WhatsAppWebhook([FromBody] JsonElement payload)
         {
             try
@@ -85,11 +106,9 @@ namespace JobTracker.Controllers
 
                             if (!string.IsNullOrEmpty(from) && !string.IsNullOrEmpty(text))
                             {
-                                // Process the incoming message asynchronously
-                                _ = Task.Run(async () =>
-                                {
-                                    await _whatsAppService.ProcessIncomingMessageAsync(from, text);
-                                });
+                                // Webhooks do not carry an authenticated tenant. The service
+                                // therefore fails closed and will not run AI or retrieve data.
+                                await _whatsAppService.ProcessIncomingMessageAsync(from, text);
                             }
                         }
                     }
@@ -105,6 +124,7 @@ namespace JobTracker.Controllers
         }
 
         [HttpGet("whatsapp-webhook")]
+        [AllowAnonymous]
         public IActionResult VerifyWhatsAppWebhook([FromQuery] string hub_mode, [FromQuery] string hub_verify_token, [FromQuery] string hub_challenge)
         {
             try
@@ -128,11 +148,17 @@ namespace JobTracker.Controllers
         {
             try
             {
-                var response = await _aiMessagingService.ProcessIncomingQueryAsync(request.Query, request.JobId, request.UserId);
+                RequireTenant();
+                var response = await _aiMessagingService.ProcessIncomingQueryAsync(request.Query, request.JobId);
                 return Ok(new { response });
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+                if (ex is CrossTenantReferenceException)
+                    return Forbid();
+
                 _logger.LogError(ex, "Error processing AI query");
                 return StatusCode(500, new { message = "Internal server error" });
             }
@@ -143,6 +169,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                RequireTenant();
+
                 string message = request.Type switch
                 {
                     "verification" => await _aiMessagingService.GenerateVerificationMessageAsync(request.EmployeeName ?? "", request.VerificationCode ?? ""),
@@ -157,10 +185,17 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+                if (ex is CrossTenantReferenceException)
+                    return Forbid();
+
                 _logger.LogError(ex, "Error generating message");
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }
+
+        private int RequireTenant() => _tenantContext.GetCurrentCompanyId();
     }
 
     public class SendSmsRequest
@@ -179,7 +214,6 @@ namespace JobTracker.Controllers
     {
         public string Query { get; set; } = string.Empty;
         public int? JobId { get; set; }
-        public int? UserId { get; set; }
     }
 
     public class GenerateMessageRequest

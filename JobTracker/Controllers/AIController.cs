@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JobTracker.Services.AI;
+using JobTracker.Services;
 
 namespace JobTracker.Controllers
 {
@@ -11,11 +12,13 @@ namespace JobTracker.Controllers
     {
         private readonly AIAssistantService _ai;
         private readonly ILogger<AIController> _logger;
+        private readonly ITenantContext _tenantContext;
 
-        public AIController(AIAssistantService ai, ILogger<AIController> logger)
+        public AIController(AIAssistantService ai, ILogger<AIController> logger, ITenantContext tenantContext)
         {
             _ai = ai;
             _logger = logger;
+            _tenantContext = tenantContext;
         }
 
         // POST: api/ai/generate-scope
@@ -24,6 +27,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                _tenantContext.GetCurrentCompanyId();
+
                 if (string.IsNullOrWhiteSpace(req.JobName))
                     return BadRequest(new { message = "Job name is required" });
 
@@ -43,6 +48,9 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+
                 _logger.LogError(ex, "Error generating job scope");
                 return StatusCode(500, new { message = "Error generating scope" });
             }
@@ -54,6 +62,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                _tenantContext.GetCurrentCompanyId();
+
                 var result = await _ai.ScoreLeadAsync(
                     req.CallerName ?? "Unknown",
                     req.Source,
@@ -74,6 +84,9 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+
                 _logger.LogError(ex, "Error scoring lead");
                 return StatusCode(500, new { message = "Error scoring lead" });
             }
@@ -85,6 +98,8 @@ namespace JobTracker.Controllers
         {
             try
             {
+                _tenantContext.GetCurrentCompanyId();
+
                 if (string.IsNullOrWhiteSpace(req.WorkDescription))
                     return BadRequest(new { message = "Work description is required" });
 
@@ -97,6 +112,9 @@ namespace JobTracker.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is TenantContextException)
+                    return Unauthorized(new { message = "Authenticated company context is required" });
+
                 _logger.LogError(ex, "Error generating invoice items");
                 return StatusCode(500, new { message = "Error generating invoice items" });
             }
@@ -106,6 +124,15 @@ namespace JobTracker.Controllers
         [HttpGet("status")]
         public ActionResult<object> GetStatus()
         {
+            try
+            {
+                _tenantContext.GetCurrentCompanyId();
+            }
+            catch (TenantContextException)
+            {
+                return Unauthorized(new { message = "Authenticated company context is required" });
+            }
+
             var hasKey = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
             return Ok(new
             {

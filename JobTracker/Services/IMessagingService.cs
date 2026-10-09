@@ -22,7 +22,7 @@ namespace JobTracker.Services
         Task<string> GenerateVerificationMessageAsync(string employeeName, string verificationCode);
         Task<string> GenerateJobUpdateMessageAsync(Job job, string updateType);
         Task<string> GenerateScheduleReminderAsync(string employeeName, Job job, DateTime scheduledTime);
-        Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null, int? userId = null);
+        Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null);
         Task<string> GenerateResponseToWhatsAppMessageAsync(string fromNumber, string messageContent);
     }
 

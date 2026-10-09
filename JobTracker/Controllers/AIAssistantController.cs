@@ -1,16 +1,21 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using JobTracker.Services;
 
 namespace JobTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AIAssistantController : ControllerBase
     {
         private readonly ILogger<AIAssistantController> _logger;
+        private readonly ITenantContext _tenantContext;
 
-        public AIAssistantController(ILogger<AIAssistantController> logger)
+        public AIAssistantController(ILogger<AIAssistantController> logger, ITenantContext tenantContext)
         {
             _logger = logger;
+            _tenantContext = tenantContext;
         }
 
         [HttpPost("building-code-assistance")]
@@ -18,8 +23,17 @@ namespace JobTracker.Controllers
         {
             try
             {
+                _tenantContext.GetCurrentCompanyId();
+
+                if (string.IsNullOrWhiteSpace(request.Query))
+                    return BadRequest(new { message = "Query is required" });
+
                 var response = GetAIResponse(request.Query);
                 return Ok(response);
+            }
+            catch (TenantContextException)
+            {
+                return Unauthorized(new { message = "Authenticated company context is required" });
             }
             catch (Exception ex)
             {
