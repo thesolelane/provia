@@ -1,5 +1,13 @@
 namespace JobTracker.Services
 {
+    public sealed class TenantContextException : InvalidOperationException
+    {
+        public TenantContextException()
+            : base("Tenant context is required for this operation.")
+        {
+        }
+    }
+
     public class TenantContext : ITenantContext
     {
         private int _currentCompanyId;
@@ -14,9 +22,9 @@ namespace JobTracker.Services
 
         public int GetCurrentCompanyId()
         {
-            if (_currentCompanyId == 0)
+            if (_currentCompanyId <= 0)
             {
-                throw new InvalidOperationException("Tenant context not set. User may not be authenticated or company not found.");
+                throw new TenantContextException();
             }
             return _currentCompanyId;
         }

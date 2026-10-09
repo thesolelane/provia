@@ -10,12 +10,17 @@ namespace JobTracker.Services
     {
         private readonly ILogger<AIMessagingService> _logger;
         private readonly JobTrackerContext _context;
+        private readonly ITenantContext _tenantContext;
         private readonly bool _hasOpenAI;
 
-        public AIMessagingService(ILogger<AIMessagingService> logger, JobTrackerContext context)
+        public AIMessagingService(
+            ILogger<AIMessagingService> logger,
+            JobTrackerContext context,
+            ITenantContext tenantContext)
         {
             _logger = logger;
             _context = context;
+            _tenantContext = tenantContext;
             
             var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
             _hasOpenAI = !string.IsNullOrEmpty(apiKey);
@@ -23,6 +28,8 @@ namespace JobTracker.Services
 
         public async Task<string> GenerateVerificationMessageAsync(string employeeName, string verificationCode)
         {
+            RequireTenant();
+
             // Smart template-based message generation
             var templates = new[]
             {
@@ -44,12 +51,14 @@ namespace JobTracker.Services
 
         public async Task<string> GenerateJobUpdateMessageAsync(Job job, string updateType)
         {
+            var tenantJob = await LoadTenantJobAsync(job);
+
             var templates = new[]
             {
-                $"Job Update: {job.Name} - {updateType}. Status: {job.Status}. Job #{job.JobNumber}",
-                $"{job.Name} ({job.JobNumber}): {updateType}. Current status: {job.Status}",
-                $"Update on Job #{job.JobNumber} - {job.Name}: {updateType}",
-                $"{updateType} - {job.Name}. Job #{job.JobNumber} now {job.Status}"
+                $"Job Update: {tenantJob.Name} - {updateType}. Status: {tenantJob.Status}. Job #{tenantJob.JobNumber}",
+                $"{tenantJob.Name} ({tenantJob.JobNumber}): {updateType}. Current status: {tenantJob.Status}",
+                $"Update on Job #{tenantJob.JobNumber} - {tenantJob.Name}: {updateType}",
+                $"{updateType} - {tenantJob.Name}. Job #{tenantJob.JobNumber} now {tenantJob.Status}"
             };
 
             // Select template based on total length to stay under SMS limits
@@ -65,15 +74,16 @@ namespace JobTracker.Services
 
         public async Task<string> GenerateScheduleReminderAsync(string employeeName, Job job, DateTime scheduledTime)
         {
+            var tenantJob = await LoadTenantJobAsync(job);
             var firstName = employeeName.Split(' ')[0];
             var timeFormatted = scheduledTime.ToString("h:mm tt");
             
             var templates = new[]
             {
-                $"Hi {firstName}! Reminder: {job.Name} today at {timeFormatted}. Job #{job.JobNumber}",
-                $"{firstName}, you're scheduled for {job.Name} at {timeFormatted} today. Job #{job.JobNumber}",
-                $"Work reminder: {job.Name} - {timeFormatted} today, {firstName}. Job #{job.JobNumber}",
-                $"{firstName}: {job.Name} today {timeFormatted}. Job #{job.JobNumber}"
+                $"Hi {firstName}! Reminder: {tenantJob.Name} today at {timeFormatted}. Job #{tenantJob.JobNumber}",
+                $"{firstName}, you're scheduled for {tenantJob.Name} at {timeFormatted} today. Job #{tenantJob.JobNumber}",
+                $"Work reminder: {tenantJob.Name} - {timeFormatted} today, {firstName}. Job #{tenantJob.JobNumber}",
+                $"{firstName}: {tenantJob.Name} today {timeFormatted}. Job #{tenantJob.JobNumber}"
             };
 
             var selectedTemplate = templates[0];
@@ -86,21 +96,23 @@ namespace JobTracker.Services
             return selectedTemplate;
         }
 
-        public async Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null, int? userId = null)
+        public async Task<string> ProcessIncomingQueryAsync(string query, int? jobId = null)
         {
             try
             {
+                var companyId = RequireTenant();
                 query = query.ToLowerInvariant();
                 
                 // Get relevant job data if jobId is provided
                 string contextData = "";
                 if (jobId.HasValue)
                 {
-                    var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
-                    if (job != null)
-                    {
-                        contextData = $"Job: {job.Name} (#{job.JobNumber}), Status: {job.Status}, Location: {job.Location}, Start: {job.StartDate:MM/dd/yyyy}";
-                    }
+                    var job = await _context.Jobs.AsNoTracking()
+                        .FirstOrDefaultAsync(j => j.Id == jobId.Value && j.CompanyId == companyId);
+                    if (job == null)
+                        throw new CrossTenantReferenceException();
+
+                    contextData = $"Job: {job.Name} (#{job.JobNumber}), Status: {job.Status}, Location: {job.Location}, Start: {job.StartDate:MM/dd/yyyy}";
                 }
 
                 // Smart pattern matching for common queries
@@ -108,7 +120,8 @@ namespace JobTracker.Services
                 {
                     if (!string.IsNullOrEmpty(contextData))
                     {
-                        var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
+                        var job = await _context.Jobs.AsNoTracking()
+                            .FirstAsync(j => j.Id == jobId!.Value && j.CompanyId == companyId);
                         return $"Job {job?.Name} (#{job?.JobNumber}) is currently {job?.Status}. Started {job?.StartDate:MM/dd/yyyy}.";
                     }
                     return "To check job status, please specify the job number (e.g., #1234).";
@@ -128,7 +141,8 @@ namespace JobTracker.Services
                 {
                     if (!string.IsNullOrEmpty(contextData))
                     {
-                        var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == jobId.Value);
+                        var job = await _context.Jobs.AsNoTracking()
+                            .FirstAsync(j => j.Id == jobId!.Value && j.CompanyId == companyId);
                         return $"Job location: {job?.Location}";
                     }
                     return "Please specify which job location you need.";
@@ -136,6 +150,10 @@ namespace JobTracker.Services
 
                 // Default helpful response
                 return "I can help with job status, schedules, building codes, and locations. Please be specific about what you need or contact your supervisor.";
+            }
+            catch (CrossTenantReferenceException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -146,20 +164,53 @@ namespace JobTracker.Services
 
         public async Task<string> GenerateResponseToWhatsAppMessageAsync(string fromNumber, string messageContent)
         {
+            var companyId = RequireTenant();
+
             // Extract job number from message content
             var jobNumberMatch = Regex.Match(messageContent, @"#(\d+)");
             int? jobId = null;
             
             if (jobNumberMatch.Success && int.TryParse(jobNumberMatch.Groups[1].Value, out int jobNumber))
             {
-                var job = await _context.Jobs.FirstOrDefaultAsync(j => j.JobNumber == jobNumber.ToString());
+                var job = await _context.Jobs.AsNoTracking()
+                    .FirstOrDefaultAsync(j => j.JobNumber == jobNumber.ToString() && j.CompanyId == companyId);
+
+                if (job == null && await _context.Jobs.AsNoTracking()
+                    .AnyAsync(j => j.JobNumber == jobNumber.ToString()))
+                {
+                    throw new CrossTenantReferenceException();
+                }
+
                 jobId = job?.Id;
             }
-
-            // Try to identify user by phone number
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == fromNumber);
             
-            return await ProcessIncomingQueryAsync(messageContent, jobId, user?.Id);
+            return await ProcessIncomingQueryAsync(messageContent, jobId);
+        }
+
+        private int RequireTenant() => _tenantContext.GetCurrentCompanyId();
+
+        private async Task<Job> LoadTenantJobAsync(Job requestedJob)
+        {
+            var companyId = RequireTenant();
+
+            if (requestedJob == null || requestedJob.Id <= 0)
+                throw new CrossTenantReferenceException();
+
+            var tenantJob = await _context.Jobs.AsNoTracking()
+                .FirstOrDefaultAsync(j => j.Id == requestedJob.Id && j.CompanyId == companyId);
+
+            if (tenantJob == null)
+                throw new CrossTenantReferenceException();
+
+            return tenantJob;
+        }
+    }
+
+    public sealed class CrossTenantReferenceException : InvalidOperationException
+    {
+        public CrossTenantReferenceException()
+            : base("Referenced data does not belong to the authenticated company.")
+        {
         }
     }
 }

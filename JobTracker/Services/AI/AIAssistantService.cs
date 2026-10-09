@@ -1,4 +1,5 @@
 using System.Text.Json;
+using JobTracker.Services;
 
 namespace JobTracker.Services.AI
 {
@@ -19,18 +20,26 @@ namespace JobTracker.Services.AI
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AIAssistantService> _logger;
+        private readonly ITenantContext _tenantContext;
         private readonly string? _openAiApiKey;
 
-        public AIAssistantService(HttpClient httpClient, ILogger<AIAssistantService> logger, IConfiguration configuration)
+        public AIAssistantService(
+            HttpClient httpClient,
+            ILogger<AIAssistantService> logger,
+            IConfiguration configuration,
+            ITenantContext tenantContext)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _tenantContext = tenantContext;
             _openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
         }
 
         // ── Job Scope Generator ──────────────────────────────────────────────────
         public async Task<JobScopeResult> GenerateJobScopeAsync(string jobName, string location, string clientName, decimal budget, string? tradeHint)
         {
+            _tenantContext.GetCurrentCompanyId();
+
             if (string.IsNullOrEmpty(_openAiApiKey))
                 return GetLocalJobScope(jobName, location, budget, tradeHint);
 
@@ -116,6 +125,8 @@ Respond ONLY with valid JSON in this exact format, no other text:
             string callerName, string? source, string? stage, int daysInStage,
             string? jobType, string? jobScope, bool hasEmail, bool hasPhone)
         {
+            _tenantContext.GetCurrentCompanyId();
+
             if (string.IsNullOrEmpty(_openAiApiKey))
                 return GetLocalLeadScore(source, stage, daysInStage, jobScope, hasEmail, hasPhone);
 
@@ -243,6 +254,8 @@ tier must be exactly one of: Hot, Warm, Cold";
         // ── Invoice Line-Item Assistant ──────────────────────────────────────────
         public async Task<string> GenerateInvoiceLineItemsAsync(string workDescription, decimal totalBudget)
         {
+            _tenantContext.GetCurrentCompanyId();
+
             if (string.IsNullOrEmpty(_openAiApiKey))
                 return GetLocalInvoiceItems(workDescription, totalBudget);
 
@@ -312,6 +325,8 @@ Include 3-6 line items. Quantities as numbers. Prices as numbers (no $ symbol). 
 
         public async Task<string> GetFireBlockingGuidance(string sectionType)
         {
+            _tenantContext.GetCurrentCompanyId();
+
             var fireBlockingKnowledge = GetFireBlockingRequirements();
             
             if (string.IsNullOrEmpty(_openAiApiKey))

@@ -1,6 +1,8 @@
+using JobTracker.Models;
+
 namespace JobTracker.Services
 {
-    public class SMSService
+    public class SMSService : IMessagingService
     {
         private readonly ILogger<SMSService> _logger;
         private readonly string _accountSid;
@@ -44,6 +46,23 @@ namespace JobTracker.Services
                 return false;
             }
         }
+
+        public Task<bool> SendSmsAsync(string phoneNumber, string message) =>
+            SendSMSAsync(phoneNumber, message);
+
+        public Task<bool> SendVerificationSmsAsync(string phoneNumber, string verificationCode) =>
+            SendSMSAsync(phoneNumber, $"Your PROVIA verification code is {verificationCode}. Expires in 10 minutes.");
+
+        public Task<bool> SendJobUpdateSmsAsync(string phoneNumber, Job job, string updateMessage) =>
+            SendSMSAsync(phoneNumber, updateMessage);
+
+        public Task<bool> SendScheduleReminderAsync(
+            string phoneNumber,
+            string employeeName,
+            Job job,
+            DateTime scheduledTime) =>
+            SendSMSAsync(phoneNumber,
+                $"Hi {employeeName.Split(' ')[0]}! Reminder: {job.Name} today at {scheduledTime:h:mm tt}. Job #{job.JobNumber}");
 
         private string CleanPhoneNumber(string phoneNumber)
         {

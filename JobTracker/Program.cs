@@ -27,6 +27,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<InspectionTrackingService>();
 builder.Services.AddScoped<JobTracker.Services.AI.AIAssistantService>();
+builder.Services.AddScoped<JobTracker.Services.IAIMessagingService, JobTracker.Services.AIMessagingService>();
+builder.Services.AddScoped<JobTracker.Services.IWhatsAppService, JobTracker.Services.WhatsAppService>();
+builder.Services.AddScoped<JobTracker.Services.IMessagingService, JobTracker.Services.SMSService>();
 builder.Services.AddScoped<JobTracker.Services.IEmailService, JobTracker.Services.EmailService>();
 builder.Services.AddScoped<JobTracker.Services.GeoFencingService>();
 
@@ -190,6 +193,7 @@ if (!Directory.Exists(uploadsPath))
 app.UseCors("AllowReactApp");
 
 // Add authentication and authorization middleware
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 

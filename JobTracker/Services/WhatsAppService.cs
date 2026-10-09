@@ -8,16 +8,19 @@ namespace JobTracker.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<WhatsAppService> _logger;
         private readonly IAIMessagingService _aiMessagingService;
+        private readonly ITenantContext _tenantContext;
         private readonly string? _accessToken;
         private readonly string? _phoneNumberId;
         private readonly string? _verifyToken;
 
         public WhatsAppService(HttpClient httpClient, ILogger<WhatsAppService> logger, 
-            IAIMessagingService aiMessagingService, IConfiguration configuration)
+            IAIMessagingService aiMessagingService, IConfiguration configuration,
+            ITenantContext tenantContext)
         {
             _httpClient = httpClient;
             _logger = logger;
             _aiMessagingService = aiMessagingService;
+            _tenantContext = tenantContext;
             _accessToken = configuration["WHATSAPP_ACCESS_TOKEN"];
             _phoneNumberId = configuration["WHATSAPP_PHONE_NUMBER_ID"];
             _verifyToken = configuration["WHATSAPP_VERIFY_TOKEN"];
@@ -33,6 +36,8 @@ namespace JobTracker.Services
 
         public async Task<bool> SendWhatsAppMessageAsync(string phoneNumber, string message)
         {
+            _tenantContext.GetCurrentCompanyId();
+
             if (string.IsNullOrEmpty(_accessToken) || string.IsNullOrEmpty(_phoneNumberId))
             {
                 _logger.LogWarning("WhatsApp credentials not configured. Cannot send message.");
@@ -77,6 +82,11 @@ namespace JobTracker.Services
         {
             try
             {
+                // A provider webhook has no authenticated tenant in this application.
+                // Refuse to run retrieval or AI rather than guessing a company from
+                // the sender, payload, or message content.
+                _tenantContext.GetCurrentCompanyId();
+
                 _logger.LogInformation($"Processing incoming WhatsApp message from {fromNumber}: {messageContent}");
 
                 // Generate AI response
@@ -86,6 +96,11 @@ namespace JobTracker.Services
                 await SendWhatsAppMessageAsync(fromNumber, aiResponse);
 
                 return aiResponse;
+            }
+            catch (TenantContextException)
+            {
+                _logger.LogWarning("Ignored WhatsApp AI message because no authenticated tenant context was available.");
+                return "This channel is not configured for an authenticated company.";
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 using JobTracker.Data;
 using JobTracker.Services;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace JobTracker.Middleware
@@ -19,10 +20,14 @@ namespace JobTracker.Middleware
             
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
             {
-                var user = await dbContext.Users.FindAsync(userId);
-                if (user != null)
+                var user = await dbContext.Users
+                    .Include(u => u.Company)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user != null && user.IsActive && user.CompanyId > 0 && user.Company?.IsActive == true)
                 {
                     tenantContext.SetCurrentCompanyId(user.CompanyId);
+                    tenantContext.UserId = user.Id;
                 }
             }
 
