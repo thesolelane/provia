@@ -86,3 +86,5 @@ obj/ or **/obj/
 # Private onboarding report: keep security findings out of the public repository
 /docs/ONBOARDING-REPORT.md
 /docs/ONBOARDING-REPORT.pdf
+docs/ONBOARDING-REPORT.md
+docs/ONBOARDING-REPORT.pdf

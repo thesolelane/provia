@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ItfyHpzNq6v0w_vZPxn4e"
+uri = "file://docs/ONBOARDING-REPORT.pdf"
+type = "pdf"
+title = "PROVIA Onboarding and Security Report (PDF)"
+description = "14-page private onboarding report covering the app, CompanyId tenant boundary, 64 EF tables, configuration, implementation gaps, and security findings. The PDF and Markdown report are gitignored."
+logical_id = "04078d73-6522-49ec-a41d-fc87f8b4c63b"
+content_hash = "sha256:fdb2043cccfe666bb7b3a2acd5c223b4d5d65e93476f2f9a7ee72587cc83963e"
+size = 397138
+mtime_ms = 1791565795090
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:32475586-fa2c-4c9c-90eb-4a182dc0e055/04078d73-6522-49ec-a41d-fc87f8b4c63b/6f93594c-157a-4e70-92d5-122be53e20d9"
+storage_version_token = "1791565915790835"
+content_type = "application/pdf"
